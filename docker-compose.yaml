@@ -1,0 +1,47 @@
+services:
+  auth:
+    build: ./services/auth/
+    container_name: auth
+    command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+    volumes:
+      - ./services/auth:/opt
+    expose:
+      - "8000"
+    depends_on:
+      - db
+  
+  game:
+    build: ./services/game/
+    container_name: game
+    command: ["python3", "manage.py", "runserver", "0.0.0.0:8001"]
+    volumes:
+      - ./services/game:/opt
+    expose:
+      - "8001"
+    depends_on:
+      - db
+  tournaments:
+    build: ./services/tournaments/
+    container_name: tournaments
+    command: ["python3", "manage.py", "runserver", "0.0.0.0:8001"]
+    volumes:
+      - ./services/tournaments:/opt
+    expose:
+      - "8001"
+    depends_on:
+      - db
+  db:
+    image: postgres:16
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    #health check, add condition to check if the db is ready
+    volumes:
+      - db:/var/lib/postgresql/data
+
+volumes:
+  db:
