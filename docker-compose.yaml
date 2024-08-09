@@ -1,47 +1,85 @@
+version: '3'
 services:
   auth:
-    build: ./services/auth/
-    container_name: auth
-    command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
-    volumes:
-      - ./services/auth:/opt
-    expose:
-      - "8000"
-    depends_on:
-      - db
-  
-  game:
-    build: ./services/game/
-    container_name: game
-    command: ["python3", "manage.py", "runserver", "0.0.0.0:8001"]
-    volumes:
-      - ./services/game:/opt
-    expose:
-      - "8001"
-    depends_on:
-      - db
-  tournaments:
-    build: ./services/tournaments/
-    container_name: tournaments
-    command: ["python3", "manage.py", "runserver", "0.0.0.0:8001"]
-    volumes:
-      - ./services/tournaments:/opt
-    expose:
-      - "8001"
-    depends_on:
-      - db
-  db:
-    image: postgres:16
-    container_name: db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+    build: ./services/auth
     ports:
-      - "5432:5432"
-    #health check, add condition to check if the db is ready
+      - "8001:8000"
+    depends_on:
+      - db
+
+  users:
+    build: ./services/users
+    ports:
+      - "8002:8000"
+    depends_on:
+      - db
+
+  game:
+    build: ./services/game
+    ports:
+      - "8003:8000"
+    depends_on:
+      - db
+
+  tournament:
+    build: ./services/tournament
+    ports:
+      - "8004:8000"
+    depends_on:
+      - db
+
+  settings:
+    build: ./services/settings
+    ports:
+      - "8005:8000"
+    depends_on:
+      - db
+
+  stats:
+    build: ./services/stats
+    ports:
+      - "8006:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./services/frontend
+    ports:
+      - "3000:3000"
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: your_db_name
+      POSTGRES_USER: your_db_user
+      POSTGRES_PASSWORD: your_db_password
     volumes:
-      - db:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+
+  elk:
+    build: ./elk
+    ports:
+      - "9200:9200"
+      - "5601:5601"
+
+  monitoring:
+    build: ./monitoring
+    ports:
+      - "9090:9090"
+      - "3000:3000"
 
 volumes:
-  db:
+  pgdata:
+
+
+  # auth:
+  #   build: ./services/auth/
+  #   container_name: auth
+  #   command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+  #   volumes:
+  #     - ./services/auth:/opt
+  #   expose:
+  #     - "8000"
+  #   depends_on:
+  #     - db
+  

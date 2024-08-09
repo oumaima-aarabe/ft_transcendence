@@ -17,11 +17,6 @@ jobs:
           POSTGRES_DB: your_db_name
           POSTGRES_USER: your_db_user
           POSTGRES_PASSWORD: your_db_password
-        options: >-
-          --health-cmd "pg_isready -U your_db_user -d your_db_name"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
         ports:
           - 5432:5432
 
@@ -35,11 +30,12 @@ jobs:
 
     - name: Install Django dependencies
       run: |
-        cd transcendence
+        cd services/auth
         pip install -r requirements.txt
 
     - name: Run Django Tests
       run: |
+        cd services/auth
         python manage.py migrate
         python manage.py test
 
@@ -50,8 +46,9 @@ jobs:
 
     - name: Install Next.js dependencies
       run: |
-        cd next-app
+        cd services/frontend
         npm install
 
     - name: Run Next.js Tests
       run: npm run test
+
