@@ -36,11 +36,11 @@ jobs:
       - name: Sleep to allow PostgreSQL to start
         run: sleep 30
 
-      - name: Print PostgreSQL logs (if needed)
-        run: docker logs $(docker ps -q --filter "name=postgres")
+      # - name: Print PostgreSQL logs (if needed)
+      #   run: docker logs $(docker ps -q --filter "name=postgres")
 
-      - name: Wait for PostgreSQL to be ready
-        run: ./scripts/wait-for-it.sh postgres:5432 --timeout=30 --strict -- echo "Postgres is up"
+      # - name: Wait for PostgreSQL to be ready
+      #   run: ./scripts/wait-for-it.sh postgres:5432 --timeout=30 --strict -- echo "Postgres is up"
 
 
       - name: Apply migration and run tests
