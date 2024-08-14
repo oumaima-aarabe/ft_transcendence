@@ -7,7 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+
+  backend:
     runs-on: ubuntu-latest
 
     services:
@@ -43,22 +44,29 @@ jobs:
           python backend/manage.py migrate
           python backend/manage.py test
 
-    #   - name: Set up Node.js
-    #     uses: actions/setup-node@v2
-    #     with:
-    #       node-version: '20'
+  frontend:
 
-    #   - name: Install Next.js dependencies
-    #     run: npm install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    #   - name: Run lint
-    #     run: npm run lint
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
 
-    #   - name: Build project
-    #     run: npm run build
+      - name: Install Next.js dependencies
+        run: npm install
 
-    #   - name: Run tests
-    #     run: npm test
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
 
     # - name: Upload build artifacts
     #   uses: actions/upload-artifact@v2
