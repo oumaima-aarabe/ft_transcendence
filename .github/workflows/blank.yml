@@ -19,35 +19,32 @@ jobs:
           POSTGRES_PASSWORD: ps_db_password123456
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ps_db_name"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      backend:
+        image: ./backend/
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.11'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
+      - name: Build Docker image
+        run: docker-compose build
 
-      - name: Sleep to allow PostgreSQL to start
-        run: sleep 30
+      - name: Run services
+        run: docker-compose up -d
 
-      # - name: Print PostgreSQL logs (if needed)
-      #   run: docker logs $(docker ps -q --filter "name=postgres")
+      - name: Wait for services to be ready
+        run: ./scripts/wait-for-it.sh postgres:5432 --timeout=60 --strict -- echo "Postgres is up"
 
-      # - name: Wait for PostgreSQL to be ready
-      #   run: ./scripts/wait-for-it.sh postgres:5432 --timeout=30 --strict -- echo "Postgres is up"
-
-
-      - name: Apply migration and run tests
-        run: |
-          python backend/manage.py migrate
-          python backend/manage.py test
-
+      - name: Run tests
+        run: docker-compose exec app python backend/manage.py test
 
 
 
