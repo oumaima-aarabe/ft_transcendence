@@ -7,48 +7,64 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
-        image: postgres:latest
+        image: postgres:15
         env:
-          POSTGRES_DB: your_db_name
-          POSTGRES_USER: your_db_user
-          POSTGRES_PASSWORD: your_db_password
+          POSTGRES_DB: test_db
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
         ports:
           - 5432:5432
-
+        options: >-
+          --health-cmd="pg_isready -U user"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
-    - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
 
-    - name: Install Django dependencies
-      run: |
-        cd services/auth
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
 
-    - name: Run Django Tests
-      run: |
-        cd services/auth
-        python manage.py migrate
-        python manage.py test
+      - name:  apply migration && Run tests
+        run: |
+          python backend/manage.py migrate
+          python backend/manage.py test
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'
+        node-version: '20'
 
     - name: Install Next.js dependencies
-      run: |
-        cd services/frontend
-        npm install
+      run: npm install
 
-    - name: Run Next.js Tests
-      run: npm run test
+    - name: Run lint
+        run: npm run lint
 
+    - name: Build project
+      run: npm run build
+
+    - name: Run tests
+      run: npm test
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: nextjs-build
+        path: .next
+
+#Testing: For Django : pytest or Django’s built-in test framework. For Next.js : jest.
+#to keep in mind : Matrix builds, parallel jobs, and caching.
