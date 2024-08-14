@@ -43,22 +43,22 @@ jobs:
           python backend/manage.py migrate
           python backend/manage.py test
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '20'
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
 
-    - name: Install Next.js dependencies
-      run: npm install
+      - name: Install Next.js dependencies
+        run: npm install
 
-    - name: Run lint
+      - name: Run lint
         run: npm run lint
 
-    - name: Build project
-      run: npm run build
+      - name: Build project
+        run: npm run build
 
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npm test
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
