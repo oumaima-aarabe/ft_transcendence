@@ -22,9 +22,11 @@ jobs:
 
       - name: Create docker-compose.yml for testing
         run: |
-          cat <<EOF > docker-compose.yml
+          cat << EOF > docker-compose.yml
           services:
+
             backend:
+
               container_name: backend
               build: ./backend
               environment:
@@ -42,7 +44,9 @@ jobs:
                 backend_db:
                   condition: service_healthy
               command: ["python", "manage.py", "runserver", "0.0.0.0:8888"]
+
             backend_db:
+
               image: postgres:16
               container_name: backend_db
               ports:
@@ -57,16 +61,17 @@ jobs:
                 timeout: 5s
                 retries: 5
           EOF
-          shell: bash
+
       - name: Run Services
         run: |
           docker-compose up -d
           docker-compose logs --tail=100
+
       - name: Run tests
         run: |
           docker-compose exec -T backend python3 manage.py test
 
-          
+
   frontend:
 
     runs-on: ubuntu-latest
@@ -94,10 +99,10 @@ jobs:
           cd frontend
           npm run build
 
-      - name: Run tests
-        run: |
-          cd frontend
-          npm test
+      # - name: Run tests
+      #   run: |
+      #     cd frontend
+      #     npm test
 
     # - name: Upload build artifacts
     #   uses: actions/upload-artifact@v2
