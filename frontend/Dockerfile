@@ -1,6 +1,11 @@
-FROM node:14-alpine
+FROM node:20
+
 WORKDIR /app
-COPY . /app
+
+COPY . .
+
 RUN npm install
-RUN npm run build
-CMD ["npm", "run", "start"]
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
