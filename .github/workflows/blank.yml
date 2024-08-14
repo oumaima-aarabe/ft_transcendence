@@ -7,50 +7,62 @@ on:
     branches: [ main ]
 
 jobs:
+
   backend:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: ps_db_name
-          POSTGRES_USER: ps_db_user
-          POSTGRES_PASSWORD: ps_db_password123456
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U ps_db_name"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install Docker Compose
+      - name: install docker-compose
         run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
-        run: docker-compose build
-
-      - name: Run services
-        run: docker-compose up -d
-
-      # - name: Wait for services to be ready
-      #   run: ./scripts/wait-for-it.sh postgres:5432 --timeout=60 --strict -- echo "Postgres is up"
-
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+      - name: Create docker-compose.yml for testing
+        run: |
+          cat << EOF > docker-compose.yml
+          services:
+            backend:
+              container_name: backend
+              build: ./backend
+              environment:
+                DB_HOST: backend_db
+                DB_PORT: 5432
+                DB_NAME: ps_backend_db
+                DB_USER: ps_backend_user
+                DB_PASSWORD: ps_backend_password
+                POSTGRES_HOST: backend_db
+                POSTGRES_PORT: 5432
+                POSTGRES_USER: ps_backend_user
+                POSTGRES_DB: ps_backend_db
+                POSTGRES_PASSWORD: ps_backend_password
+              depends_on:
+                backend_db:
+                  condition: service_healthy
+              command: ["python", "manage.py", "runserver", "0.0.0.0:8888"]
+            backend_db:
+              image: postgres:16
+              container_name: backend_db
+              ports:
+                - "5432:5432"
+              environment:
+                POSTGRES_USER: ps_backend_user
+                POSTGRES_PASSWORD: ps_backend_password
+                POSTGRES_DB: ps_backend_db
+              healthcheck:
+                test: ["CMD", "pg_isready", "-d", "ps_backend_db", "-U", "ps_backend_user"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+          EOF
+      - name: Run Services
+        run: |
+          docker-compose up -d
+          docker-compose logs --tail=100
       - name: Run tests
-        run: docker-compose exec app python backend/manage.py test
-
-
-
+        run: |
+          docker-compose exec -T backend python3 manage.py test
   frontend:
 
     runs-on: ubuntu-latest
@@ -67,17 +79,14 @@ jobs:
         run: |
           cd frontend
           npm install
-
       - name: Run lint
         run: |
           cd frontend
           npm run lint
-
       - name: Build project
         run: |
           cd frontend
           npm run build
-
       # - name: Run tests
       #   run: |
       #     cd frontend
@@ -91,3 +100,37 @@ jobs:
 
 #Testing: For Django : pytest or Django’s built-in test framework. For Next.js : jest.
 #to keep in mind : Matrix builds, parallel jobs, and caching.
+
+    # services:
+    #   postgres:
+    #     image: postgres:16
+    #     env:
+    #       POSTGRES_DB: test_db
+    #       POSTGRES_USER: user
+    #       POSTGRES_PASSWORD: password
+    #     ports:
+    #       - 5432:5432
+    #     options: >-
+    #       --health-cmd="pg_isready -U user"
+    #       --health-interval=10s
+    #       --health-timeout=5s
+    #       --health-retries=5
+    # steps:
+    #   - name: Checkout repository
+    #     uses: actions/checkout@v2
+
+    #   - name: Set up Python
+    #     uses: actions/setup-python@v2
+    #     with:
+    #       python-version: '3.11'
+
+    #   - name: Install dependencies
+    #     run: |
+    #       python -m pip install --upgrade pip
+    #       pip install -r backend/requirements.txt
+
+    #   - name:  apply migration && Run tests
+    #     run: |
+    #       sleep 15
+    #       python backend/manage.py migrate
+    #       python backend/manage.py test
