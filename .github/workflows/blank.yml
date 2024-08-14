@@ -42,6 +42,7 @@ jobs:
 
       - name:  apply migration && Run tests
         run: |
+          sleep 15
           python backend/manage.py migrate
           python backend/manage.py test
 
