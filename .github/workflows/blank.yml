@@ -57,7 +57,9 @@ jobs:
           node-version: '20'
 
       - name: Install Next.js dependencies
-        run: npm install
+        run: |
+        cd frontend
+        npm install
 
       - name: Run lint
         run: npm run lint
