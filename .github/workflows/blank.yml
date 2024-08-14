@@ -13,7 +13,8 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
+        name: postgres
         env:
           POSTGRES_DB: test_db
           POSTGRES_USER: user
@@ -62,13 +63,19 @@ jobs:
           npm install
 
       - name: Run lint
-        run: npm run lint
+        run: |
+          cd frontend
+          npm run lint
 
       - name: Build project
-        run: npm run build
+        run: |
+          cd frontend
+          npm run build
 
       - name: Run tests
-        run: npm test
+        run: |
+          cd frontend
+          npm test
 
     # - name: Upload build artifacts
     #   uses: actions/upload-artifact@v2
