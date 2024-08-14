@@ -38,10 +38,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-    #   - name:  apply migration && Run tests
-    #     run: |
-    #       python backend/manage.py migrate
-    #       python backend/manage.py test
+      - name:  apply migration && Run tests
+        run: |
+          python backend/manage.py migrate
+          python backend/manage.py test
 
     #   - name: Set up Node.js
     #     uses: actions/setup-node@v2
