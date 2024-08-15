@@ -2,7 +2,7 @@ name: Notify Discord on CI Completion
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI"]  # Replace with your CI workflow name
     types:
       - completed
 
@@ -10,40 +10,25 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Get Workflow Information
-        id: get-info
+      - name: Debug Workflow Information
         run: |
-          echo "status=${{ github.event.workflow_run.conclusion }}" >> $GITHUB_ENV
-          echo "event_trigger=${{ github.event.workflow_run.event }}" >> $GITHUB_ENV
-          echo "actor=${{ github.event.workflow_run.actor.login }}" >> $GITHUB_ENV
-          echo "commit_message=$(echo '${{ github.event.workflow_run.head_commit.message }}' | jq -R --slurp)" >> $GITHUB_ENV
+          echo "Workflow Status: ${{ github.event.workflow_run.conclusion }}"
+          echo "Triggered by: ${{ github.event.workflow_run.event }}"
+          echo "Actor: ${{ github.event.workflow_run.actor.login }}"
+          echo "Commit Message: ${{ github.event.workflow_run.head_commit.message }}"
 
-      - name: Collect Job Statuses
-        id: collect-statuses
-        run: |
-          JOBS_STATUS=""
-          for job in $(echo '${{ toJson(github.event.workflow_run.jobs) }}' | jq -c '.[]'); do
-            JOB_NAME=$(echo "$job" | jq -r '.name')
-            JOB_CONCLUSION=$(echo "$job" | jq -r '.conclusion')
-            JOBS_STATUS+="$JOB_NAME: $JOB_CONCLUSION\n"
-          done
-          echo "jobs_status=$(echo "$JOBS_STATUS" | jq -R --slurp)" >> $GITHUB_ENV
-
-      - name: Send Discord Notification
+      - name: Send Basic Discord Notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          STATUS: ${{ env.status }}
-          EVENT_TRIGGER: ${{ env.event_trigger }}
-          ACTOR: ${{ env.actor }}
-          COMMIT_MESSAGE: ${{ env.commit_message }}
-          JOBS_STATUS: ${{ env.jobs_status }}
+          STATUS: ${{ github.event.workflow_run.conclusion }}
+          ACTOR: ${{ github.event.workflow_run.actor.login }}
+          COMMIT_MESSAGE: ${{ github.event.workflow_run.head_commit.message }}
         run: |
           curl -X POST \
           -H "Content-Type: application/json" \
           -d '{
-                "content": "Workflow **CI** has completed with status: **'"$STATUS"'**\n
-                            **Triggered by**: '"$EVENT_TRIGGER"' by '"$ACTOR"'\n
-                            **Commit message**: '"$COMMIT_MESSAGE"'\n
-                            **Jobs status**:\n'"$JOBS_STATUS"'"
+                "content": "CI Pipeline completed with status: **'"$STATUS"'**\n
+                            Triggered by: '"$ACTOR"'\n
+                            Commit message: '"$COMMIT_MESSAGE"'"
               }' \
           $DISCORD_WEBHOOK_URL

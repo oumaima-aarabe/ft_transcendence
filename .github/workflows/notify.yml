@@ -1,4 +1,4 @@
-name: Notify Discord on CI Completion
+name: Notify Discord
 
 on:
   push:
