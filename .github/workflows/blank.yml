@@ -26,8 +26,8 @@ jobs:
       - name: Linting and formatting checks
         run: |
           black --check backend --config pyproject.toml
-          flake8 backend --settings-path .isort.cfg
-          isort backend --config .flake8
+          isort --check backend --settings-path .isort.cfg
+          flake8 backend --config .flake8
 
 
   backend:
