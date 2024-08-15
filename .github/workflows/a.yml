@@ -1,0 +1,24 @@
+# name: Notify Discord on CI Completion
+
+# on:
+#   workflow_run:
+#     workflows: ["CI"]
+#     types:
+#       - completed
+# jobs:
+#   notify:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Send Discord Notification
+#         env:
+#           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+#           STATUS: ${{ github.event.workflow_run.conclusion }}
+#         run: |
+#             STATUS_MESSAGE="CI Pipeline has completed with status: $STATUS"
+#             curl -X POST \
+#             -H "Content-Type: application/json" \
+#             -d "{\"content\": \"$STATUS_MESSAGE\"}" \
+#             $DISCORD_WEBHOOK_URL
+#             -d "{\"content\": \"New event in your repository! Type: ${{ github.event_name }} - Action: ${{ github.event.action }} by ${{ github.actor }}\"}" \
+#             $DISCORD_WEBHOOK_URL
+

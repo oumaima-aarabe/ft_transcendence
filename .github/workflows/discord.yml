@@ -88,7 +88,6 @@ jobs:
           MESSAGE+="**Branch:** $BRANCH\n"
           # Export message for the next step
           echo "::set-output name=message::$MESSAGE"
-          echo "::set-output name=github_event_name::$GITHUB_EVENT_NAME"
 
       - name: Send Discord Notification
         env:
