@@ -2,7 +2,7 @@ name: Notify Discord on CI Completion
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI"]  # Replace with your CI workflow name
     types:
       - completed
 
@@ -13,8 +13,8 @@ jobs:
       - name: Gather Workflow Job Statuses
         id: gather_statuses
         run: |
-          JOBS_STATUS=$(echo "${{ toJSON(github.event.workflow_run.jobs) }}" | jq -r '.[] | "**Job**: \(.name)\n**Status**: \(.conclusion)\n"')
-          echo "jobs_status=$JOBS_STATUS" >> $GITHUB_ENV
+          JOBS=$(gh run view ${{ github.event.workflow_run.id }} --json jobs --jq '.jobs[] | "**Job**: \(.name)\n**Status**: \(.conclusion)\n"')
+          echo "jobs_status=$JOBS" >> $GITHUB_ENV
 
       - name: Send Discord Notification
         env:
