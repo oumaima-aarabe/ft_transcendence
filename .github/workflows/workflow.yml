@@ -10,15 +10,17 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up GitHub CLI Authentication
-        run: echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
-
       - name: Gather Workflow Job Statuses
+        id: gather_statuses
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}  # Use the PAT stored in GitHub Secrets
         run: |
-          JOBS=$(gh run view ${{ github.event.workflow_run.id }} --json jobs --jq '.jobs[] | "**Job**: \(.name)\n**Status**: \(.conclusion)\n"')
-          echo "jobs_status=$JOBS" >> $GITHUB_ENV
+          # Fetch the list of jobs from the GitHub API
+          JOBS_STATUS=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs" \
+            | jq -r '.jobs[] | "**Job**: \(.name)\n**Status**: \(.conclusion)\n"')
+
+          echo "jobs_status=$JOBS_STATUS" >> $GITHUB_ENV
 
       - name: Send Discord Notification
         env:
