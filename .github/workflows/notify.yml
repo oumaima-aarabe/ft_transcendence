@@ -1,0 +1,21 @@
+name: Notify Discord on CI Completion
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '*' ]
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ github.event.workflow_run.conclusion }}
+        run: |
+            curl -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \"New event in your repository! Type: ${{ github.event_name }} - Action: ${{ github.event.action }} by ${{ github.actor }}\"}" \
+            $DISCORD_WEBHOOK_URL
+
