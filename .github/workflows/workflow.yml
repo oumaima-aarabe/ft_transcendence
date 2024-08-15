@@ -2,7 +2,7 @@ name: Notify Discord on CI Completion
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI"]  # Replace with your CI workflow name
     types:
       - completed
 
@@ -13,21 +13,24 @@ jobs:
       - name: Gather Workflow Job Statuses
         id: gather_statuses
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}  # Use the PAT stored in GitHub Secrets
         run: |
           # Fetch the list of jobs from the GitHub API
           JOBS_STATUS=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs" \
             | jq -r '.jobs[] | "🔹 **Job**: \(.name)\n   **Status**: \(.conclusion)"' | paste -sd '\n\n' -)
 
-          echo "jobs_status=$JOBS_STATUS" >> $GITHUB_ENV
+          echo "JOBS_STATUS<<EOF" >> $GITHUB_ENV
+          echo "$JOBS_STATUS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Send Discord Notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          JOBS_STATUS: ${{ env.jobs_status }}
+          JOBS_STATUS: ${{ env.JOBS_STATUS }}
         run: |
           STATUS="${{ github.event.workflow_run.conclusion }}"
+          ACTOR="${{ github.event.workflow_run.actor.login }}"
           COMMIT_MESSAGE=$(echo "${{ github.event.workflow_run.head_commit.message }}" | jq -R .)
 
           if [ "$STATUS" == "success" ]; then
@@ -40,12 +43,14 @@ jobs:
 
           JSON_PAYLOAD=$(jq -n \
             --arg status "**Status**: $STATUS_EMOJI **\($STATUS)**" \
+            --arg actor "**Triggered by**: \`$ACTOR\`" \
             --arg commit_message "**Commit Message**: \`$COMMIT_MESSAGE\`" \
             --arg jobs_status "$JOBS_STATUS" \
             '{
               content: (
                 "**CI Pipeline Notification**\n\n" +
                 $status + "\n" +
+                $actor + "\n" +
                 $commit_message + "\n\n" +
                 "**Job Statuses:**\n" + $jobs_status
               )
