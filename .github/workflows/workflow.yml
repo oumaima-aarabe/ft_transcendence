@@ -2,7 +2,7 @@ name: Notify Discord on CI Completion
 
 on:
   workflow_run:
-    workflows: ["CI"]  # Replace with your CI workflow name
+    workflows: ["CI"]
     types:
       - completed
 
@@ -10,13 +10,6 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug Workflow Information
-        run: |
-          echo "Workflow Status: ${{ github.event.workflow_run.conclusion }}"
-          echo "Triggered by: ${{ github.event.workflow_run.event }}"
-          echo "Actor: ${{ github.event.workflow_run.actor.login }}"
-          echo "Commit Message: ${{ github.event.workflow_run.head_commit.message }}"
-
       - name: Send Discord Notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -25,14 +18,27 @@ jobs:
           ACTOR="${{ github.event.workflow_run.actor.login }}"
           COMMIT_MESSAGE=$(echo "${{ github.event.workflow_run.head_commit.message }}" | jq -R .)
 
-          JSON_PAYLOAD=$(jq -n \
-            --arg status "$STATUS" \
-            --arg actor "$ACTOR" \
-            --arg commit_message "$COMMIT_MESSAGE" \
-            '{content: ("CI Pipeline completed with status: **\($status)**\nTriggered by: \($actor)\nCommit message: \($commit_message)")}')
-          
-          echo "$JSON_PAYLOAD" | jq .
+          if [ "$STATUS" == "success" ]; then
+            STATUS_EMOJI="✅"
+          elif [ "$STATUS" == "failure" ]; then
+            STATUS_EMOJI="❌"
+          else
+            STATUS_EMOJI="⚠️"
+          fi
 
+          JSON_PAYLOAD=$(jq -n \
+            --arg status "**Status**: $STATUS_EMOJI **\($STATUS)**" \
+            --arg actor "**Triggered by**: \`$ACTOR\`" \
+            --arg commit_message "**Commit Message**: \`$COMMIT_MESSAGE\`" \
+            '{
+              content: (
+                "**CI Pipeline Notification**\n\n" +
+                $status + "\n" +
+                $actor + "\n" +
+                $commit_message
+              )
+            }')
+          
           curl -X POST \
           -H "Content-Type: application/json" \
           -d "$JSON_PAYLOAD" \

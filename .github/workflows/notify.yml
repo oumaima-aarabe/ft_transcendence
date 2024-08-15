@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ '*' ]
+
 jobs:
   notify:
     runs-on: ubuntu-latest
@@ -12,10 +13,41 @@ jobs:
       - name: Send Discord Notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          STATUS: ${{ github.event.workflow_run.conclusion }}
+          EVENT_NAME: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          ACTOR: ${{ github.actor }}
+          REPO_NAME: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-            curl -X POST \
-            -H "Content-Type: application/json" \
-            -d "{\"content\": \"New event in your repository! Type: ${{ github.event_name }} - Action: ${{ github.event.action }} by ${{ github.actor }}\"}" \
-            $DISCORD_WEBHOOK_URL
+          if [ "$EVENT_NAME" == "push" ]; then
+            EVENT_EMOJI="🚀"
+            EVENT_TYPE="Push"
+          elif [ "$EVENT_NAME" == "pull_request" ]; then
+            EVENT_EMOJI="🔀"
+            EVENT_TYPE="Pull Request"
+          else
+            EVENT_EMOJI="⚡"
+            EVENT_TYPE="$EVENT_NAME"
+          fi
 
+          JSON_PAYLOAD=$(jq -n \
+            --arg event_type "**Event**: $EVENT_EMOJI **$EVENT_TYPE**" \
+            --arg action "**Action**: $ACTION" \
+            --arg actor "**Triggered by**: \`$ACTOR\`" \
+            --arg repo "**Repository**: \`$REPO_NAME\`" \
+            --arg branch "**Branch**: \`$BRANCH\`" \
+            '{
+              content: (
+                "**Repository Notification**\n\n" +
+                $event_type + "\n" +
+                $action + "\n" +
+                $actor + "\n" +
+                $repo + "\n" +
+                $branch
+              )
+            }')
+
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -d "$JSON_PAYLOAD" \
+          $DISCORD_WEBHOOK_URL
