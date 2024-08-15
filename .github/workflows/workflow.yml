@@ -18,7 +18,7 @@ jobs:
           # Fetch the list of jobs from the GitHub API
           JOBS_STATUS=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs" \
-            | jq -r '.jobs[] | "**Job**: \(.name)\n**Status**: \(.conclusion)\n"')
+            | jq -r '.jobs[] | "**Job**: \(.name) | **Status**: \(.conclusion)"' | paste -sd ', ' -)
 
           echo "jobs_status=$JOBS_STATUS" >> $GITHUB_ENV
 
