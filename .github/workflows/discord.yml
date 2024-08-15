@@ -1,0 +1,22 @@
+name: Notify Discord on Push or PR
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - main 
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -d "{\"content\": \"New event in your repository! Type: ${{ github.event_name }} - Action: ${{ github.event.action }} by ${{ github.actor }}\"}" \
+          $DISCORD_WEBHOOK_URL
