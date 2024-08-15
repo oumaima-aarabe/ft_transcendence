@@ -14,7 +14,6 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           EVENT_NAME: ${{ github.event_name }}
-          ACTION: ${{ github.event.action }}
           ACTOR: ${{ github.actor }}
           REPO_NAME: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
@@ -32,7 +31,6 @@ jobs:
 
           JSON_PAYLOAD=$(jq -n \
             --arg event_type "**Event**: $EVENT_EMOJI **$EVENT_TYPE**" \
-            --arg action "**Action**: $ACTION" \
             --arg actor "**Triggered by**: \`$ACTOR\`" \
             --arg repo "**Repository**: \`$REPO_NAME\`" \
             --arg branch "**Branch**: \`$BRANCH\`" \
@@ -40,7 +38,6 @@ jobs:
               content: (
                 "**Repository Notification**\n\n" +
                 $event_type + "\n" +
-                $action + "\n" +
                 $actor + "\n" +
                 $repo + "\n" +
                 $branch
