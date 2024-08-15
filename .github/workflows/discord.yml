@@ -86,12 +86,9 @@ jobs:
           MESSAGE+="**Author:** [${AUTHOR_NAME}]($AUTHOR_URL)\n"
           MESSAGE+="**Commit:** [${COMMIT_MESSAGE}]($COMMIT_URL)\n"
           MESSAGE+="**Branch:** $BRANCH\n"
-          MESSAGE+="**Lint Status Job:** $(get_status_emoji "$LINT_STATUS") $LINT_STATUS\n"
-          MESSAGE+="**Test Status Job:** $(get_status_emoji "$BE_STATUS") $BE_STATUS\n"
-          MESSAGE+="**Build Status Job:** $(get_status_emoji "$FE_STATUS") $FE_STATUS"
-
           # Export message for the next step
           echo "::set-output name=message::$MESSAGE"
+          echo "::set-output name=github_event_name::$GITHUB_EVENT_NAME"
 
       - name: Send Discord Notification
         env:
@@ -99,3 +96,7 @@ jobs:
         run: |
           curl -X POST -H "Content-Type: application/json" \
             -d "{\"content\": \"${{ steps.prepare.outputs.message }}\"}" $DISCORD_WEBHOOK_URL
+
+
+
+
