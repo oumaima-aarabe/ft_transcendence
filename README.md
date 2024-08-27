@@ -65,3 +65,4 @@
 | **Responsiveness & Compatibility**        | The application must be responsive across devices (desktops, tablets, smartphones) and compatible with multiple browsers. |
 | **User Experience**                       | Ensure a smooth and engaging user experience with optimized loading times and performance. |
 | **Security**                             | Implement Two-Factor Authentication (2FA), use HTTPS for all connections, and utilize JWT for secure session management. |
+| **Form and user input validation**        | Implement validation for forms and any user input, either on the client-side within the base page or on the server-side if a backend is employed. |
