@@ -84,6 +84,12 @@ ft_transcendence/
    - Shared logic, utilities, and base models or views are housed in the `common` directory to promote DRY (Don't Repeat Yourself) principles.
   
 
+4. **API Gateway**:
+   - The `api_gateway` service serves as the entry point, routing requests to the appropriate microservices and potentially handling cross-cutting concerns like authentication and rate limiting.
+
+5. **Communication**:
+   - Microservices communicate via RESTful APIs. For more advanced use cases, you might consider adding message queues (e.g., RabbitMQ, Kafka) for asynchronous communication.
+
 
 
 
@@ -198,9 +204,3 @@ erDiagram
         datetime joined_at
     }
 ```
-
-4. **API Gateway**:
-   - The `api_gateway` service serves as the entry point, routing requests to the appropriate microservices and potentially handling cross-cutting concerns like authentication and rate limiting.
-
-5. **Communication**:
-   - Microservices communicate via RESTful APIs. For more advanced use cases, you might consider adding message queues (e.g., RabbitMQ, Kafka) for asynchronous communication.
