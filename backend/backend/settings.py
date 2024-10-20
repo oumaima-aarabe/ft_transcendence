@@ -12,9 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 # import os
 from pathlib import Path
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    ".apps.SignUpConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -79,28 +80,28 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 # The `DATABASES` setting in the Django project is configuring the database connection for the
 # project. In this specific configuration:
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ["DB_POSTGRES_DB"],
-        "USER": os.environ["DB_POSTGRES_USER"],
-        "PASSWORD": os.environ["DB_POSTGRES_PASSWORD"],
-        "HOST": os.environ["DB_POSTGRES_HOST"],
-        "PORT": os.environ["DB_POSTGRES_PORT"],
-    }
-}
-
-
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "ps_db_name",
-#         "USER": "ps_db_user",
-#         "PASSWORD": "ps_db_password123456",
-#         "HOST": "postgres",
-#         "PORT": "5432",
+#         "NAME": os.environ["DB_POSTGRES_DB"],
+#         "USER": os.environ["DB_POSTGRES_USER"],
+#         "PASSWORD": os.environ["DB_POSTGRES_PASSWORD"],
+#         "HOST": os.environ["DB_POSTGRES_HOST"],
+#         "PORT": os.environ["DB_POSTGRES_PORT"],
 #     }
 # }
+
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "ps_db_name",
+        "USER": "ps_db_user",
+        "PASSWORD": "ps_db_password123456",
+        "HOST": "postgres",
+        "PORT": "5432",
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
