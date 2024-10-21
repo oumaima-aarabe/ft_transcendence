@@ -95,112 +95,85 @@ ft_transcendence/
 
 
 ```mermaid
+
 erDiagram
-    USER ||--o| RANKING : has
-    USER ||--o| PROFILE : has
-    USER ||--o| USER_STATS : has
-    USER ||--o{ USER_ACHIEVEMENT : earns
-    USER ||--o{ FRIENDSHIP : has
-    USER ||--o{ MESSAGE : sends
-    USER ||--o{ MESSAGE : receives
-    USER ||--o{ GAME : plays_as_player1
-    USER ||--o{ GAME : plays_as_player2
-    USER ||--o{ GAME : wins
-    USER ||--o{ TOURNAMENT_PARTICIPANT : participates
-    ACHIEVEMENT ||--o{ USER_ACHIEVEMENT : awarded_to
-    TOURNAMENT ||--o{ TOURNAMENT_PARTICIPANT : includes
-
     USER {
-        int id PK
-        string username
-        string email
-        string password
-        string state
-        string avatar
-        int level
-        boolean two_factor_enabled
+        AutoField id
+        CharField password
+        DateTimeField last_login
+        BooleanField is_superuser
+        CharField username
+        CharField first_name
+        CharField last_name
+        CharField email
+        BooleanField is_staff
+        DateTimeField date_joined
     }
-
-    RANKING {
-        int id PK
-        int user_id FK
-        int points
-        int rank
-        datetime last_updated
-    }
-
+    
     PROFILE {
-        int id PK
-        int user_id FK
-        string preferred_paddle
-        string playing_style
+        BooleanField is_active
+        CharField display_name
+        ImageField avatar
+        IntegerField xp
+        IntegerField level
+        OneToOneField user
     }
 
-    USER_STATS {
-        int id PK
-        int user_id FK
-        int games_played
-        int games_won
-        int games_lost
-        int tournaments_participated
-        int tournaments_won
+    STATS {
+        IntegerField wins
+        IntegerField losses
+        OneToOneField user
     }
 
-    ACHIEVEMENT {
-        int id PK
-        string name
-        string description
-        string icon
-    }
-
-    USER_ACHIEVEMENT {
-        int id PK
-        int user_id FK
-        int achievement_id FK
-        datetime date_earned
-    }
-
-    FRIENDSHIP {
-        int id PK
-        int user_id FK
-        int friend_id FK
-        datetime created_at
-        string status
+    RELATION_TYPE {
+        DateTimeField created
+        ForeignKey actor
+        ForeignKey friend
+        CharField status
     }
 
     MESSAGE {
-        int id PK
-        int sender_id FK
-        int receiver_id FK
-        text content
-        datetime timestamp
-        boolean is_read
+        ForeignKey sender
+        ForeignKey receiver
+        TextField content
+        DateTimeField timestamp
+    }
+
+    TWO_FA_BASE {
+        ForeignKey user
+        CharField key
+        JSONField backup_tokens
+    }
+
+    GAME_STATS {
+        OneToManyField game
+    }
+
+    MATCH_HISTORY {
+        OneToManyField game
     }
 
     GAME {
-        int id PK
-        int player1_id FK
-        int player2_id FK
-        int winner_id FK
-        datetime start_time
-        datetime end_time
-        int player1_score
-        int player2_score
+        IntegerField id
     }
+
+    MATCH {
+    IntegerField id
+    }
+    
+
 
     TOURNAMENT {
-        int id PK
-        string name
-        datetime start_date
-        datetime end_date
-        int max_participants
+    IntegerField id
     }
 
-    TOURNAMENT_PARTICIPANT {
-        int id PK
-        int tournament_id FK
-        int user_id FK
-        string nickname
-        datetime joined_at
-    }
+    USER ||--o{ PROFILE : has
+    USER ||--o{ STATS : has
+    USER ||--o{ RELATION_TYPE : "actor"
+    USER ||--o{ RELATION_TYPE : "friend"
+    USER ||--o{ MESSAGE : "sender"
+    USER ||--o{ MESSAGE : "receiver"
+    USER ||--o{ TWO_FA_BASE : has
+
+
 ```
