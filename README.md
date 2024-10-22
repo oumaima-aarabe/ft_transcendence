@@ -66,3 +66,88 @@
 | **User Experience**                       | Ensure a smooth and engaging user experience with optimized loading times and performance. |
 | **Security**                             | Implement Two-Factor Authentication (2FA), use HTTPS for all connections, and utilize JWT for secure session management. |
 | **Form and user input validation**        | Implement validation for forms and any user input, either on the client-side within the base page or on the server-side if a backend is employed. |
+
+
+```mermaid
+
+erDiagram
+    USER {
+        AutoField id
+        CharField password
+        DateTimeField last_login
+        BooleanField is_superuser
+        CharField username
+        CharField first_name
+        CharField last_name
+        CharField email
+        BooleanField is_staff
+        DateTimeField date_joined
+    }
+    
+    PROFILE {
+        BooleanField is_active
+        CharField display_name
+        ImageField avatar
+        IntegerField xp
+        IntegerField level
+        OneToOneField user
+    }
+
+    STATS {
+        IntegerField wins
+        IntegerField losses
+        OneToOneField user
+    }
+
+    RELATION_TYPE {
+        DateTimeField created
+        ForeignKey actor
+        ForeignKey friend
+        CharField status
+    }
+
+    MESSAGE {
+        ForeignKey sender
+        ForeignKey receiver
+        TextField content
+        DateTimeField timestamp
+    }
+
+    TWO_FA_BASE {
+        ForeignKey user
+        CharField key
+        JSONField backup_tokens
+    }
+
+    GAME_STATS {
+        OneToManyField game
+    }
+
+    MATCH_HISTORY {
+        OneToManyField game
+    }
+
+    GAME {
+        IntegerField id
+    }
+
+    MATCH {
+    IntegerField id
+    }
+    
+
+
+    TOURNAMENT {
+    IntegerField id
+    }
+
+    USER ||--o{ PROFILE : has
+    USER ||--o{ STATS : has
+    USER ||--o{ RELATION_TYPE : "actor"
+    USER ||--o{ RELATION_TYPE : "friend"
+    USER ||--o{ MESSAGE : "sender"
+    USER ||--o{ MESSAGE : "receiver"
+    USER ||--o{ TWO_FA_BASE : has
+
+
+```
