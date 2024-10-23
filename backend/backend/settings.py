@@ -36,7 +36,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "rest_framework",
-    # ".apps.SignUpConfig",
+    # "sign_up",
+    "sign_up.apps.SignUpConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
