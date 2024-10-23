@@ -1,47 +1,49 @@
 
 services:
 
-  backend:
-    build: ./backend/
-    container_name: backend
-    command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
-    volumes:
-      - ./backend:/app
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    tty: true
-    environment:
-      - DB_HOST=${DB_POSTGRES_HOST}
-      - DB_PORT=${DB_POSTGRES_PORT}
-      - DB_NAME=${DB_POSTGRES_DB}
-      - DB_USER=${DB_POSTGRES_USER}
-      - DB_PASSWORD=${DB_POSTGRES_PASSWORD}
-    depends_on:
-      db:
-        condition: service_healthy
+  # backend:
+  #   build: ./backend/
+  #   container_name: backend
+  #   command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+  #   volumes:
+  #     - ./backend:/app
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "8000:8000"
+  #   tty: true
+  #   environment:
+  #     - DB_HOST=${DB_POSTGRES_HOST}
+  #     - DB_PORT=${DB_POSTGRES_PORT}
+  #     - DB_NAME=${DB_POSTGRES_DB}
+  #     - DB_USER=${DB_POSTGRES_USER}
+  #     - DB_PASSWORD=${DB_POSTGRES_PASSWORD}
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
 
-  frontend:
-    build: ./frontend
-    container_name: frontend
-    volumes:
-      - ./frontend:/app
-    ports:
-      - "3000:3000"
-    tty: true
+  # frontend:
+  #   build: ./frontend
+  #   container_name: frontend
+  #   volumes:
+  #     - ./frontend:/app
+  #   ports:
+  #     - "3000:3000"
+  #   tty: true
 
   db:
     image: postgres:16
     container_name: postgres
     env_file:
       - .env
-    environment:
-      POSTGRES_DB: ${DB_POSTGRES_DB}
-      POSTGRES_USER: ${DB_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
+    # environment:
+    #   POSTGRES_DB: ${DB_POSTGRES_DB}
+    #   POSTGRES_USER: ${DB_POSTGRES_USER}
+    #   POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${DB_POSTGRES_DB} -U ${DB_POSTGRES_USER}"]
       interval: 10s
@@ -52,3 +54,4 @@ services:
 
 volumes:
   pgdata:
+
