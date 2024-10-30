@@ -36,10 +36,6 @@ services:
     container_name: postgres
     env_file:
       - .env
-    # environment:
-    #   POSTGRES_DB: ${DB_POSTGRES_DB}
-    #   POSTGRES_USER: ${DB_POSTGRES_USER}
-    #   POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:

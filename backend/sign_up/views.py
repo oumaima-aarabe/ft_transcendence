@@ -1,7 +1,8 @@
-from django.shortcuts import render
-from django.http import HttpResponse 
-from django.views import View
+from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.contrib.auth.hashers import make_password
 
 # Create your views here.
 
@@ -13,23 +14,24 @@ from django.contrib.auth.models import User
 #     def post(self, request):
 #         return HttpResponse("post request")
 
-class signup_view(request):
-    if request.method == 'GET':
-        username = request.POST.get('username')
-        email =request.POST.get('email')
-        password =request.POST.get('password')
 
-    # create a new user
+class signup_view(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
 
-    User.objects.create(
-        username=username,
-        email=email,
-        password=make_password(password)
-    )
+        # create a new user
 
-    return redirect('signin')
+        # User.objects.create(
+        #     username=username,
+        #     email=email,
+        #     password=make_password(password)
+        # )
+
+        return Response("user created successfully")
     
-
+    # redirect('signin')
     # if request.method == 'POST':
     #     return HttpResponse("this is a post request")
     # else
