@@ -4,16 +4,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password
 
-# Create your views here.
-
-# def signUp()
-# class MyView(View):
-#     def get(self, request):
-#         return HttpResponse("get request")
-
-#     def post(self, request):
-#         return HttpResponse("post request")
-
 
 class signup_view(APIView):
     def post(self, request):
@@ -23,21 +13,10 @@ class signup_view(APIView):
 
         # create a new user
 
-        # User.objects.create(
-        #     username=username,
-        #     email=email,
-        #     password=make_password(password)
-        # )
+        User.objects.create(
+            username=username,
+            email=email,
+            password=make_password(password)
+        )
 
         return Response("user created successfully")
-    
-    # redirect('signin')
-    # if request.method == 'POST':
-    #     return HttpResponse("this is a post request")
-    # else
-        # return HttpResponse("request not exist")
-
-    
-
-    
-    
