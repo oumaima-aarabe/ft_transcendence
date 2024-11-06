@@ -34,3 +34,23 @@ class GameInvite:
     def check_expiry(self):
         if datetime.now() > self.expires_at:
             self.status = 'expired'
+
+
+class MatchmakingService:
+    def find_match(self, queue_entry):
+
+        potential_matches = QueueEntry.objects.filter(
+            status='queued'
+        ).exclude(user=queue_entry.user)
+
+        matches = potential_matches.filter(
+            skill_rating__range=(
+                queue_entry.skill_rating - queue_entry.search_radius,
+                queue_entry.skill_rating + queue_entry.search_radius
+            )
+        )
+        
+        if matches:
+            return matches[0]
+        else:
+            return None
