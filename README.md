@@ -72,103 +72,109 @@
 ```` mermaid
 
   erDiagram
-      USER {
-          AutoField id
-          CharField password
-          DateTimeField last_login
-          BooleanField is_superuser
-          CharField username
-          CharField first_name
-          CharField last_name
-          CharField email
-          BooleanField is_staff
-          DateTimeField date_joined
-      }
-      
-      PROFILE {
-          BooleanField is_active
-          CharField display_name
-          ImageField avatar
-          IntegerField xp
-          IntegerField level
-          OneToOneField user
-      }
+    USER {
+        AutoField id
+        CharField password
+        DateTimeField last_login
+        BooleanField is_superuser
+        CharField username
+        CharField first_name
+        CharField last_name
+        CharField email
+        BooleanField is_staff
+        DateTimeField date_joined
+    }
+    
+    PROFILE {
+        BooleanField is_active
+        CharField display_name
+        ImageField avatar
+        IntegerField xp
+        IntegerField level
+        OneToOneField user
+    }
 
-      PLAYERSTATS {
-          OneToOneField user
-          IntegerField games_played
-          IntegerField games_won
-          IntegerField current_level
-          IntegerField experience_points
-          FloatField skill_rating
-      }
+    PLAYERSTATS {
+        OneToOneField user
+        IntegerField games_played
+        IntegerField games_won
+        IntegerField current_level
+        IntegerField experience_points
+        FloatField skill_rating
+    }
 
-      RELATION_TYPE {
-          DateTimeField created
-          ForeignKey actor
-          ForeignKey friend
-          CharField status
-      }
+    RELATION_TYPE {
+        DateTimeField created
+        ForeignKey actor
+        ForeignKey friend
+        CharField status
+    }
 
-      MESSAGE {
-          ForeignKey sender
-          ForeignKey receiver
-          TextField content
-          DateTimeField timestamp
-      }
+    MESSAGE {
+        ForeignKey sender
+        ForeignKey receiver
+        TextField content
+        DateTimeField timestamp
+    }
 
-      TWO_FA_BASE {
-          ForeignKey user
-          CharField key
-          JSONField backup_tokens
-      }
+    TWO_FA_BASE {
+        ForeignKey user
+        CharField key
+        JSONField backup_tokens
+    }
 
+    MATCH {
+        ForeignKey session
+        IntegerField game_number
+        IntegerField player1_score
+        IntegerField player2_score
+        CharField status
+        ForeignKey winner
+        CharField history
+    }
 
-      MATCH {
-          ForeignKey session
-          IntegerField game_number
-          IntegerField player1_score
-          IntegerField player2_score
-          CharField status
-          ForeignKey winner
-          CharField history
-      }
+    GAMESESSION {
+        ForeignKey player1
+        ForeignKey player2
+        CharField status
+        IntegerField matches_won_player1
+        IntegerField matches_won_player2
+        ForeignKey tournament
+    }
 
-      GAMESESSION {
-          ForeignKey player1
-          ForeignKey player2
-          CharField status
-          IntegerField player1_score
-          IntegerField player2_score
-          ForeignKey tournament
-      }
+    GAMEHISTORY {
+        ForeignKey session
+        ForeignKey winner
+        ForeignKey loser
+        DateTimeField created_at
+        DateTimeField completed_at
+        IntegerField duration
+        CharField end_reason
+        BooleanField is_tourn
+        IntegerField winner_score
+        IntegerField loser_score
+    }
 
-      GAMEHISTORY{
-          ForeignKey session
-          ForeignKey winner
-          DateTimeField created_at
-          DateTimeField completed_at
-          IntegerField duration
-          CharField end_reason
-          BooleanField is_tourn
+    TOURNAMENT {
+        IntegerField id
+        CharField name
+        DateTimeField start_date
+        DateTimeField end_date
+        CharField status
+    }
 
-      }
+    USER ||--|| PROFILE : has
+    USER ||--o{ RELATION_TYPE : "actor"
+    USER ||--o{ RELATION_TYPE : "friend"
+    USER ||--o{ MESSAGE : "sender"
+    USER ||--o{ MESSAGE : "receiver"
+    USER ||--|| TWO_FA_BASE : has
+    USER ||--o{ GAMESESSION : "player1"
+    USER ||--o{ GAMESESSION : "player2"
+    USER ||--o{ GAMEHISTORY : "winner"
+    USER ||--|| PLAYERSTATS : has
+    GAMESESSION ||--o{ GAMEHISTORY : has
+    GAMESESSION ||--o{ MATCH : has
+    TOURNAMENT ||--o{ GAMESESSION : has
 
-
-
-      TOURNAMENT {
-          IntegerField id
-      }
-
-      USER ||--|| PROFILE : has
-      USER ||--o{ RELATION_TYPE : "actor"
-      USER ||--o{ RELATION_TYPE : "friend"
-      USER ||--o{ MESSAGE : "sender"
-      USER ||--o{ MESSAGE : "receiver"
-      USER ||--|| TWO_FA_BASE : has
-      USER ||--o{ GAMESESSION : "player1"
-      USER ||--o{ GAMESESSION : "player2"
-      USER ||--o{ GAMEHISTORY : "winner"
-      USER ||--|| PLAYERSTATS : has
-      GAMESESSION ||--|| GAMEHISTORY : has
 ````
