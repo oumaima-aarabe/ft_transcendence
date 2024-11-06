@@ -68,6 +68,7 @@
 | **Form and user input validation**        | Implement validation for forms and any user input, either on the client-side within the base page or on the server-side if a backend is employed. |
 
 
+
 ```mermaid
 
 erDiagram
@@ -127,18 +128,34 @@ erDiagram
         OneToManyField game
     }
 
-    GAME {
+    TOURNAMENT {
         IntegerField id
     }
 
-    MATCH {
-    IntegerField id
+    GAMESESSION {
+        ForeignKey player1
+        ForeignKey player2
+        CharField status
+        DateTimeField created_at
+        DateTimeField completed_at
     }
-    
 
+    GAME {
+        ForeignKey session
+        IntegerField game_number
+        IntegerField player1_score
+        IntegerField player2_score
+        CharField status
+        ForeignKey winner
+    }
 
-    TOURNAMENT {
-    IntegerField id
+    PLAYERSTATS {
+        OneToOneField user
+        IntegerField games_played
+        IntegerField games_won
+        IntegerField current_level
+        IntegerField experience_points
+        FloatField skill_rating
     }
 
     USER ||--o{ PROFILE : has
@@ -148,6 +165,12 @@ erDiagram
     USER ||--o{ MESSAGE : "sender"
     USER ||--o{ MESSAGE : "receiver"
     USER ||--o{ TWO_FA_BASE : has
+    USER ||--o{ GAMESESSION : "player1"
+    USER ||--o{ GAMESESSION : "player2"
+    USER ||--o{ GAME : "winner"
+    USER ||--o{ PLAYERSTATS : has
+    GAMESESSION ||--o{ GAME : has
+
 
 
 ```
