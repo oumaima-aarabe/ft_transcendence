@@ -2,20 +2,26 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.exceptions import ValidationError
+from django.http import HttpResponse
+from rest_framework import status
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username, password, email, **extra_fields):
-        if not username:
-            raise ValueError('username not set')
-        if not email:
-            raise ValueError('email not set')
-        if not password:
-            raise ValueError('password not set')
+    def create_user(self, **extra_fields):
+        print("EXTRA: ", extra_fields)
+        if not extra_fields.get('username'):
+            return HttpResponse('username not set')
+        if not extra_fields.get('email'):
+            return HttpResponse('email not set')
+        if not extra_fields.get('password'):
+            return HttpResponse('password not set')
+        username = extra_fields.get('username')
+        email = extra_fields.get('email')
+        password = extra_fields.get('password')
 
         try:
             User.objects.get(email=email)
-            raise ValueError("email already in use")
+            return HttpResponse("email already in use", status=status.HTTP_401_UNAUTHORIZED)
         except ValidationError:
             try:
                 User.objects.get(username=username)
@@ -34,7 +40,8 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=10, unique=True)
     first_name = models.CharField(max_length=20)
     last_name = models.CharField(max_length=20)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    password = models.CharField()
+    # avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     # tfa = models.JSONField(_("TFA"), encoder=, decoder=)
 
     USERNAME_FIELD = 'username'
@@ -44,17 +51,3 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
-
-# Create your models here.
-
-# class User(models.Model):
-#     username = models.CharField(max_length=10, unique=True)
-#     email = models.EmailField(unique=True)
-#     password = models.CharField(max_length=128) 
-#     state = models.CharField(max_length=100)
-#     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-#     level = models.IntegerField(default=1)
-#     two_factor_enabled = models.BooleanField(default=False)
-
-#     def __str__(self):
-#         return self.username
