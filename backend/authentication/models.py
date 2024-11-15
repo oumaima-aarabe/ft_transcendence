@@ -1,37 +1,35 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
-from django.contrib.auth.base_user import BaseUserManager
-from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.http import HttpResponse
 from rest_framework import status
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, **extra_fields):
-        print("EXTRA: ", extra_fields)
-        if not extra_fields.get('username'):
-            return HttpResponse('username not set')
-        if not extra_fields.get('email'):
-            return HttpResponse('email not set')
-        if not extra_fields.get('password'):
-            return HttpResponse('password not set')
-        username = extra_fields.get('username')
-        email = extra_fields.get('email')
-        password = extra_fields.get('password')
+    def create_user(self, email, username, password):
+        print('check1')
+        if not username:
+            return HttpResponse('username not set', status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            return HttpResponse('email not set', status=status.HTTP_400_BAD_REQUEST)
+        if not password:
+            return HttpResponse('password not set', status=status.HTTP_400_BAD_REQUEST)
+        print('check2')
 
         try:
-            User.objects.get(email=email)
+            print('qbl: ', self)
+            self.model.objects.get(email=email)
+            print('ba3d')
             return HttpResponse("email already in use", status=status.HTTP_401_UNAUTHORIZED)
-        except ValidationError:
+        except self.model.DoesNotExist:
             try:
-                User.objects.get(username=username)
-                raise ValueError("username already in use")
-            except ValidationError:
+                self.model.objects.get(username=username)
+                return HttpResponse("username already in use", status=status.HTTP_401_UNAUTHORIZED)
+            except self.model.DoesNotExist:
                 email = self.normalize_email(email)
                 user = self.model(email=email, username=username, **extra_fields)
                 user.set_password(password)
                 user.save()
-                return user
+                return HttpResponse("created successfully", status=status.HTTP_201_CREATED)
 
 
 class User(AbstractBaseUser):

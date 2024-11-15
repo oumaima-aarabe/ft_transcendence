@@ -15,14 +15,14 @@ class signup_view(APIView):
 
         print('DATA: ', data)
 
-        serializer = UserSerializer(data=data)
-        print('SERIALIZER: ', serializer)
-        serializer.create(data)
-        if serializer.is_valid():
+        userSerializer = UserSerializer(data=data)
+        # print('SERIALIZER: ', userSerializer)
+        userSerializer.create(data)
+        if userSerializer.is_valid():
+            # userSerializer.create(data)
             print('is valid')
-            serializer.save()
+            # userSerializer.save()
         else:
-            print('yekh')
             return HttpResponse('ERROR', status=status.HTTP_400_BAD_REQUEST)
 
         return render(request, 'home.html')
