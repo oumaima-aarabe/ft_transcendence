@@ -37,7 +37,8 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     # "sign_up.apps.SignUpConfig",
     "rest_framework",
-    "rest_framework.authtoken",
+    'users'
+    # "rest_framework.authtoken",
     "authentication",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -144,11 +145,13 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-REST_FRAMEWORK = {
+AUTH_USER_MODEL = 'users.User'
+
+# REST_FRAMEWORK = {
     
-}
+# }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# DEFAULT_AUTO_FIELD = "django.db.models.Bi gAutoField"
