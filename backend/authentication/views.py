@@ -20,18 +20,19 @@ class signup_view(APIView):
         return Response(userserializer.data)
     
 
-class login_view(APIView):
-    def post(self, request):
-        email = request.data['email']
-        password = request.data['password']
+# class login_view(APIView):
+#     def post(self, request):
+#         email = request.data['email']
+#         password = request.data['password']
         
-        user = User.objects.filter(email=email).first()
+#         user = User.objects.filter(email=email).first()
         
-        if user is None:
-            raise AuthenticationFailed('User not found')
+#         if user is None:
+#             raise AuthenticationFailed('User not found')
         
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password')
+#         if not user.check_password(password):
+#             raise AuthenticationFailed('Incorrect password')
         
-        return Response({
-            'message': 'success'})
+#         return Response({
+#             'message': 'success'})
+
