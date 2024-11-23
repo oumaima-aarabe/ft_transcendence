@@ -44,12 +44,14 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    'corsheaders',
     "django.contrib.staticfiles",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corseheaders.middleware.CorsMiddleware",                       
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -144,10 +146,14 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-AUTH_USER_MODEL =   "authentication.User"
+AUTH_USER_MODEL = "authentication.User"
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ CREDENTIALS = True
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+ 
