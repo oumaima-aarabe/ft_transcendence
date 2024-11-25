@@ -36,15 +36,15 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # "sign_up.apps.SignUpConfig",
-    "rest_framework",
     # "rest_framework.authtoken",
+    "rest_framework",
     "authentication",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    'corsheaders',
+    "corsheaders",
     "django.contrib.staticfiles",
 ]
 
@@ -149,11 +149,10 @@ STATIC_URL = "static/"
 AUTH_USER_MODEL = "authentication.User"
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
- 

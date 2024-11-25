@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from .serializers import UserSerializer
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+from .models import User
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 import datetime
@@ -50,8 +51,23 @@ class login_view(APIView):
             response.data = {
                 'jwt': token
             }
-            return response
             
+        return Response
+    
+
+class user_view(APIView):
+    def get(self, request):
+        token = request.COOKIES.get('jwt')
         
-        return Response({
-            'message': 'success'})
+        if not token:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        try:
+            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        user = User.objects.filter(id=payload[id]).first()
+        serializer = UserSerializer(user)
+        
+        return Response(serializer.data)
