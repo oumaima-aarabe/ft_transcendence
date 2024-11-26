@@ -17,7 +17,6 @@ class signup_view(APIView):
         print('DATA: ', data)
 
         userserializer = UserSerializer(data=data)
-        # print('SERIALIZER: ', userSerializer)
         userserializer.is_valid(raise_exception=True)
         userserializer.save()
         return Response(userserializer.data)
@@ -41,7 +40,7 @@ class login_view(APIView):
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.utcnow()
         }
-        
+
         token = jwt.encode(payload, 'secret', algorithm='HS256')
         
         response = Response()
@@ -50,26 +49,26 @@ class login_view(APIView):
         response.data = {
             'jwt': token
         }
-            
+
         return response
 
 
-class user_view(APIView):
-    def get(self, request):
-        token = request.COOKIES.get('jwt')
+# class user_view(APIView):
+#     def get(self, request):
+#         token = request.COOKIES.get('jwt')
         
-        if not token:
-            raise AuthenticationFailed('Unauthenticated')
-        
-        try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated')
-        
-        user = User.objects.filter(id=payload['id']).first()
-        serializer = UserSerializer(user)
-        
-        return Response(serializer.data)
+#         if not token:
+#             raise AuthenticationFailed('Unauthenticated')
+
+#         try:
+#             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+#         except jwt.ExpiredSignatureError:
+#             raise AuthenticationFailed('Unauthenticated')
+
+#         user = User.objects.filter(id=payload['id']).first()
+#         serializer = UserSerializer(user)
+
+#         return Response(serializer.data)
 
 
 class logout_view(APIView):
