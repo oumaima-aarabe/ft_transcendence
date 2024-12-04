@@ -4,10 +4,11 @@ from .models import User
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
-import datetime
-import jwt , os, requests
 from django.shortcuts import redirect, HttpResponse
 from django.utils.http import urlencode
+from django.contrib.auth import authenticate, login
+import datetime
+import jwt , os, requests
 
 
 # Create your views here.
@@ -90,6 +91,47 @@ class Login42API(APIView):
         response_data = response.json()
         if response.status_code == 200:
             access_token = response_data.get("access_token")
+            ft_user_url = "https://api.intra.42.fr/v2/me"
+            user_data = requests.get(
+                ft_user_url,
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            user_data = user_data.json()
+
+            user_email = user_data["email"]
+
+            # create user with email
+            user = User.objects.filter(email=user_email).first()
+            if user is None:
+                user = User.objects.create_user(
+                    email=user_email, username=user_email
+                )
+
+            authenticated_user = authenticate(request, username=user_email)
+            if authenticated_user is not None:
+                login(request, authenticated_user)
+
+                # create token
+                payload = {
+                    'id': authenticated_user.id,
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                    'iat': datetime.datetime.utcnow()
+                }
+
+                token = jwt.encode(payload, 'secret', algorithm='HS256')
+        
+                response = redirect(os.getenv("dashboard_url"))
+        
+                response.set_cookie(key='jwt', value=token, httponly=True)
+                response.data = {
+                    'jwt': token
+                }
+                return response
+            else:
+                return HttpResponse(
+                    "Error authenticating user",
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
 
 
 class logout_view(APIView):
