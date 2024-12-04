@@ -4,7 +4,9 @@ from .models import User
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 import datetime
-import jwt
+import jwt , os
+from django.shortcuts import redirect
+from django.utils.http import urlencode
 
 
 # Create your views here.
@@ -53,22 +55,17 @@ class login_view(APIView):
         return response
 
 
-# class user_view(APIView):
-#     def get(self, request):
-#         token = request.COOKIES.get('jwt')
-        
-#         if not token:
-#             raise AuthenticationFailed('Unauthenticated')
-
-#         try:
-#             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-#         except jwt.ExpiredSignatureError:
-#             raise AuthenticationFailed('Unauthenticated')
-
-#         user = User.objects.filter(id=payload['id']).first()
-#         serializer = UserSerializer(user)
-
-#         return Response(serializer.data)
+class fortytwo_view(APIView):
+    def get(self, request):
+        ft_auth_url = "https://api.intra.42.fr/oauth/authorize"
+        params = {
+            "client_id": "u-s4t2ud-485157a1dedad716eefa2e43f388a9ff41988e266ce0a1db66e46b157c9508c7",
+            "response_type": "code",
+            "redirect_url": "http://localhost:8000/api/auth/42"
+        }
+        return redirect(f"{ft_auth_url}?{urlencode(params)}")
+    #f format string 
+    #secret:"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"
 
 
 class logout_view(APIView):
