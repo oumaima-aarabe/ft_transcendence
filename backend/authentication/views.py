@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
 from .serializers import UserSerializer
 from .models import User
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 import datetime
-import jwt , os
-from django.shortcuts import redirect
+import jwt , os, requests
+from django.shortcuts import redirect, HttpResponse
 from django.utils.http import urlencode
 
 
@@ -59,13 +60,36 @@ class fortytwo_view(APIView):
     def get(self, request):
         ft_auth_url = "https://api.intra.42.fr/oauth/authorize"
         params = {
-            "client_id": "u-s4t2ud-485157a1dedad716eefa2e43f388a9ff41988e266ce0a1db66e46b157c9508c7",
+            "client_id": os.getenv("42_CLIENT_ID"),
             "response_type": "code",
-            "redirect_url": "http://localhost:8000/api/auth/42"
+            "redirect_uri": os.getenv("42_CALLBACK_URL")
         }
         return redirect(f"{ft_auth_url}?{urlencode(params)}")
-    #f format string 
-    #secret:"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"
+        # f format string 
+
+
+class Login42API(APIView):
+    def get(self, request):
+        code = request.GET.get("code")
+        if code is None:
+            return Response(
+                {"error": "Code not provided."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": os.getenv("42_CLIENT_ID"),
+            "client_secret": os.getenv("42_CLIENT_SECRET"),
+            "redirect_uri": os.getenv("42_CALLBACK_URL"),
+            "code": code,
+        }
+
+        ft_token_url = "https://api.intra.42.fr/oauth/token"
+        response = requests.post(ft_token_url, data=data)
+        response_data = response.json()
+        if response.status_code == 200:
+            access_token = response_data.get("access_token")
 
 
 class logout_view(APIView):
