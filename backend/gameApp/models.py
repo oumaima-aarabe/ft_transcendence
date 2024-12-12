@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 # Create your models here.
-class GameSession:
+class GameSession(models.Model):
     player1 = ForeignKey(User)
     player2 = ForeignKey(User)
     status = CharField(choices=['waiting', 'in_progress', 'completed'])
@@ -13,7 +13,7 @@ class GameSession:
     completed_at = DateTimeField(null=True)
     tournament = ForeignKey(Tournament, null=True)
 
-class Match:
+class Match(models.Model):
     session = ForeignKey(GameSession)
     game_number = IntegerField(1-5)
     player1_score = IntegerField()
@@ -22,7 +22,7 @@ class Match:
     winner = ForeignKey(User, null=True)
     history = TextField()
 
-class GameHistory:
+class GameHistory(models.Model):
     session = ForeignKey(GameSession)
     winner = ForeignKey(User)
     loser = ForeignKey(User)
@@ -35,10 +35,10 @@ class GameHistory:
     loser_score = IntegerField()
 
 
-class PlayerStats:
+class PlayerStats(models.Model):
     user = OneToOneField(User)
-    games_played = IntegerField()
-    games_won = IntegerField()
-    current_level = IntegerField()
-    experience_points = IntegerField()
+    games_played = IntegerField(default=0)
+    games_won = IntegerField(default=0)
+    current_level = IntegerField(default=0)
+    experience_points = IntegerField(default=0)
     skill_rating = FloatField() # maybe a serializer field, it s just calculated from the other fields
