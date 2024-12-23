@@ -1,44 +1,58 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
 
+class User(AbstractUser):
+    pass
+
+STATUS = (
+    ('Waiting', 'Waiting'),
+    ('In_progress', 'In_progress'),
+    ('Completed', 'Completed'),
+)
 # Create your models here.
 class GameSession(models.Model):
-    player1 = ForeignKey(User)
-    player2 = ForeignKey(User)
-    status = CharField(choices=['waiting', 'in_progress', 'completed'])
-    created_at = DateTimeField()
-    matches_won1 = IntegerField()
-    matches_won2 = IntegerField()
-    completed_at = DateTimeField(null=True)
-    tournament = ForeignKey(Tournament, null=True)
+    
+
+    player1 = models.ForeignKey("User", related_name="player1", on_delete=models.CASCADE)
+    player2 = models.ForeignKey("User", related_name="player2", on_delete=models.CASCADE)
+    status = models.CharField(max_length=16, choices=STATUS, default='Waiting')
+    created_at = models.DateTimeField(auto_now_add=True)
+    matches_won1 = models.IntegerField(default=0)
+    matches_won2 = models.IntegerField(default=0)
+    compketed_at = models.DateTimeField(null=True)
+    # tournament = models.ForeignKey("Tournament", null=True, on_delete=models.CASCADE)
 
 class Match(models.Model):
-    session = ForeignKey(GameSession)
-    game_number = IntegerField(1-5)
-    player1_score = IntegerField()
-    player2_score = IntegerField()
-    status = CharField()
-    winner = ForeignKey(User, null=True)
-    history = TextField()
+    session = models.ForeignKey(GameSession, on_delete=models.CASCADE)
+    game_number = models.IntegerField()
+    player1_score = models.IntegerField()
+    player2_score = models.IntegerField()
+    status = models.CharField(max_length=16, default='waiting', choices=STATUS)
+    winner = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    history = models.TextField()
 
 class GameHistory(models.Model):
-    session = ForeignKey(GameSession)
-    winner = ForeignKey(User)
-    loser = ForeignKey(User)
-    created_at = DateTimeField()
-    completed_at = DateTimeField()
-    duration = IntegerField()
-    end_reason = CharField()
-    is_tourn = BooleanField()
-    winner_score = IntegerField()
-    loser_score = IntegerField()
+    
+    REASON = (
+        ('Completed', 'Completed'),
+        ('Abandoned', 'Abandoned'),
+        ('Timeout', 'Timeout'),
+    )
+    session = models.ForeignKey(GameSession, on_delete=models.CASCADE)
+    winner = models.ForeignKey(User, related_name='winner', on_delete=models.CASCADE)
+    loser = models.ForeignKey(User, related_name='loser', on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(null=True)
+    duration = models.IntegerField()
+    end_reason = models.CharField(max_length=16, choices=STATUS, default='Completed')
+    is_tourn = models.BooleanField(default=False)
+    winner_score = models.IntegerField()
+    loser_score = models.IntegerField()
 
 
 class PlayerStats(models.Model):
-    user = OneToOneField(User)
-    games_played = IntegerField(default=0)
-    games_won = IntegerField(default=0)
-    current_level = IntegerField(default=0)
-    experience_points = IntegerField(default=0)
-    skill_rating = FloatField() # maybe a serializer field, it s just calculated from the other fields
+    player = models.OneToOneField(User, on_delete=models.CASCADE)
+    games_played = models.IntegerField(default=0)
+    games_won = models.IntegerField(default=0)
+    current_level = models.IntegerField(default=0)
+    experience_points = models.IntegerField(default=0)
