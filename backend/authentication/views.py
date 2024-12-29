@@ -8,8 +8,9 @@ from django.shortcuts import redirect, HttpResponse
 from django.utils.http import urlencode
 from django.contrib.auth import authenticate, login
 import datetime
-import jwt , os, requests
-
+import jwt
+import requests
+import os
 
 # Create your views here.
 
@@ -17,8 +18,6 @@ import jwt , os, requests
 class signup_view(APIView):
     def post(self, request):
         data = request.data
-
-        print('DATA: ', data)
 
         userserializer = UserSerializer(data=data)
         userserializer.is_valid(raise_exception=True)
