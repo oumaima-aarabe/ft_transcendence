@@ -2,9 +2,11 @@
 
 import { useForm } from "react-hook-form"
 import { Card } from "./ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel } from "./ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Input } from "./ui/input"
+import { Button } from "./ui/button"
 
 
 export const RegisterForm = () => {
@@ -36,19 +38,58 @@ export const RegisterForm = () => {
             <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(submitRegister)}>
                     <FormField
-                        control={registerForm}
-                    name="..."
-                    render={() => (
+                    control={registerForm.control}
+                    name="username"
+                    render={({field}) => (
                         <FormItem>
-                        <FormLabel />
-                        <FormControl>
-                          { /* Your form field */}
-                        </FormControl>
-                        <FormDescription />
-                        <FormMessage />
-                      </FormItem>
+                            <FormLabel>Username</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Enter your username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
                     )}
-                    />
+                    ></FormField>
+                    <FormField
+                    control={registerForm.control}
+                    name="email"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>email</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Enter your email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    ></FormField>
+                    <FormField
+                    control={registerForm.control}
+                    name="password"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>password</FormLabel>
+                            <FormControl>
+                                <Input type="password" placeholder="Enter your password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    ></FormField>
+                    <FormField
+                    control={registerForm.control}
+                    name="confirmPassword"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>confirmPassword</FormLabel>
+                            <FormControl>
+                                <Input type="password" placeholder="Confirm your Password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    ></FormField>
+                    <Button type="submit">sign up</Button>
                 </form>
             </Form>
         </Card>
