@@ -7,9 +7,12 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "./ui/input"
 import { Button } from "./ui/button"
+// import Router, { useRouter } from "next/router"
 
 
 export const RegisterForm = () => {
+
+    
     const formSchema = z.object({
         username: z.string().min(4).max(10),
         email: z.string().email("Invalid email address"),
@@ -17,7 +20,10 @@ export const RegisterForm = () => {
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
             "Password must be at least 8 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character."),
         confirmPassword: z.string(),
-    }).refine(data => data.password === data.confirmPassword, { message: "Passwords must match",});
+    }).refine(data => data.password === data.confirmPassword, { 
+        message: "Passwords must match",
+        path: ["confirmPassword"],
+    });
 
     const registerForm = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -28,11 +34,17 @@ export const RegisterForm = () => {
             confirmPassword: "",
         },
     })
-    function submitRegister(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
 
-        console.log(values)}
+    const router = useRouter();
+
+    function submitRegister(values: z.infer<typeof formSchema>) {
+        // Handle the form values
+        console.log(values);
+
+        // Redirect to the dashboard page
+        router.push("/dashboard");
+    }
+
     return(
         <Card >
             <Form {...registerForm}>
@@ -81,7 +93,7 @@ export const RegisterForm = () => {
                     name="confirmPassword"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>confirmPassword</FormLabel>
+                            <FormLabel>Confirm password</FormLabel>
                             <FormControl>
                                 <Input type="password" placeholder="Confirm your Password" {...field} />
                             </FormControl>
