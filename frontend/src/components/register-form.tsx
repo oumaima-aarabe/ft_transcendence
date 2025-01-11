@@ -46,7 +46,7 @@ export const RegisterForm = () => {
     }
 
     return(
-        <Card >
+        <Card className="">
             <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(submitRegister)}>
                     <FormField
