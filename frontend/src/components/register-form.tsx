@@ -7,11 +7,12 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "./ui/input"
 import { Button } from "./ui/button"
-// import Router, { useRouter } from "next/router"
+import { useRouter } from "next/navigation";
+
 
 
 export const RegisterForm = () => {
-
+    const router = useRouter();
     
     const formSchema = z.object({
         username: z.string().min(4).max(10),
@@ -35,9 +36,8 @@ export const RegisterForm = () => {
         },
     })
 
-    const router = useRouter();
-
     function submitRegister(values: z.infer<typeof formSchema>) {
+    
         // Handle the form values
         console.log(values);
 
