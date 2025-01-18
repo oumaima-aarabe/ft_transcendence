@@ -80,7 +80,7 @@ export const RegisterForm = () => {
   }
 
   return (
-    <Card className="w-[690px] h-[606px] bg-[#D05F3B] bg-opacity-[18%] p-10 flex justify-center flex-col">
+    <Card className="w-[690px] h-[606px] bg-[#751d03] bg-opacity-[18%] p-10 flex justify-center flex-col rounded-3xl border-none backdrop-blur-lg">
       <div className="flex justify-center">
         <p className="text-[22px] font-normal text-gray-700 leading-relaxed">
           {" "}
@@ -91,17 +91,19 @@ export const RegisterForm = () => {
         <Form {...registerForm}>
           <form
             onSubmit={registerForm.handleSubmit(submitRegister)}
-            className="h-[472px] w-[562px] border border-red-600 space-y-5"
+            className="h-[472px] w-[562px] space-y-10"
           >
             <FormField
               control={registerForm.control}
               name="username"
               render={({ field }) => (
-                <FormItem className="w-[562px] h-[54px] space-y-2">
+                <FormItem className="w-[562px] h-[54px] space-y-2 border border-red-600 ">
                   <FormLabel>Username</FormLabel>
+                  <div className="border border-green-500">
                   <FormControl>
                     <Input placeholder="@ Enter your username" {...field} />
                   </FormControl>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -155,9 +157,13 @@ export const RegisterForm = () => {
                 )}
               ></FormField>
             </div>
-            <Button type="submit" className="w-[562px] h-[54px] border border-green-500 mt-7">
-							<span className="border border-blue-500">sign up</span>
+            <Button type="submit" className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] shadow-md hover:bg-[#c75b37] rounded-3xl space-y-20">
+							<span className="text-[#c75b37]">sign up</span>
 						</Button>
+            <div className="flex justify-center space-x-1">
+              <p>You already have an account?</p>
+              <button className="text-blue-500 hover:text-[#8D361A] focus:outline-none">Sign in!</button>
+            </div>
           </form>
         </Form>
       </div>
