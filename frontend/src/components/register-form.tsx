@@ -82,28 +82,25 @@ export const RegisterForm = () => {
   return (
     <Card className="w-[690px] h-[606px] bg-[#751d03] bg-opacity-[18%] p-10 flex justify-center flex-col rounded-3xl border-none backdrop-blur-lg">
       <div className="flex justify-center">
-        <p className="text-[22px] font-normal text-gray-700 leading-relaxed">
-          {" "}
-          Join us by entering your information{" "}
+        <p className="text-[22px] font-normal text-white leading-relaxed ">
+          Join us by entering your information
         </p>
       </div>
       <div className="flex justify-center">
         <Form {...registerForm}>
           <form
             onSubmit={registerForm.handleSubmit(submitRegister)}
-            className="h-[472px] w-[562px] space-y-10"
+            className="h-[472px] w-[562px] space-y-[50px]"
           >
             <FormField
               control={registerForm.control}
               name="username"
               render={({ field }) => (
-                <FormItem className="w-[562px] h-[54px] space-y-2 border border-red-600 ">
+                <FormItem className="w-[562px] h-[54px] space-y-2 text-[#EEE5BE]">
                   <FormLabel>Username</FormLabel>
-                  <div className="border border-green-500">
-                  <FormControl>
+                  <FormControl className="rounded-3xl bg-[#EEE5BE]">
                     <Input placeholder="@ Enter your username" {...field} />
                   </FormControl>
-                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -112,10 +109,10 @@ export const RegisterForm = () => {
               control={registerForm.control}
               name="email"
               render={({ field }) => (
-                <FormItem className="w-[562px] h-[54px] space-y-2">
+                <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
                   <FormLabel>email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your email" {...field} />
+                  <FormControl className="rounded-3xl bg-[#EEE5BE]">
+                    <Input placeholder="@ Enter your email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -126,9 +123,9 @@ export const RegisterForm = () => {
                 control={registerForm.control}
                 name="password"
                 render={({ field }) => (
-									<FormItem className="w-[275px] h-[54px]">
+                  <FormItem className="w-[275px] h-[54px] text-white">
                     <FormLabel>password</FormLabel>
-                    <FormControl>
+                    <FormControl className="rounded-3xl bg-[#EEE5BE]">
                       <Input
                         type="password"
                         placeholder="Enter your password"
@@ -143,9 +140,9 @@ export const RegisterForm = () => {
                 control={registerForm.control}
                 name="confirmPassword"
                 render={({ field }) => (
-                  <FormItem className="w-[275px] h-[54px]">
+                  <FormItem className="w-[275px] h-[54px] text-white">
                     <FormLabel>Confirm password</FormLabel>
-                    <FormControl>
+                    <FormControl className="rounded-3xl  bg-[#EEE5BE]">
                       <Input
                         type="password"
                         placeholder="Confirm your Password"
@@ -157,12 +154,17 @@ export const RegisterForm = () => {
                 )}
               ></FormField>
             </div>
-            <Button type="submit" className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] shadow-md hover:bg-[#c75b37] rounded-3xl space-y-20">
-							<span className="text-[#c75b37]">sign up</span>
-						</Button>
+            <Button
+              type="submit"
+              className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] shadow-md hover:bg-[#c75b37] rounded-3xl space-y-20"
+            >
+              <span className="text-[#c75b37]">sign up</span>
+            </Button>
             <div className="flex justify-center space-x-1">
               <p>You already have an account?</p>
-              <button className="text-blue-500 hover:text-[#8D361A] focus:outline-none">Sign in!</button>
+              <button className="text-blue-500 hover:text-[#8D361A] focus:outline-none">
+                Sign in!
+              </button>
             </div>
           </form>
         </Form>
