@@ -17,6 +17,7 @@ import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Icon } from '@iconify-icon/react';
 
 export interface FormDataRegister {
   username: string;
@@ -82,7 +83,7 @@ export const RegisterForm = () => {
   return (
     <Card className="w-[690px] h-[606px] bg-[#751d03] bg-opacity-[18%] p-10 flex justify-center flex-col rounded-3xl border-none backdrop-blur-lg">
       <div className="flex justify-center">
-        <p className="text-[22px] font-normal text-white leading-relaxed ">
+        <p className="text-[22px] font-regular text-white leading-relaxed">
           Join us by entering your information
         </p>
       </div>
@@ -98,7 +99,7 @@ export const RegisterForm = () => {
               render={({ field }) => (
                 <FormItem className="w-[562px] h-[54px] space-y-2 text-[#EEE5BE]">
                   <FormLabel>Username</FormLabel>
-                  <FormControl className="rounded-3xl bg-[#EEE5BE]">
+                  <FormControl className="text-[#4C4C4C] rounded-3xl bg-[#EEE5BE]">
                     <Input placeholder="@ Enter your username" {...field} />
                   </FormControl>
                   <FormMessage />
@@ -110,8 +111,8 @@ export const RegisterForm = () => {
               name="email"
               render={({ field }) => (
                 <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
-                  <FormLabel>email</FormLabel>
-                  <FormControl className="rounded-3xl bg-[#EEE5BE]">
+                  <FormLabel>Email</FormLabel>
+                  <FormControl className=" text-[#4C4C4C] rounded-3xl bg-[#EEE5BE]">
                     <Input placeholder="@ Enter your email" {...field} />
                   </FormControl>
                   <FormMessage />
@@ -124,13 +125,16 @@ export const RegisterForm = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem className="w-[275px] h-[54px] text-white">
-                    <FormLabel>password</FormLabel>
-                    <FormControl className="rounded-3xl bg-[#EEE5BE]">
+                    <FormLabel>Password</FormLabel>
+                    <FormControl className="text-[#4C4C4C] rounded-3xl bg-[#EEE5BE]">
                       <Input
+                        src="/password-icon.svg"
                         type="password"
                         placeholder="Enter your password"
                         {...field}
-                      />
+                      >
+                        {/* <Icon icon="solar:heart-lock-bold" width="24" height="24" /> */}
+                      </Input>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,7 +146,7 @@ export const RegisterForm = () => {
                 render={({ field }) => (
                   <FormItem className="w-[275px] h-[54px] text-white">
                     <FormLabel>Confirm password</FormLabel>
-                    <FormControl className="rounded-3xl  bg-[#EEE5BE]">
+                    <FormControl className=" text-[#4C4C4C] rounded-3xl  bg-[#EEE5BE]">
                       <Input
                         type="password"
                         placeholder="Confirm your Password"
@@ -156,13 +160,13 @@ export const RegisterForm = () => {
             </div>
             <Button
               type="submit"
-              className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] shadow-md hover:bg-[#c75b37] rounded-3xl space-y-20"
+              className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-lg shadow-[#8D361A]"
             >
               <span className="text-[#c75b37]">sign up</span>
             </Button>
             <div className="flex justify-center space-x-1">
               <p>You already have an account?</p>
-              <button className="text-blue-500 hover:text-[#8D361A] focus:outline-none">
+              <button className="text-[#40CFB7] hover:text-[#8D361A] focus:outline-none">
                 Sign in!
               </button>
             </div>
