@@ -8,7 +8,9 @@ from django.shortcuts import redirect, HttpResponse
 from django.utils.http import urlencode
 from django.contrib.auth import authenticate, login
 import datetime
-import jwt , os, requests
+import jwt
+import os
+import requests
 
 
 # Create your views here.
