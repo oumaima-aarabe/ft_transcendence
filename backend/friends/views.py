@@ -48,6 +48,48 @@ class Friend_view(APIView):
             })
 
         return Response(
-            {"data": accepted_friends},
+            {"data": serialized_friends},
+            status=status.HTTP_200_OK
+        )
+
+
+class Blocked_friend_view(APIView):
+    # permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FriendSerializer
+
+    def get(self, request):
+
+        userId = request.query_params.get('userId')
+        if not userId:
+            return Response(
+                {"error": "UserId not found."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            current_user = User.objects.get(pk=userId)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        blocked_friends = Friend.objects.filter(
+            user=current_user,
+            state='blocked'
+        )
+        
+        serialized_friends = []
+        for friendship in blocked_friends:
+            
+            serialized_friends.append({
+                'id': friendship.id,
+                'friend_id': friendship.friend.id,
+                'username': friendship.friend.username,
+                'state': friendship.state
+            })
+            
+        return Response(
+            {"data": serialized_friends},
             status=status.HTTP_200_OK
         )
