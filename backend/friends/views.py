@@ -1,28 +1,41 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Friend
-from .serializers import FriendSerializer
-from rest_framework import status
+from rest_framework import status, permissions
 from django.db.models import Q
+from .models import Friend
 from authentication.models import User
 
 
-class Friend_view(APIView):
-    # permission_classes = [permissions.IsAuthenticated]
-    serializer_class = FriendSerializer
+class BaseFriendView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_user(self, user_id):
+        try:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return None
+
+    def serialize_friend(self, friendship, current_user):
+        friend_user = friendship.friend if friendship.user == current_user else friendship.user
+        return {
+            'id': friendship.id,
+            'friend_id': friend_user.id,
+            'username': friend_user.username,
+            'state': friendship.state
+        }
+
+
+class AcceptedFriendView(BaseFriendView):
     def get(self, request):
-
-        userId = request.query_params.get('userId')
-        if not userId:
+        user_id = request.query_params.get('userId')
+        if not user_id:
             return Response(
                 {"error": "UserId not found."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            current_user = User.objects.get(pk=userId)
-        except User.DoesNotExist:
+        current_user = self.get_user(user_id)
+        if not current_user:
             return Response(
                 {"error": "User not found."},
                 status=status.HTTP_404_NOT_FOUND
@@ -32,20 +45,11 @@ class Friend_view(APIView):
             Q(user=current_user) | Q(friend=current_user),
             state='accepted'
         )
-        
-        # Serialize friends with related user details
-        serialized_friends = []
-        for friend in accepted_friends:
-            if friend.user == current_user:
-                friend_user = friend.friend
-            else:
-                friend.user
-            serialized_friends.append({
-                'id': friend.id,
-                'friend_id': friend_user.id,
-                'username': friend_user.username,
-                'state': friend.state
-            })
+
+        serialized_friends = [
+            self.serialize_friend(friend, current_user) 
+            for friend in accepted_friends
+        ]
 
         return Response(
             {"data": serialized_friends},
@@ -53,42 +57,102 @@ class Friend_view(APIView):
         )
 
 
-class Blocked_friend_view(APIView):
-    # permission_classes = [permissions.IsAuthenticated]
-    serializer_class = FriendSerializer
-
+class BlockedFriendView(BaseFriendView):
     def get(self, request):
-
-        userId = request.query_params.get('userId')
-        if not userId:
+        user_id = request.query_params.get('userId')
+        if not user_id:
             return Response(
                 {"error": "UserId not found."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            current_user = User.objects.get(pk=userId)
-        except User.DoesNotExist:
+        current_user = self.get_user(user_id)
+        if not current_user:
             return Response(
                 {"error": "User not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
-            
+
         blocked_friends = Friend.objects.filter(
             user=current_user,
             state='blocked'
         )
-        
-        serialized_friends = []
-        for friendship in blocked_friends:
-            
-            serialized_friends.append({
-                'id': friendship.id,
-                'friend_id': friendship.friend.id,
-                'username': friendship.friend.username,
-                'state': friendship.state
-            })
-            
+
+        serialized_friends = [{
+            'id': friendship.id,
+            'friend_id': friendship.friend.id,
+            'username': friendship.friend.username,
+            'state': friendship.state
+        } for friendship in blocked_friends]
+
+        return Response(
+            {"data": serialized_friends},
+            status=status.HTTP_200_OK
+        )
+
+
+class IncomingFriendRequestView(BaseFriendView):
+    def get(self, request):
+        user_id = request.query_params.get('userId')
+        if not user_id:
+            return Response(
+                {"error": "UserId not found."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        current_user = self.get_user(user_id)
+        if not current_user:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        incoming_requests = Friend.objects.filter(
+            friend=current_user,
+            state='pending'
+        )
+
+        serialized_friends = [{
+            'id': friendship.id,
+            'friend_id': friendship.user.id,
+            'username': friendship.user.username,
+            'state': friendship.state
+        } for friendship in incoming_requests]
+
+        return Response(
+            {"data": serialized_friends},
+            status=status.HTTP_200_OK
+        )
+
+
+class OutgoingFriendRequestView(BaseFriendView):
+    def get(self, request):
+        user_id = request.query_params.get('userId')
+        if not user_id:
+            return Response(
+                {"error": "UserId not found."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        current_user = self.get_user(user_id)
+        if not current_user:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        outgoing_requests = Friend.objects.filter(
+            user=current_user,
+            state='pending'
+        )
+
+        serialized_friends = [{
+            'id': friendship.id,
+            'friend_id': friendship.friend.id,
+            'username': friendship.friend.username,
+            'state': friendship.state
+        } for friendship in outgoing_requests]
+
         return Response(
             {"data": serialized_friends},
             status=status.HTTP_200_OK
