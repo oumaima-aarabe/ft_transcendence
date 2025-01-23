@@ -1,9 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Friend
 from .serializers import FriendSerializer
 from rest_framework import status
+from django.db.models import Q
+from authentication.models import User
 
 
 class Friend_view(APIView):
@@ -19,9 +20,25 @@ class Friend_view(APIView):
                 {"error": "UserId not found."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        current_user = User.objects.get(pk=userId)
+        if not current_user:
+            return Response(
+                {"error": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        return Friend.objects.filter(
-            user=self.request.user,
+        accepted_friends = Friend.objects.filter(
+            Q(user=current_user) | Q(friend=current_user),
             state='accepted'
+        )
+        if not accepted_friends:
+            return Response(
+                {"data": []},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {"data": accepted_friends},
+            status=status.HTTP_200_OK
         )
 
