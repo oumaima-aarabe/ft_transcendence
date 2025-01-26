@@ -165,6 +165,11 @@ class OutgoingFriendRequestView(BaseFriendView):
 
 # actions
 
+class BaseAction(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+
 class SendFriendRequestView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -192,3 +197,43 @@ class ConfirmFriendRequestView(APIView):
         Friend.objects.create(user=target_user, friend=current_user)
         friend_request.delete()
         return Response({'status': 'Friend request confirmed'}, status=status.HTTP_200_OK)
+
+
+class CancelFriendRequestView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        target_user_id = request.data.get('target_user_id')
+        current_user = request.user
+        target_user = get_object_or_404(User, id=target_user_id)
+
+        Friend.objects.filter(
+            Q(sender=current_user, recipient=target_user) | 
+            Q(sender=target_user, recipient=current_user)
+        ).delete()
+        return Response({'status': 'Friend request cancelled'}, status=status.HTTP_200_OK)
+
+
+class RemoveFriendView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        target_user_id = request.data.get('target_user_id')
+        current_user = request.user
+        target_user = get_object_or_404(User, id=target_user_id)
+
+        Friend.objects.filter(
+            Q(user=current_user, friend=target_user) |
+            Q(user=target_user, friend=current_user)
+        ).delete()
+        return Response({'status': 'Friend removed'}, status=status.HTTP_200_OK)
+
+
+
+class BlockView(APIView):
+
+
+class UnblockView(APIView):
+
