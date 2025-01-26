@@ -12,12 +12,12 @@ class Friend(models.Model):
         ('blocked', 'Blocked'),
     ]
 
-    user = models.ForeignKey(
+    sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='user_friends'
     )
-    friend = models.ForeignKey(
+    recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='friend_of'
@@ -32,9 +32,9 @@ class Friend(models.Model):
 
     class Meta:
         # Ensure that there can't be duplicate friendships
-        unique_together = ['user', 'friend']
+        unique_together = ['sender', 'recipient']
         # Order by creation date
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} -> {self.friend.username} ({self.state})"
+        return f"{self.sender.username} -> {self.recipient.username} ({self.state})"

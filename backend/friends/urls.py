@@ -8,8 +8,6 @@ from .views import (
     ConfirmFriendRequestView,
     CancelFriendRequestView,
     RemoveFriendView,
-    BlockView,
-    UnblockView,
 )
 
 
@@ -22,8 +20,4 @@ urlpatterns = [
     path('friends/confirm-request/', ConfirmFriendRequestView.as_view(), name='confirm_friend_request'),
     path('friends/Cancel-request/', CancelFriendRequestView.as_view(), name='cancel_friend_request'),
     path('friends/remove-friend/', RemoveFriendView.as_view(), name='remove_friend'),
-    path('friends/block/', BlockView.as_view(), name='block'),
-    path('friends/unblock/', UnblockView.as_view(), name='unblock'),
-
-
 ]

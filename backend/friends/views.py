@@ -12,15 +12,10 @@ from django.shortcuts import get_object_or_404
 # lists
 class BaseFriendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
-    def get_user(self, user_id):
-        try:
-            return User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return None
+    authentication_classes = [JWTAuthentication]
 
     def serialize_friend(self, friendship, current_user):
-        friend_user = friendship.friend if friendship.user == current_user else friendship.user
+        friend_user = friendship.recipient if friendship.sender == current_user else friendship.sender
         return {
             'id': friendship.id,
             'friend_id': friend_user.id,
@@ -31,28 +26,16 @@ class BaseFriendView(APIView):
 
 class AcceptedFriendView(BaseFriendView):
     def get(self, request):
-        user_id = request.query_params.get('userId')
-        if not user_id:
-            return Response(
-                {"error": "UserId not found."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        current_user = self.get_user(user_id)
-        if not current_user:
-            return Response(
-                {"error": "User not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        current_user = request.user
 
         accepted_friends = Friend.objects.filter(
-            Q(user=current_user) | Q(friend=current_user),
+            Q(sender=current_user) | Q(recipient=current_user),
             state='accepted'
         )
 
         serialized_friends = [
-            self.serialize_friend(friend, current_user) 
-            for friend in accepted_friends
+            self.serialize_friend(friendship, current_user)
+            for friendship in accepted_friends
         ]
 
         return Response(
@@ -63,29 +46,17 @@ class AcceptedFriendView(BaseFriendView):
 
 class BlockedFriendView(BaseFriendView):
     def get(self, request):
-        user_id = request.query_params.get('userId')
-        if not user_id:
-            return Response(
-                {"error": "UserId not found."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        current_user = self.get_user(user_id)
-        if not current_user:
-            return Response(
-                {"error": "User not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        current_user = request.user
 
         blocked_friends = Friend.objects.filter(
-            user=current_user,
+            sender=current_user,
             state='blocked'
         )
 
         serialized_friends = [{
             'id': friendship.id,
-            'friend_id': friendship.friend.id,
-            'username': friendship.friend.username,
+            'friend_id': friendship.recipient.id,
+            'username': friendship.recipient.username,
             'state': friendship.state
         } for friendship in blocked_friends]
 
@@ -97,29 +68,17 @@ class BlockedFriendView(BaseFriendView):
 
 class IncomingFriendRequestView(BaseFriendView):
     def get(self, request):
-        user_id = request.query_params.get('userId')
-        if not user_id:
-            return Response(
-                {"error": "UserId not found."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        current_user = self.get_user(user_id)
-        if not current_user:
-            return Response(
-                {"error": "User not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        current_user = request.user
 
         incoming_requests = Friend.objects.filter(
-            friend=current_user,
+            recipient=current_user,
             state='pending'
         )
 
         serialized_friends = [{
             'id': friendship.id,
-            'friend_id': friendship.user.id,
-            'username': friendship.user.username,
+            'friend_id': friendship.sender.id,
+            'username': friendship.sender.username,
             'state': friendship.state
         } for friendship in incoming_requests]
 
@@ -131,29 +90,17 @@ class IncomingFriendRequestView(BaseFriendView):
 
 class OutgoingFriendRequestView(BaseFriendView):
     def get(self, request):
-        user_id = request.query_params.get('userId')
-        if not user_id:
-            return Response(
-                {"error": "UserId not found."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        current_user = self.get_user(user_id)
-        if not current_user:
-            return Response(
-                {"error": "User not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        current_user = request.user
 
         outgoing_requests = Friend.objects.filter(
-            user=current_user,
+            sender=current_user,
             state='pending'
         )
 
         serialized_friends = [{
             'id': friendship.id,
-            'friend_id': friendship.friend.id,
-            'username': friendship.friend.username,
+            'friend_id': friendship.recipient.id,
+            'username': friendship.recipient.username,
             'state': friendship.state
         } for friendship in outgoing_requests]
 
@@ -165,10 +112,6 @@ class OutgoingFriendRequestView(BaseFriendView):
 
 # actions
 
-class BaseAction(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
 
 class SendFriendRequestView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -179,7 +122,7 @@ class SendFriendRequestView(APIView):
         current_user = request.user
         target_user = get_object_or_404(User, id=target_user_id)
 
-        Friend.objects.create(sender=current_user, recipient=target_user)
+        Friend.objects.create(sender=current_user, recipient=target_user, state='pending')
         return Response({'status': 'Friend request sent'}, status=status.HTTP_201_CREATED)
 
 
@@ -192,11 +135,12 @@ class ConfirmFriendRequestView(APIView):
         current_user = request.user
         target_user = get_object_or_404(User, id=target_user_id)
 
-        friend_request = get_object_or_404(Friend, sender=target_user, recipient=current_user)
-        Friend.objects.create(user=current_user, friend=target_user)
-        Friend.objects.create(user=target_user, friend=current_user)
-        friend_request.delete()
-        return Response({'status': 'Friend request confirmed'}, status=status.HTTP_200_OK)
+        friend_request = get_object_or_404(Friend, sender=target_user, recipient=current_user, state='pending')
+        if not friend_request:
+            return Response({'Error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
+        friend_request.state = 'accepted'
+        friend_request.save()
+        return Response({'data': 'Friend request confirmed'}, status=status.HTTP_200_OK)
 
 
 class CancelFriendRequestView(APIView):
@@ -208,11 +152,14 @@ class CancelFriendRequestView(APIView):
         current_user = request.user
         target_user = get_object_or_404(User, id=target_user_id)
 
-        Friend.objects.filter(
-            Q(sender=current_user, recipient=target_user) | 
-            Q(sender=target_user, recipient=current_user)
-        ).delete()
-        return Response({'status': 'Friend request cancelled'}, status=status.HTTP_200_OK)
+        try:
+            Friend.objects.filter(
+                Q(sender=current_user, recipient=target_user, state='pending') |
+                Q(sender=target_user, recipient=current_user, state='pending')
+            ).delete()
+        except Friend.DoesNotExist:
+            return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'data': 'Friend request cancelled'}, status=status.HTTP_200_OK)
 
 
 class RemoveFriendView(APIView):
@@ -223,17 +170,13 @@ class RemoveFriendView(APIView):
         target_user_id = request.data.get('target_user_id')
         current_user = request.user
         target_user = get_object_or_404(User, id=target_user_id)
+        try:
+            Friend.objects.filter(
+                Q(user=current_user, friend=target_user, state='accepted') |
+                Q(user=target_user, friend=current_user, state='accepted')
+            ).delete()
+        except Friend.DoesNotExist:
+            return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'data': 'Friend removed'}, status=status.HTTP_200_OK)
 
-        Friend.objects.filter(
-            Q(user=current_user, friend=target_user) |
-            Q(user=target_user, friend=current_user)
-        ).delete()
-        return Response({'status': 'Friend removed'}, status=status.HTTP_200_OK)
-
-
-
-class BlockView(APIView):
-
-
-class UnblockView(APIView):
 
