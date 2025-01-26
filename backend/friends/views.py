@@ -176,4 +176,19 @@ class SendFriendRequestView(APIView):
 
         Friend.objects.create(sender=current_user, recipient=target_user)
         return Response({'status': 'Friend request sent'}, status=status.HTTP_201_CREATED)
-    
+
+
+class ConfirmFriendRequestView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        target_user_id = request.data.get('target_user_id')
+        current_user = request.user
+        target_user = get_object_or_404(User, id=target_user_id)
+
+        friend_request = get_object_or_404(Friend, sender=target_user, recipient=current_user)
+        Friend.objects.create(user=current_user, friend=target_user)
+        Friend.objects.create(user=target_user, friend=current_user)
+        friend_request.delete()
+        return Response({'status': 'Friend request confirmed'}, status=status.HTTP_200_OK)
