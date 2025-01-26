@@ -4,8 +4,12 @@ from rest_framework import status, permissions
 from django.db.models import Q
 from .models import Friend
 from authentication.models import User
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 
 
+# lists
 class BaseFriendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -157,3 +161,19 @@ class OutgoingFriendRequestView(BaseFriendView):
             {"data": serialized_friends},
             status=status.HTTP_200_OK
         )
+
+
+# actions
+
+class SendFriendRequestView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        target_user_id = request.data.get('target_user_id')
+        current_user = request.user
+        target_user = get_object_or_404(User, id=target_user_id)
+
+        Friend.objects.create(sender=current_user, recipient=target_user)
+        return Response({'status': 'Friend request sent'}, status=status.HTTP_201_CREATED)
+    

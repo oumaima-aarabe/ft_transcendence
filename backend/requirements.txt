@@ -5,6 +5,7 @@ Django==4.2.16
 django-allauth==65.3.1
 django-cors-headers==4.6.0
 djangorestframework==3.15.2
+djangorestframework_simplejwt==5.4.0
 idna==3.10
 pillow==11.0.0
 psycopg==3.2.3
