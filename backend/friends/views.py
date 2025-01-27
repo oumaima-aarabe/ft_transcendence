@@ -180,3 +180,34 @@ class RemoveFriendView(APIView):
         return Response({'data': 'Friend removed'}, status=status.HTTP_200_OK)
 
 
+class BlockView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        target_user_id = request.data.get('target_user_id')
+        current_user = request.user
+        target_user = get_object_or_404(User, id=target_user_id)
+
+        Friend.objects.filter(
+            Q(sender=current_user, recipient=target_user) |
+            Q(sender=target_user, recipient=current_user)
+        ).delete()
+        Friend.objects.create(sender=current_user, recipient=target_user, state='blocked')
+        return Response({'data': 'User blocked'}, status=status.HTTP_200_OK)
+
+
+class UnblockView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        target_user_id = request.data.get('target_user_id')
+        current_user = request.user
+        target_user = get_object_or_404(User, id=target_user_id)
+
+        blocked = Friend.objects.filter(sender=current_user, recipient=target_user, state='blocked')
+        if not blocked:
+            return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
+        blocked.delete()
+        return Response({'data': 'User unblocked'}, status=status.HTTP_200_OK)
