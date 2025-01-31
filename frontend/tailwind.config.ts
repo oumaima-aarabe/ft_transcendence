@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+		boxShadow: {
+			'shd': '0px 4px 6.2px rgba(208, 95, 59, 1)',
+},
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
   			'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',

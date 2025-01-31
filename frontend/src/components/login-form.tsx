@@ -83,7 +83,7 @@ const LoginForm = () => {
 					)}
 					/>
 					<Button type="submit"
-					className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-lg shadow-[#8D361A]">
+					className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-shd">
 						<span className="text-[#c75b37]">sign up</span>
 					</Button>
 					<div className="flex justify-center">
