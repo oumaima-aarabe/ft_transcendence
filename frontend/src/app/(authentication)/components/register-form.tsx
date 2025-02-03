@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { Card } from "./ui/card";
+import { Card } from "../../../components/ui/card";
 import {
   Form,
   FormControl,
@@ -9,15 +9,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./ui/form";
+} from "../../../components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Input } from "../../../components/ui/input";
+import { Button } from "../../../components/ui/button";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Icon } from '@iconify-icon/react';
+import { Icon } from "@iconify-icon/react";
 
 export interface FormDataRegister {
   username: string;
@@ -100,15 +100,19 @@ export const RegisterForm = () => {
                 <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
                   <FormLabel>Username</FormLabel>
                   <FormControl className="text-[#4C4C4C]">
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                        <Icon icon="entypo:email" width="20" height="20" />                        
-                        </div>
-                        <div>
-                          <Input placeholder="Enter your username" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
-                        </div>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        <Icon icon="entypo:email" width="20" height="20" />
                       </div>
-                    </FormControl>
+                      <div>
+                        <Input
+                          placeholder="Enter your username"
+                          className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                          {...field}
+                        />
+                      </div>
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -119,16 +123,20 @@ export const RegisterForm = () => {
               render={({ field }) => (
                 <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
                   <FormLabel>Email</FormLabel>
-                    <FormControl className="text-[#4C4C4C]">
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                        <Icon icon="entypo:email" width="20" height="20" />                        
-                        </div>
-                        <div>
-                          <Input placeholder="Enter your email" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
-                        </div>
+                  <FormControl className="text-[#4C4C4C]">
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        <Icon icon="entypo:email" width="20" height="20" />
                       </div>
-                    </FormControl>
+                      <div>
+                        <Input
+                          placeholder="Enter your email"
+                          className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                          {...field}
+                        />
+                      </div>
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -141,16 +149,24 @@ export const RegisterForm = () => {
                   <FormItem className="w-[275px] h-[54px] text-white">
                     <FormLabel>Password</FormLabel>
                     <FormLabel>Password</FormLabel>
-                      <FormControl className="text-[#4C4C4C]">
-                        <div className="relative">
-                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                            <Icon icon="icon-park-solid:lock-one" width="24" height="24" />
-                          </div>
-                          <div>
-                            <Input placeholder="Enter password" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
-                          </div>
+                    <FormControl className="text-[#4C4C4C]">
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                          <Icon
+                            icon="icon-park-solid:lock-one"
+                            width="24"
+                            height="24"
+                          />
                         </div>
-                      </FormControl>
+                        <div>
+                          <Input
+                            placeholder="Enter password"
+                            className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                            {...field}
+                          />
+                        </div>
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -161,16 +177,24 @@ export const RegisterForm = () => {
                 render={({ field }) => (
                   <FormItem className="w-[275px] h-[54px] text-white">
                     <FormLabel>Confirm password</FormLabel>
-                      <FormControl className="text-[#4C4C4C]">
-                        <div className="relative">
-                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                            <Icon icon="icon-park-solid:lock-one" width="24" height="24" />
-                          </div>
-                          <div>
-                            <Input placeholder="Confirm password" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
-                          </div>
+                    <FormControl className="text-[#4C4C4C]">
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                          <Icon
+                            icon="icon-park-solid:lock-one"
+                            width="24"
+                            height="24"
+                          />
                         </div>
-                      </FormControl>
+                        <div>
+                          <Input
+                            placeholder="Confirm password"
+                            className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                            {...field}
+                          />
+                        </div>
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

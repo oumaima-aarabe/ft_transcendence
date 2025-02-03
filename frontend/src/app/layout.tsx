@@ -17,7 +17,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      
       <body className={cn(inter.className, "w-screen h-screen bg-global-background bg-no-repeat bg-cover bg-center")}>{children}</body>
     </html>
   );
