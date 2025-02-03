@@ -9,17 +9,18 @@ interface LayoutProps {
 
 const MainLayout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen flex "> {/* Global background */}
-        sidebar
-        {/* <Header /> */}
-        <div className="flex-1 flex flex-col border border-red w-[1426px] ">
-        {/* <Sidebar /> */}
+    <div className="min-h-screen flex flex-col"> {/* Global background */}
+      <header className="bg-black text-white h-[99px] flex justify-evenly">
         header
-          {/* Content passed from child pages */}
-          <main className="flex-1 p-6 bg-white">
-            {children}
-          </main>
-        </div>
+      </header>
+      <div className="flex flex-1">
+        <aside className="bg-white w-[77px]">
+          Sidebar
+        </aside>
+        <main className="flex-1 p-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };
