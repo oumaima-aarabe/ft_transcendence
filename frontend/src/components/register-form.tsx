@@ -97,11 +97,18 @@ export const RegisterForm = () => {
               control={registerForm.control}
               name="username"
               render={({ field }) => (
-                <FormItem className="w-[562px] h-[54px] space-y-2 text-[#EEE5BE]">
+                <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
                   <FormLabel>Username</FormLabel>
-                  <FormControl className="text-[#4C4C4C] rounded-3xl bg-[#EEE5BE]">
-                    <Input placeholder="@ Enter your username" {...field} />
-                  </FormControl>
+                  <FormControl className="text-[#4C4C4C]">
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        <Icon icon="entypo:email" width="20" height="20" />                        
+                        </div>
+                        <div>
+                          <Input placeholder="Enter your username" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
+                        </div>
+                      </div>
+                    </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -112,9 +119,16 @@ export const RegisterForm = () => {
               render={({ field }) => (
                 <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
                   <FormLabel>Email</FormLabel>
-                  <FormControl className=" text-[#4C4C4C] rounded-3xl bg-[#EEE5BE]">
-                    <Input placeholder="@ Enter your email" {...field} />
-                  </FormControl>
+                    <FormControl className="text-[#4C4C4C]">
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        <Icon icon="entypo:email" width="20" height="20" />                        
+                        </div>
+                        <div>
+                          <Input placeholder="Enter your email" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
+                        </div>
+                      </div>
+                    </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -126,16 +140,17 @@ export const RegisterForm = () => {
                 render={({ field }) => (
                   <FormItem className="w-[275px] h-[54px] text-white">
                     <FormLabel>Password</FormLabel>
-                    <FormControl className="text-[#4C4C4C] rounded-3xl bg-[#EEE5BE]">
-                      <Input
-                        src="/password-icon.svg"
-                        type="password"
-                        placeholder="Enter your password"
-                        {...field}
-                      >
-                        {/* <Icon icon="solar:heart-lock-bold" width="24" height="24" /> */}
-                      </Input>
-                    </FormControl>
+                    <FormLabel>Password</FormLabel>
+                      <FormControl className="text-[#4C4C4C]">
+                        <div className="relative">
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                            <Icon icon="icon-park-solid:lock-one" width="24" height="24" />
+                          </div>
+                          <div>
+                            <Input placeholder="Enter password" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
+                          </div>
+                        </div>
+                      </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -146,13 +161,16 @@ export const RegisterForm = () => {
                 render={({ field }) => (
                   <FormItem className="w-[275px] h-[54px] text-white">
                     <FormLabel>Confirm password</FormLabel>
-                    <FormControl className=" text-[#4C4C4C] rounded-3xl  bg-[#EEE5BE]">
-                      <Input
-                        type="password"
-                        placeholder="Confirm your Password"
-                        {...field}
-                      />
-                    </FormControl>
+                      <FormControl className="text-[#4C4C4C]">
+                        <div className="relative">
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                            <Icon icon="icon-park-solid:lock-one" width="24" height="24" />
+                          </div>
+                          <div>
+                            <Input placeholder="Confirm password" className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl" {...field} />
+                          </div>
+                        </div>
+                      </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

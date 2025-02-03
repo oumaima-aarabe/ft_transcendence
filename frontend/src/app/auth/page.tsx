@@ -13,8 +13,8 @@ export default function RegisterPage() {
         width={265}
         height={170}
       />
-      {/* <RegisterForm/> */}
-      <LoginForm />
+      <RegisterForm/>
+      {/* <LoginForm /> */}
     </div>
   );
 }
