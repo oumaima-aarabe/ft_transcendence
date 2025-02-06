@@ -1,24 +1,29 @@
 const Cover = () => {
   return (
-    <div className=" relative border border-yellow w-[100%] h-[20%] rounded-2xl bg-cover bg-center">
-            <div className="absolute tp-[60%] border border-red-50 ">
+    <div
+      className="border border-yellow w-full h-[20%] rounded-2xl bg-cover bg-center flex justify-center items-center"
+      style={{ backgroundImage: "url('/cover.svg')" }}
+    >
+      <div className="flex flex-col items-center justify-center">
+        <div className="rounded-full h-36 w-36 flex items-center justify-center mb-3 border-8 border-white">
+          <div className="div">
+            <img
+              src="/logo.svg"
+              alt="profile"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
 
-            </div>
-            <div></div>
+        <div className="text-white text-center mb-3">
+          <h2 className="text-xl font-semibold">kawtatr aboussi</h2>
+        </div>
+
+        <div className="mb-3">
+          level will be here
+        </div>
+      </div>
     </div>
-//     <div className="relative w-[80%] h-[60%] border border-yellow-300 bg-cover bg-center" style={{ backgroundImage: "url('/path/to/your/cover.svg')" }}>
-    
-//     <!-- Circular Avatar on top of the cover image -->
-//     <div className="absolute top-[60%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-//       <img src="/path/to/your/avatar.jpg" alt="Avatar" className="w-32 h-32 rounded-full border-4 border-white" />
-//     </div>
-    
-//     <!-- Content of the card -->
-//     <div className="relative z-10 text-center mt-[40%]">
-//       <h2 className="text-xl">Card Title</h2>
-//       <p>This is a card content with an SVG background and an avatar.</p>
-//     </div>
-//   </div>
   );
 }
 
