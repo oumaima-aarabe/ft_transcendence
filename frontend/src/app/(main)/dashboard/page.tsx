@@ -1,4 +1,5 @@
 import Cover from "@/app/(main)/components/cover";
+import Friendchat from "../components/friendchat";
 
 
 export default function DashboardPage() {
@@ -18,6 +19,7 @@ export default function DashboardPage() {
           </div>
           <div className="border border-red-600 w-[30%] h-[100%] ">
             friends
+            <Friendchat/>
           </div>
         </div>
       </div>
