@@ -1,15 +1,19 @@
+# The above code defines API views for user signup, login, 42 OAuth authentication, and logout with
+# token generation and cookie handling.
 from rest_framework.views import APIView
 from .serializers import UserSerializer
 from .models import User
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
 from django.shortcuts import redirect, HttpResponse
 from django.utils.http import urlencode
 from django.contrib.auth import authenticate, login
 import datetime
-import jwt
-import os 
+import os
+import requests
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+
 
 
 # Create your views here.
@@ -29,30 +33,25 @@ class signup_view(APIView):
 
 class login_view(APIView):
     def post(self, request):
-        email = request.data['email']
-        password = request.data['password']
+        email = request.data.get('email')
+        password = request.data.get('password')
         
-        user = User.objects.filter(email=email).first()
+        user = authenticate(request, username=email, password=password)
 
         if user is None:
-            raise AuthenticationFailed('User not found')
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password')
-        
-        payload = {
-            'id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            'iat': datetime.datetime.utcnow()
-        }
-
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
+        refresh_token = RefreshToken.for_user(user)
+        access_token = refresh_token.access_token
         
         response = Response()
+
+        response.set_cookie(key='refresh_token', value=str(refresh_token), httponly=True)
         
-        response.set_cookie(key='jwt', value=token, httponly=True)
+        response.set_cookie(key='access_token', value=str(access_token), httponly=True)
+
         response.data = {
-            'jwt': token
+            'data': 'User authenticated successfully'
         }
 
         return response
@@ -90,6 +89,7 @@ class Login42API(APIView):
         ft_token_url = "https://api.intra.42.fr/oauth/token"
         response = requests.post(ft_token_url, data=data)
         response_data = response.json()
+
         if response.status_code == 200:
             access_token = response_data.get("access_token")
             ft_user_url = "https://api.intra.42.fr/v2/me"
@@ -99,7 +99,12 @@ class Login42API(APIView):
             )
             user_data = user_data.json()
 
-            user_email = user_data["email"]
+            user_email = user_data.get("email")
+            if not user_email:
+                return Response(
+                    {"error": "Unable to retrieve user email from 42 API"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # create user with email
             user = User.objects.filter(email=user_email).first()
@@ -110,36 +115,38 @@ class Login42API(APIView):
 
             authenticated_user = authenticate(request, username=user_email)
             if authenticated_user is not None:
-                login(request, authenticated_user)
+                # login(request, authenticated_user)
+                refresh = RefreshToken.for_user(authenticated_user)
+                access_token = str(refresh.access_token)
+                refresh_token = str(refresh)
 
-                # create token
-                payload = {
-                    'id': authenticated_user.id,
-                    'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-                    'iat': datetime.datetime.utcnow()
-                }
-
-                token = jwt.encode(payload, 'secret', algorithm='HS256')
-        
                 response = redirect(os.getenv("dashboard_url"))
-        
-                response.set_cookie(key='jwt', value=token, httponly=True)
-                response.data = {
-                    'jwt': token
-                }
+                response.set_cookie(key='access', value=access_token, httponly=True)
+                response.set_cookie(key='refresh', value=refresh_token, httponly=True)
+
                 return response
             else:
-                return HttpResponse(
-                    "Error authenticating user",
+                return Response(
+                    {"error": "Error authenticating user"},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
+        else:
+            return Response(
+                {"error": "Failed to exchange code for token", "details": response_data},
+                status=response.status_code
+            )
 
 
-class logout_view(APIView):
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        response = Response()
-        response.delete.cookie('jwt')
-        response.data = {
-            'massage': 'success'
-        }
-        return response
+        # Blacklist refresh token
+        try:
+            refresh_token = request.data.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
