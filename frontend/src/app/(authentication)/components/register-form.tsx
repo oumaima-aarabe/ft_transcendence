@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Icon } from "@iconify-icon/react";
+import { LoginFormProps } from "../auth/page";
 
 export interface FormDataRegister {
   username: string;
@@ -26,7 +27,7 @@ export interface FormDataRegister {
   confirmPassword: string;
 }
 
-export const RegisterForm = () => {
+export const RegisterForm = ({setLogin}: LoginFormProps) => {
   const router = useRouter();
   const [data, setData] = useState("");
 
@@ -195,16 +196,16 @@ export const RegisterForm = () => {
           >
             <span className="text-[#c75b37]">Sign up</span>
           </Button>
-          <div className="text-center text-sm text-white">
-            <p>
-              Already have an account?{" "}
-              <button className="text-[#40CFB7] hover:text-[#8D361A] focus:outline-none">
-                Sign in!
-              </button>
-            </p>
-          </div>
         </form>
       </Form>
+      <div className="text-center text-sm text-white mt-6">
+        <p>
+          Already have an account?{" "}
+          <button onClick={() => {setLogin(true)}} className="text-[#40CFB7] hover:text-[#8D361A] focus:outline-none">
+            Sign in!
+          </button>
+        </p>
+      </div>
     </Card>
   );
 };

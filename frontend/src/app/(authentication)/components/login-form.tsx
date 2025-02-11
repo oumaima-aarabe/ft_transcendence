@@ -16,8 +16,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
+import { LoginFormProps } from "../auth/page";
 
-const LoginForm = () => {
+
+const LoginForm = ({setLogin}: LoginFormProps) => {
   const formSchema = z.object({
     email: z.string().email("Invalid email address"),
     password: z
@@ -42,10 +44,10 @@ const LoginForm = () => {
 
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
-      <div className="flex justify-center items-center h-auto p-4 mb-6 text-[#EEE5BE] text-center space-x-2">
-        <p className="text-sm sm:text-base">You already have an account?</p>
-        <button className="text-[#40CFB7] hover:text-[#f18662] focus:outline-none">
-          Sign in!
+      <div className="flex justify-center items-center h-auto p-4 mb-6 text-white text-center space-x-2">
+        <p className="text-sm sm:text-base">new to PongArcadia?</p>
+        <button onClick={() => {setLogin(false)}} className="text-[#40CFB7] hover:text-[#f18662] focus:outline-none">
+          Sign up!
         </button>
       </div>
 
@@ -115,7 +117,6 @@ const LoginForm = () => {
           </Button>
         </form>
       </Form>
-
       <div className="flex flex-col justify-center items-center mt-6 space-y-4">
         <div className="flex items-center w-full">
           <div className="border-t-2 border-[#40CFB7] flex-grow"></div>
