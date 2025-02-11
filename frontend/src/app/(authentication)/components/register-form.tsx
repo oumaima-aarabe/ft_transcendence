@@ -73,148 +73,139 @@ export const RegisterForm = () => {
   };
 
   function submitRegister(values: z.infer<typeof formSchema>) {
-    // Handle the form values
     console.log(values);
-
-    // Redirect to the dashboard page
     postRegisterData(values);
   }
 
   return (
-    <Card className="w-[690px] h-[606px] bg-[#751d03] bg-opacity-[18%] p-10 flex justify-center flex-col rounded-3xl border-none backdrop-blur-lg">
-      <div className="flex justify-center">
-        <p className="text-[22px] font-regular text-white leading-relaxed">
+    <Card className="w-full max-w-[690px] bg-[#751d03] bg-opacity-[18%] p-8 md:p-10 flex flex-col justify-center rounded-3xl border-none backdrop-blur-lg">
+      <div className="text-center mb-6">
+        <p className="text-[18px] md:text-[22px] font-medium text-white">
           Join us by entering your information
         </p>
       </div>
-      <div className="flex justify-center">
-        <Form {...registerForm}>
-          <form
-            onSubmit={registerForm.handleSubmit(submitRegister)}
-            className="h-[472px] w-[562px] space-y-[50px]"
+      <Form {...registerForm}>
+        <form
+          onSubmit={registerForm.handleSubmit(submitRegister)}
+          className="space-y-6"
+        >
+          <FormField
+            control={registerForm.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-white">Username</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Icon icon="entypo:email" width="20" height="20" />
+                    </div>
+                    <Input
+                      placeholder="Enter your username"
+                      className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={registerForm.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-white">Email</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Icon icon="entypo:email" width="20" height="20" />
+                    </div>
+                    <Input
+                      placeholder="Enter your email"
+                      className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex flex-wrap gap-4">
+            <FormField
+              control={registerForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem className="flex-1 min-w-[220px]">
+                  <FormLabel className="text-white">Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        <Icon
+                          icon="icon-park-solid:lock-one"
+                          width="24"
+                          height="24"
+                        />
+                      </div>
+                      <Input
+                        type="password"
+                        placeholder="Enter password"
+                        className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={registerForm.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem className="flex-1 min-w-[220px]">
+                  <FormLabel className="text-white">Confirm password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                        <Icon
+                          icon="icon-park-solid:lock-one"
+                          width="24"
+                          height="24"
+                        />
+                      </div>
+                      <Input
+                        type="password"
+                        placeholder="Confirm password"
+                        className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <Button
+            type="submit"
+            className="w-full h-[54px] bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-lg shadow-[#8D361A]"
           >
-            <FormField
-              control={registerForm.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
-                  <FormLabel>Username</FormLabel>
-                  <FormControl className="text-[#4C4C4C]">
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                        <Icon icon="entypo:email" width="20" height="20" />
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="Enter your username"
-                          className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
-                          {...field}
-                        />
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            ></FormField>
-            <FormField
-              control={registerForm.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem className="w-[562px] h-[54px] space-y-2 text-white">
-                  <FormLabel>Email</FormLabel>
-                  <FormControl className="text-[#4C4C4C]">
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                        <Icon icon="entypo:email" width="20" height="20" />
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="Enter your email"
-                          className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
-                          {...field}
-                        />
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            ></FormField>
-            <div className="flex space-x-4 justify-between">
-              <FormField
-                control={registerForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem className="w-[275px] h-[54px] text-white">
-                    <FormLabel>Password</FormLabel>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl className="text-[#4C4C4C]">
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                          <Icon
-                            icon="icon-park-solid:lock-one"
-                            width="24"
-                            height="24"
-                          />
-                        </div>
-                        <div>
-                          <Input
-                            placeholder="Enter password"
-                            className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
-                            {...field}
-                          />
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              ></FormField>
-              <FormField
-                control={registerForm.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem className="w-[275px] h-[54px] text-white">
-                    <FormLabel>Confirm password</FormLabel>
-                    <FormControl className="text-[#4C4C4C]">
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                          <Icon
-                            icon="icon-park-solid:lock-one"
-                            width="24"
-                            height="24"
-                          />
-                        </div>
-                        <div>
-                          <Input
-                            placeholder="Confirm password"
-                            className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
-                            {...field}
-                          />
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              ></FormField>
-            </div>
-            <Button
-              type="submit"
-              className="w-[562px] h-[54px] mt-7 bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-lg shadow-[#8D361A]"
-            >
-              <span className="text-[#c75b37]">sign up</span>
-            </Button>
-            <div className="flex justify-center space-x-1">
-              <p>You already have an account?</p>
+            <span className="text-[#c75b37]">Sign up</span>
+          </Button>
+          <div className="text-center text-sm text-white">
+            <p>
+              Already have an account?{" "}
               <button className="text-[#40CFB7] hover:text-[#8D361A] focus:outline-none">
                 Sign in!
               </button>
-            </div>
-          </form>
-        </Form>
-      </div>
+            </p>
+          </div>
+        </form>
+      </Form>
     </Card>
   );
 };
+
