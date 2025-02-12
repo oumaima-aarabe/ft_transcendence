@@ -17,9 +17,16 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import { LoginFormProps } from "../auth/page";
-
+import {  useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const LoginForm = ({setLogin}: LoginFormProps) => {
+  const router = useRouter();
+  const loginMutation = useMutation({
+    mutationFn: (data: z.infer<typeof formSchema>) => axios.post("http://127.0.0.1:8000/api/auth/sign_in", data),
+  });
+
   const formSchema = z.object({
     email: z.string().email("Invalid email address"),
     password: z
@@ -40,12 +47,14 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
 
   function submitLogin(values: z.infer<typeof formSchema>) {
     console.log(values);
+    loginMutation.mutate(values);
+    if (loginMutation.isSuccess) router.push("/dashboard");
   }
 
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
       <div className="flex justify-center items-center h-auto p-4 mb-6 text-white text-center space-x-2">
-        <p className="text-sm sm:text-base">new to PongArcadia?</p>
+        <p className="text-sm sm:text-base">New to PongArcadia?</p>
         <button onClick={() => {setLogin(false)}} className="text-[#40CFB7] hover:text-[#f18662] focus:outline-none">
           Sign up!
         </button>
@@ -108,12 +117,22 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
               </FormItem>
             )}
           />
-
+          {loginMutation.isError ? (
+            <p className="text-red-500 text-sm">
+              {loginMutation.error.message}
+            </p>
+          ) : null}
+          {loginMutation.isSuccess ? (
+            <p className="text-green-500 text-sm">
+              {loginMutation.data.data.message}
+            </p>
+          ) : null}
           <Button
             type="submit"
+            disabled={loginMutation.isPending}
             className="w-full h-[54px] bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-shd"
           >
-            <span className="text-[#c75b37]">Sign Up</span>
+            <span className="text-[#c75b37]">Sign In</span>
           </Button>
         </form>
       </Form>

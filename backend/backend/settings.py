@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import datetime
+from datetime import timedelta
 
 load_dotenv()
 
@@ -186,8 +187,41 @@ STATIC_URL = "static/"
 
 AUTH_USER_MODEL = "authentication.User"
 
-CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000/",
+]
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "accept",
+    "x-csrftoken",
+]
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+
+COOKIE_SECURE = False
+ACCESS_TOKEN_LIFETIME = timedelta(minutes=1)
+REFRESH_TOKEN_LIFETIME = timedelta(days=7)
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_COOKIE": "accessToken",
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    "AUTH_COOKIE_SAMESITE": "Lax",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+}
 
 
 # Default primary key field type

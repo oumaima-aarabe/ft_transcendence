@@ -19,6 +19,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Icon } from "@iconify-icon/react";
 import { LoginFormProps } from "../auth/page";
+import { useMutation } from "@tanstack/react-query";
 
 export interface FormDataRegister {
   username: string;
@@ -28,6 +29,9 @@ export interface FormDataRegister {
 }
 
 export const RegisterForm = ({setLogin}: LoginFormProps) => {
+  const registerMutation = useMutation({
+    mutationFn: (data: z.infer<typeof formSchema>) => axios.post("http://127.0.0.1:8000/api/auth/sign_up", data),
+  });
   const router = useRouter();
   const [data, setData] = useState("");
 
@@ -75,7 +79,9 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
 
   function submitRegister(values: z.infer<typeof formSchema>) {
     console.log(values);
-    postRegisterData(values);
+    // postRegisterData(values);
+    registerMutation.mutate(values);
+    if (registerMutation.isSuccess) router.push("/auth");
   }
 
   return (
@@ -190,6 +196,16 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
               )}
             />
           </div>
+          {registerMutation.isError ? (
+            <p className="text-red-500 text-sm">
+              {registerMutation.error.message}
+            </p>
+          ) : null}
+          {registerMutation.isSuccess ? (
+            <p className="text-green-500 text-sm">
+              {registerMutation.data.data.message}
+            </p>
+          ) : null}
           <Button
             type="submit"
             className="w-full h-[54px] bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-lg shadow-[#8D361A]"

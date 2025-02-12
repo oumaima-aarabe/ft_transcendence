@@ -10,13 +10,10 @@ from django.utils.http import urlencode
 from django.contrib.auth import authenticate, login
 import datetime
 import os
+from django.conf import settings
 import requests
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-
-
-
-# Create your views here.
 
 
 class signup_view(APIView):
@@ -29,32 +26,55 @@ class signup_view(APIView):
         userserializer.is_valid(raise_exception=True)
         userserializer.save()
         return Response(userserializer.data)
-    
+
 
 class login_view(APIView):
     def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        
-        user = authenticate(request, username=email, password=password)
+        try:
+            email = request.data.get('email')
+            password = request.data.get('password')
+            user = User.objects.get(email=email)
 
-        if user is None:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+            if user is None:
+                return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            check_password = user.check_password(password)
+            
+            if not check_password:
+                return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         
-        refresh_token = RefreshToken.for_user(user)
-        access_token = refresh_token.access_token
-        
-        response = Response()
+            refresh_token = RefreshToken.for_user(user)
+            access_token = refresh_token.access_token
 
-        response.set_cookie(key='refresh_token', value=str(refresh_token), httponly=True)
-        
-        response.set_cookie(key='access_token', value=str(access_token), httponly=True)
+            response = Response()
 
-        response.data = {
-            'data': 'User authenticated successfully'
-        }
+            cookie_settings = {
+                "httponly": True,
+                "secure": settings.COOKIE_SECURE,
+                "samesite": "Lax",  # Use 'None' if using HTTPS
+                "domain": None,  # This will use the current domain
+            }
+            response.set_cookie(
+                key="refreshToken",
+                value=str(refresh_token),
+                max_age=settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
+                **cookie_settings,
+            )
+            response.set_cookie(
+                key="accessToken",
+                value=str(access_token),
+                max_age=settings.ACCESS_TOKEN_LIFETIME.total_seconds(),
+                **cookie_settings,
+            )
 
-        return response
+            response.status_code = status.HTTP_200_OK
+            response.data = {
+                'data': 'User authenticated successfully'
+            }
+
+            return response
+        except Exception as error:
+            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class fortytwo_view(APIView):
@@ -121,8 +141,8 @@ class Login42API(APIView):
                 refresh_token = str(refresh)
 
                 response = redirect(os.getenv("dashboard_url"))
-                response.set_cookie(key='access', value=access_token, httponly=True)
-                response.set_cookie(key='refresh', value=refresh_token, httponly=True)
+                response.set_cookie(key='access_token', value=access_token, httponly=True)
+                response.set_cookie(key='refresh_token', value=refresh_token, httponly=True)
 
                 return response
             else:
