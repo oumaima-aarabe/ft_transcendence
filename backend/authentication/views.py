@@ -25,7 +25,10 @@ class signup_view(APIView):
         userserializer = UserSerializer(data=data)
         userserializer.is_valid(raise_exception=True)
         userserializer.save()
-        return Response(userserializer.data)
+        return Response(
+            {"data": "User created successfully"},
+            status=status.HTTP_201_CREATED
+        )
 
 
 class login_view(APIView):
@@ -50,9 +53,10 @@ class login_view(APIView):
 
             cookie_settings = {
                 "httponly": True,
-                "secure": settings.COOKIE_SECURE,
+                "secure": False,
                 "samesite": "Lax",  # Use 'None' if using HTTPS
                 "domain": None,  # This will use the current domain
+                "path": "/"
             }
             response.set_cookie(
                 key="refreshToken",
@@ -141,8 +145,29 @@ class Login42API(APIView):
                 refresh_token = str(refresh)
 
                 response = redirect(os.getenv("dashboard_url"))
-                response.set_cookie(key='access_token', value=access_token, httponly=True)
-                response.set_cookie(key='refresh_token', value=refresh_token, httponly=True)
+                cookie_settings = {
+                    "httponly": True,
+                    "secure": False,
+                    "samesite": "Lax",  # Use 'None' if using HTTPS
+                    "domain": None,  # This will use the current domain
+                    "path": "/"
+                }
+                response.set_cookie(
+                    key="refreshToken",
+                    value=str(refresh_token),
+                    max_age=settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
+                    **cookie_settings,
+                )
+                response.set_cookie(
+                    key="accessToken",
+                    value=str(access_token),
+                    max_age=settings.ACCESS_TOKEN_LIFETIME.total_seconds(),
+                    **cookie_settings,
+                )
+                response.status_code = status.HTTP_200_OK
+                response.data = {
+                    'data': 'User authenticated successfully'
+                }
 
                 return response
             else:

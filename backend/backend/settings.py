@@ -194,7 +194,7 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000/",
+    "http://localhost:3000",
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",

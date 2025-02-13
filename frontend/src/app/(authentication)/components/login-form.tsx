@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 const LoginForm = ({setLogin}: LoginFormProps) => {
   const router = useRouter();
   const loginMutation = useMutation({
-    mutationFn: (data: z.infer<typeof formSchema>) => axios.post("http://127.0.0.1:8000/api/auth/sign_in", data),
+    mutationFn: (data: z.infer<typeof formSchema>) => axios.post("http://localhost:8000/api/auth/sign_in", data, {withCredentials: true}),
   });
 
   const formSchema = z.object({
@@ -48,8 +48,10 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
   function submitLogin(values: z.infer<typeof formSchema>) {
     console.log(values);
     loginMutation.mutate(values);
+    console.log(loginMutation);
     if (loginMutation.isSuccess) router.push("/dashboard");
   }
+
 
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
@@ -119,12 +121,14 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
           />
           {loginMutation.isError ? (
             <p className="text-red-500 text-sm">
-              {loginMutation.error.message}
+              error:
+              {/* {loginMutation.error} */}
             </p>
           ) : null}
           {loginMutation.isSuccess ? (
             <p className="text-green-500 text-sm">
-              {loginMutation.data.data.message}
+              success:
+              {/* {loginMutation.data} */}
             </p>
           ) : null}
           <Button
