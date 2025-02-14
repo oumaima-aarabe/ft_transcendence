@@ -26,6 +26,9 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
   const loginMutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => axios.post("http://localhost:8000/api/auth/sign_in", data, {withCredentials: true}),
   });
+  // const fortyTwoMutation = useMutation({
+  //   mutationFn: () => axios.get("http://localhost:8000/api/auth/42", {withCredentials: true}),
+  // });
 
   const formSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -49,9 +52,26 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
     console.log(values);
     loginMutation.mutate(values);
     console.log(loginMutation);
-    if (loginMutation.isSuccess) router.push("/dashboard");
   }
 
+  if (loginMutation.isSuccess) {
+    router.push("/dashboard");
+  }
+
+  const handleOauth = async () => {
+    const clientId = "u-s4t2ud-485157a1dedad716eefa2e43f388a9ff41988e266ce0a1db66e46b157c9508c7";
+    const redirectUri = encodeURIComponent("http://localhost:3000/auth/callback");
+    const url = `https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`
+    
+    window.location.href = url;
+    // await axios.get(url, {withCredentials: true})
+    // .then((res) => {
+    //   console.log('RES: ', res);
+    // })
+    // .catch((err) => {
+    //   console.log('ERR: ', err);
+    // });
+  }
 
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
@@ -146,7 +166,9 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
           <p className="text-sm text-white mx-4">Or sign in with</p>
           <div className="border-t-2 border-[#40CFB7] flex-grow"></div>
         </div>
-        <button>
+        <button
+          onClick={() => handleOauth()}
+        >
           <Image
             src="/42.svg"
             alt="logo"
