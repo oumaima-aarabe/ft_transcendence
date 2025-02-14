@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import redirect, HttpResponse
 from django.utils.http import urlencode
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 import datetime
 import os
 from django.conf import settings
@@ -89,8 +89,9 @@ class fortytwo_view(APIView):
             "response_type": "code",
             "redirect_uri": os.getenv("42_CALLBACK_URL")
         }
-        return redirect(f"{ft_auth_url}?{urlencode(params)}")
-        # f format string 
+        # return redirect(f"{ft_auth_url}?{urlencode(params)}")
+        return Response({"url": f"{ft_auth_url}?{urlencode(params)}"})
+        # f format string
 
 
 class Login42API(APIView):
@@ -108,12 +109,17 @@ class Login42API(APIView):
             "client_secret": os.getenv("42_CLIENT_SECRET"),
             "redirect_uri": os.getenv("42_CALLBACK_URL"),
             "code": code,
+            
         }
+
+        print('DATA: ', data)
 
         ft_token_url = "https://api.intra.42.fr/oauth/token"
         response = requests.post(ft_token_url, data=data)
         response_data = response.json()
-
+        
+        print('response data ------>: ', response_data)
+        
         if response.status_code == 200:
             access_token = response_data.get("access_token")
             ft_user_url = "https://api.intra.42.fr/v2/me"
@@ -122,8 +128,11 @@ class Login42API(APIView):
                 headers={"Authorization": f"Bearer {access_token}"},
             )
             user_data = user_data.json()
+            
+            # print('USER data ------>: ', user_data)
 
             user_email = user_data.get("email")
+            print('USER email ------>: ', user_email)
             if not user_email:
                 return Response(
                     {"error": "Unable to retrieve user email from 42 API"},
@@ -132,19 +141,27 @@ class Login42API(APIView):
 
             # create user with email
             user = User.objects.filter(email=user_email).first()
+            print('USER: ', user)
             if user is None:
                 user = User.objects.create_user(
                     email=user_email, username=user_email
                 )
-
-            authenticated_user = authenticate(request, username=user_email)
+            try:
+                authenticated_user = authenticate(request, email=user_email)
+            except Exception as e:
+                print('ERROR: ', e)
+                return Response(
+                    {"error": "Error authenticating user"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            print('AUTH: ', authenticated_user)
             if authenticated_user is not None:
                 # login(request, authenticated_user)
                 refresh = RefreshToken.for_user(authenticated_user)
                 access_token = str(refresh.access_token)
                 refresh_token = str(refresh)
 
-                response = redirect(os.getenv("dashboard_url"))
+                response = Response()
                 cookie_settings = {
                     "httponly": True,
                     "secure": False,
