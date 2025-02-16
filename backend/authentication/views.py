@@ -1,11 +1,9 @@
-# The above code defines API views for user signup, login, 42 OAuth authentication, and logout with
-# token generation and cookie handling.
 from rest_framework.views import APIView
 from .serializers import UserSerializer
 from .models import User
 from rest_framework import status
 from rest_framework.response import Response
-from django.shortcuts import redirect, HttpResponse
+from django.shortcuts import redirect
 from django.utils.http import urlencode
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect
@@ -40,12 +38,11 @@ class login_view(APIView):
 
             if user is None:
                 return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-            
+
             check_password = user.check_password(password)
-            
             if not check_password:
                 return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
             refresh_token = RefreshToken.for_user(user)
             access_token = refresh_token.access_token
 
@@ -90,10 +87,8 @@ class fortytwo_view(APIView):
                 "response_type": "code",
                 "redirect_uri": os.getenv("42_CALLBACK_URL")
             }
-            # return redirect(f"{ft_auth_url}?{urlencode(params)}")
             return Response({"url": f"{ft_auth_url}?{urlencode(params)}"})
         except Exception as e:
-            print('ERROR: ', e)
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -102,7 +97,7 @@ class Login42API(APIView):
         try:
             code = request.GET.get("code")
             if code is None:
-                return HttpResponseRedirect(f"{os.getenv('FRONTEND_URL')}?error=no_code")
+                return redirect(f"{os.getenv('FRONTEND_URL')}?error=no_code")
 
             data = {
                 "grant_type": "authorization_code",
@@ -110,16 +105,11 @@ class Login42API(APIView):
                 "client_secret": os.getenv("42_CLIENT_SECRET"),
                 "redirect_uri": os.getenv("42_CALLBACK_URL"),
                 "code": code,
-
             }
-
-            print('DATA: ', data)
 
             ft_token_url = "https://api.intra.42.fr/oauth/token"
             response = requests.post(ft_token_url, data=data)
             response_data = response.json()
-
-            print('response data ------>: ', response_data)
 
             if response.status_code != 200:
                 error_query = urlencode({'error': 'auth_failed'})
@@ -132,32 +122,22 @@ class Login42API(APIView):
                 headers={"Authorization": f"Bearer {access_token}"},
             )
             user_data = user_data.json()
-
-            # print('USER data ------>: ', user_data)
             user_email = user_data.get("email")
-            print('USER email ------>: ', user_email)
             if not user_email:
                 error_query = urlencode({'error': 'no_email'})
                 return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
 
-            # create user with email
             user = User.objects.filter(email=user_email).first()
-            print('USER: ', user)
             if user is None:
                 user = User.objects.create_user(
                     email=user_email, username=user_email
                 )
-            # authenticated_user = authenticate(request, username=user_email)
-            # print('AUTH: ', authenticated_user)
-            # if authenticated_user is not None:
-                # login(request, authenticated_user)
+
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-            url = os.getenv('FRONTEND_URL')
-            print('URL: ', url)
+            url = os.getenv('FRONTEND_URL') + '/dashboard'
             response = redirect(url)
-            print('RESPONSE: ', response)
             cookie_settings = {
                 "httponly": True,
                 "secure": False,
@@ -180,10 +160,8 @@ class Login42API(APIView):
             response.data = {
                 'data': 'User authenticated successfully'
             }
-            print('RESPONSE2: ', response)
             return response
         except Exception as e:
-            print('ERRORRRRRRRRR: ', e)
             error_query = urlencode({'error': str(e)})
             return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
 
@@ -199,5 +177,39 @@ class LogoutView(APIView):
             token.blacklist()
 
             return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RefreshTokenView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get("refreshToken")
+            if not refresh_token:
+                return Response({"error": "No refresh token found"}, status=status.HTTP_400_BAD_REQUEST)
+
+            token = RefreshToken(refresh_token)
+            access_token = str(token.access_token)
+
+            response = Response()
+            cookie_settings = {
+                "httponly": True,
+                "secure": False,
+                "samesite": "Lax",  # Use 'None' if using HTTPS
+                "domain": None,  # This will use the current domain
+                "path": "/"
+            }
+            response.set_cookie(
+                key="accessToken",
+                value=str(access_token),
+                max_age=settings.ACCESS_TOKEN_LIFETIME.total_seconds(),
+                **cookie_settings,
+            )
+            response.status_code = status.HTTP_200_OK
+            response.data = {
+                'data': 'Token refreshed successfully'
+            }
+
+            return response
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
