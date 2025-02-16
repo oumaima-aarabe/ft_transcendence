@@ -83,7 +83,6 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "backend.backends.GoogleOAuthBackend",
 ]
 
 SOCIALACCONT_PROVIDERS = {
@@ -190,11 +189,13 @@ AUTH_USER_MODEL = "authentication.User"
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://api.intra.42.fr",
 ]
 CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
+    "https://api.intra.42.fr",
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",

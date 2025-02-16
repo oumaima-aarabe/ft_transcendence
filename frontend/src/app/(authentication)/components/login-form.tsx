@@ -17,14 +17,17 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import { LoginFormProps } from "../auth/page";
-import {  useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-const LoginForm = ({setLogin}: LoginFormProps) => {
+const LoginForm = ({ setLogin }: LoginFormProps) => {
   const router = useRouter();
   const loginMutation = useMutation({
-    mutationFn: (data: z.infer<typeof formSchema>) => axios.post("http://localhost:8000/api/auth/sign_in", data, {withCredentials: true}),
+    mutationFn: (data: z.infer<typeof formSchema>) =>
+      axios.post("http://localhost:8000/api/auth/sign_in", data, {
+        withCredentials: true,
+      }),
   });
   // const fortyTwoMutation = useMutation({
   //   mutationFn: () => axios.get("http://localhost:8000/api/auth/42", {withCredentials: true}),
@@ -59,25 +62,38 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
   }
 
   const handleOauth = async () => {
-    const clientId = "u-s4t2ud-485157a1dedad716eefa2e43f388a9ff41988e266ce0a1db66e46b157c9508c7";
-    const redirectUri = encodeURIComponent("http://localhost:3000/auth/callback");
-    const url = `https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`
-    
-    window.location.href = url;
-    // await axios.get(url, {withCredentials: true})
-    // .then((res) => {
-    //   console.log('RES: ', res);
-    // })
-    // .catch((err) => {
-    //   console.log('ERR: ', err);
-    // });
-  }
+    const url = "http://localhost:8000/api/auth/42";
+
+    await axios
+      .get(url, { withCredentials: true })
+      .then((res) => {
+        console.log("RES1: ", res);
+        // router.push(res.data.url);
+        window.location.href = res.data.url;
+
+        // await axios.get(res.data.url, {withCredentials: true})
+        // .then((res) => {
+        //   console.log('RES2: ', res);
+        // })
+        // .catch((err) => {
+        //   console.log('ERR2: ', err);
+        // });
+      })
+      .catch((err) => {
+        console.log("ERR1: ", err);
+      });
+  };
 
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
       <div className="flex justify-center items-center h-auto p-4 mb-6 text-white text-center space-x-2">
         <p className="text-sm sm:text-base">New to PongArcadia?</p>
-        <button onClick={() => {setLogin(false)}} className="text-[#40CFB7] hover:text-[#f18662] focus:outline-none">
+        <button
+          onClick={() => {
+            setLogin(false);
+          }}
+          className="text-[#40CFB7] hover:text-[#f18662] focus:outline-none"
+        >
           Sign up!
         </button>
       </div>
@@ -166,9 +182,7 @@ const LoginForm = ({setLogin}: LoginFormProps) => {
           <p className="text-sm text-white mx-4">Or sign in with</p>
           <div className="border-t-2 border-[#40CFB7] flex-grow"></div>
         </div>
-        <button
-          onClick={() => handleOauth()}
-        >
+        <button onClick={() => handleOauth()}>
           <Image
             src="/42.svg"
             alt="logo"

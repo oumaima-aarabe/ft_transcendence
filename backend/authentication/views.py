@@ -7,8 +7,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import redirect, HttpResponse
 from django.utils.http import urlencode
-from django.contrib.auth import authenticate
-import datetime
+from django.contrib.auth import authenticate, login
+from django.http import HttpResponseRedirect
 import os
 from django.conf import settings
 import requests
@@ -83,44 +83,48 @@ class login_view(APIView):
 
 class fortytwo_view(APIView):
     def get(self, request):
-        ft_auth_url = "https://api.intra.42.fr/oauth/authorize"
-        params = {
-            "client_id": os.getenv("42_CLIENT_ID"),
-            "response_type": "code",
-            "redirect_uri": os.getenv("42_CALLBACK_URL")
-        }
-        # return redirect(f"{ft_auth_url}?{urlencode(params)}")
-        return Response({"url": f"{ft_auth_url}?{urlencode(params)}"})
-        # f format string
+        try:
+            ft_auth_url = "https://api.intra.42.fr/oauth/authorize"
+            params = {
+                "client_id": os.getenv("42_CLIENT_ID"),
+                "response_type": "code",
+                "redirect_uri": os.getenv("42_CALLBACK_URL")
+            }
+            # return redirect(f"{ft_auth_url}?{urlencode(params)}")
+            return Response({"url": f"{ft_auth_url}?{urlencode(params)}"})
+        except Exception as e:
+            print('ERROR: ', e)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Login42API(APIView):
     def get(self, request):
-        code = request.GET.get("code")
-        if code is None:
-            return Response(
-                {"error": "Code not provided."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        try:
+            code = request.GET.get("code")
+            if code is None:
+                return HttpResponseRedirect(f"{os.getenv('FRONTEND_URL')}?error=no_code")
 
-        data = {
-            "grant_type": "authorization_code",
-            "client_id": os.getenv("42_CLIENT_ID"),
-            "client_secret": os.getenv("42_CLIENT_SECRET"),
-            "redirect_uri": os.getenv("42_CALLBACK_URL"),
-            "code": code,
-            
-        }
+            data = {
+                "grant_type": "authorization_code",
+                "client_id": os.getenv("42_CLIENT_ID"),
+                "client_secret": os.getenv("42_CLIENT_SECRET"),
+                "redirect_uri": os.getenv("42_CALLBACK_URL"),
+                "code": code,
 
-        print('DATA: ', data)
+            }
 
-        ft_token_url = "https://api.intra.42.fr/oauth/token"
-        response = requests.post(ft_token_url, data=data)
-        response_data = response.json()
-        
-        print('response data ------>: ', response_data)
-        
-        if response.status_code == 200:
+            print('DATA: ', data)
+
+            ft_token_url = "https://api.intra.42.fr/oauth/token"
+            response = requests.post(ft_token_url, data=data)
+            response_data = response.json()
+
+            print('response data ------>: ', response_data)
+
+            if response.status_code != 200:
+                error_query = urlencode({'error': 'auth_failed'})
+                return HttpResponseRedirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
+
             access_token = response_data.get("access_token")
             ft_user_url = "https://api.intra.42.fr/v2/me"
             user_data = requests.get(
@@ -128,16 +132,13 @@ class Login42API(APIView):
                 headers={"Authorization": f"Bearer {access_token}"},
             )
             user_data = user_data.json()
-            
-            # print('USER data ------>: ', user_data)
 
+            # print('USER data ------>: ', user_data)
             user_email = user_data.get("email")
             print('USER email ------>: ', user_email)
             if not user_email:
-                return Response(
-                    {"error": "Unable to retrieve user email from 42 API"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                error_query = urlencode({'error': 'no_email'})
+                return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
 
             # create user with email
             user = User.objects.filter(email=user_email).first()
@@ -146,57 +147,45 @@ class Login42API(APIView):
                 user = User.objects.create_user(
                     email=user_email, username=user_email
                 )
-            try:
-                authenticated_user = authenticate(request, email=user_email)
-            except Exception as e:
-                print('ERROR: ', e)
-                return Response(
-                    {"error": "Error authenticating user"},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-            print('AUTH: ', authenticated_user)
-            if authenticated_user is not None:
+            # authenticated_user = authenticate(request, username=user_email)
+            # print('AUTH: ', authenticated_user)
+            # if authenticated_user is not None:
                 # login(request, authenticated_user)
-                refresh = RefreshToken.for_user(authenticated_user)
-                access_token = str(refresh.access_token)
-                refresh_token = str(refresh)
-
-                response = Response()
-                cookie_settings = {
-                    "httponly": True,
-                    "secure": False,
-                    "samesite": "Lax",  # Use 'None' if using HTTPS
-                    "domain": None,  # This will use the current domain
-                    "path": "/"
-                }
-                response.set_cookie(
-                    key="refreshToken",
-                    value=str(refresh_token),
-                    max_age=settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
-                    **cookie_settings,
-                )
-                response.set_cookie(
-                    key="accessToken",
-                    value=str(access_token),
-                    max_age=settings.ACCESS_TOKEN_LIFETIME.total_seconds(),
-                    **cookie_settings,
-                )
-                response.status_code = status.HTTP_200_OK
-                response.data = {
-                    'data': 'User authenticated successfully'
-                }
-
-                return response
-            else:
-                return Response(
-                    {"error": "Error authenticating user"},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-        else:
-            return Response(
-                {"error": "Failed to exchange code for token", "details": response_data},
-                status=response.status_code
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+            url = os.getenv('FRONTEND_URL')
+            print('URL: ', url)
+            response = redirect(url)
+            print('RESPONSE: ', response)
+            cookie_settings = {
+                "httponly": True,
+                "secure": False,
+                "samesite": "Lax",  # Use 'None' if using HTTPS
+                "domain": None,  # This will use the current domain
+                "path": "/"
+            }
+            response.set_cookie(
+                key="refreshToken",
+                value=str(refresh_token),
+                max_age=settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
+                **cookie_settings,
             )
+            response.set_cookie(
+                key="accessToken",
+                value=str(access_token),
+                max_age=settings.ACCESS_TOKEN_LIFETIME.total_seconds(),
+                **cookie_settings,
+            )
+            response.data = {
+                'data': 'User authenticated successfully'
+            }
+            print('RESPONSE2: ', response)
+            return response
+        except Exception as e:
+            print('ERRORRRRRRRRR: ', e)
+            error_query = urlencode({'error': str(e)})
+            return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
 
 
 class LogoutView(APIView):
