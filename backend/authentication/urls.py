@@ -5,7 +5,8 @@ from .views import (
     LogoutView,
     fortytwo_view,
     Login42API,
-    RefreshTokenView
+    RefreshTokenView,
+    VerifyTokenView,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path("42", fortytwo_view.as_view(), name='fortytwo'),
     path("42/callback", Login42API.as_view(), name='callback'),
     path("token/refresh", RefreshTokenView.as_view(), name='token_refresh'),
+    path("token/verify", VerifyTokenView.as_view(), name='token_verify'),
 ]

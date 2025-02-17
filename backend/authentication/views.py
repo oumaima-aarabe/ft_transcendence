@@ -185,6 +185,7 @@ class RefreshTokenView(APIView):
     def post(self, request):
         try:
             refresh_token = request.COOKIES.get("refreshToken")
+            print('refreshToken: ', refresh_token)
             if not refresh_token:
                 return Response({"error": "No refresh token found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -213,3 +214,10 @@ class RefreshTokenView(APIView):
             return response
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"message": "Token is valid"}, status=status.HTTP_200_OK)

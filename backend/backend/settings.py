@@ -208,8 +208,8 @@ CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SAMESITE = "Lax"
 
 COOKIE_SECURE = False
-ACCESS_TOKEN_LIFETIME = timedelta(minutes=1)
-REFRESH_TOKEN_LIFETIME = timedelta(days=7)
+ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
+REFRESH_TOKEN_LIFETIME = timedelta(days=1)
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
