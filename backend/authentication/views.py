@@ -184,7 +184,7 @@ class LogoutView(APIView):
 class RefreshTokenView(APIView):
     def post(self, request):
         try:
-            refresh_token = request.COOKIES.get("refreshToken")
+            refresh_token = request.data.get("refreshToken")
             print('refreshToken: ', refresh_token)
             if not refresh_token:
                 return Response({"error": "No refresh token found"}, status=status.HTTP_400_BAD_REQUEST)
