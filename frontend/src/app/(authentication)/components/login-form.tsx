@@ -67,20 +67,10 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
     await axios
       .get(url, { withCredentials: true })
       .then((res) => {
-        console.log("RES1: ", res);
-        // router.push(res.data.url);
         window.location.href = res.data.url;
-
-        // await axios.get(res.data.url, {withCredentials: true})
-        // .then((res) => {
-        //   console.log('RES2: ', res);
-        // })
-        // .catch((err) => {
-        //   console.log('ERR2: ', err);
-        // });
       })
       .catch((err) => {
-        console.log("ERR1: ", err);
+        console.log(err);
       });
   };
 
