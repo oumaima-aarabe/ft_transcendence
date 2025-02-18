@@ -73,7 +73,6 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
       console.error("Error fetching data:", error);
       return;
     }
-    console.log(data);
     router.push("/dashboard");
   };
 

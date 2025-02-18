@@ -5,7 +5,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import redirect
 from django.utils.http import urlencode
-from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect
 import os
 from django.conf import settings
@@ -17,8 +16,6 @@ from rest_framework.permissions import IsAuthenticated
 class signup_view(APIView):
     def post(self, request):
         data = request.data
-
-        print('DATA: ', data)
 
         userserializer = UserSerializer(data=data)
         userserializer.is_valid(raise_exception=True)
@@ -123,14 +120,15 @@ class Login42API(APIView):
             )
             user_data = user_data.json()
             user_email = user_data.get("email")
-            if not user_email:
+            username = user_data.get("login")
+            if not user_email or not username:
                 error_query = urlencode({'error': 'no_email'})
                 return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
 
             user = User.objects.filter(email=user_email).first()
             if user is None:
                 user = User.objects.create_user(
-                    email=user_email, username=user_email
+                    email=user_email, username=username
                 )
 
             refresh = RefreshToken.for_user(user)
@@ -185,7 +183,6 @@ class RefreshTokenView(APIView):
     def post(self, request):
         try:
             refresh_token = request.data.get("refreshToken")
-            print('refreshToken: ', refresh_token)
             if not refresh_token:
                 return Response({"error": "No refresh token found"}, status=status.HTTP_400_BAD_REQUEST)
 

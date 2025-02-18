@@ -53,13 +53,13 @@ INSTALLED_APPS = [
 
 ]
 
-# settings.py
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    ],
 }
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=15),
@@ -84,18 +84,6 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
-
-SOCIALACCONT_PROVIDERS = {
-    "google": {
-        "SCOPE": [
-            "profile",
-            "email",
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online",
-        },
-    }
-}
 
 ROOT_URLCONF = "backend.urls"
 
@@ -134,19 +122,6 @@ DATABASES = {
     }
 }
 
-# import os
-# print(os.getenv("DB_POSTGRES_HOST"))  # Check if this prints 'localhost'
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "ps_db_name",
-#         "HOST": "localhost",
-#         "USER": "ps_db_user",
-#         "PASSWORD": "ps_db_password123456",
-#         "PORT": "5432",
-#     }
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

@@ -52,9 +52,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
   });
 
   function submitLogin(values: z.infer<typeof formSchema>) {
-    // console.log(values);
     loginMutation.mutate(values);
-    // console.log(loginMutation);
   }
 
   if (loginMutation.isSuccess) {

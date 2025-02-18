@@ -9,41 +9,41 @@ const unprotectedPaths = [
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
-	const {pathname} = request.nextUrl
-	const accessToken = request.cookies.get('accessToken')
-	const refreshToken = request.cookies.get('refreshToken')
-	console.log('------>ACCESS TOKEN? :', accessToken)
-	console.log('------>REFRESH TOKEN? :', refreshToken)
+// 	const {pathname} = request.nextUrl
+// 	const accessToken = request.cookies.get('accessToken')
+// 	const refreshToken = request.cookies.get('refreshToken')
+// 	console.log('------>ACCESS TOKEN? :', accessToken)
+// 	console.log('------>REFRESH TOKEN? :', refreshToken)
 
-	if (!accessToken && !refreshToken){
-		if (unprotectedPaths.includes(pathname))
-			return NextResponse.next()
-		else 
-		return NextResponse.redirect(new URL('/', request.url))
-}
-else if (!accessToken && refreshToken){
-	try {
-		const res = await axios.post('http://localhost:8000/api/auth/token/refresh', {refreshToken: refreshToken.value}, { withCredentials: true });
+// 	if (!accessToken && !refreshToken){
+// 		if (unprotectedPaths.includes(pathname))
+// 			return NextResponse.next()
+// 		else 
+// 		return NextResponse.redirect(new URL('/', request.url))
+// }
+// else if (!accessToken && refreshToken){
+// 	try {
+// 		const res = await axios.post('http://localhost:8000/api/auth/token/refresh', {refreshToken: refreshToken.value}, { withCredentials: true });
 		
-		if (res.data.data) {
-			if (unprotectedPaths.includes(pathname)) {
-				return NextResponse.redirect(new URL('/dashboard', request.url));
-			}
-			return NextResponse.next();
-		} 
-		else {
-			request.cookies.delete('accessToken');
-			request.cookies.delete('refreshToken');
-			return NextResponse.redirect(new URL('/', request.url));
-		}
-	} catch (error) {
-		console.error("Token refresh failed:");
-		request.cookies.delete('accessToken');
-		request.cookies.delete('refreshToken');
-		return NextResponse.redirect(new URL('/', request.url));
-	}
-}
-return NextResponse.next()
+// 		if (res.data.data) {
+// 			if (unprotectedPaths.includes(pathname)) {
+// 				return NextResponse.redirect(new URL('/dashboard', request.url));
+// 			}
+// 			return NextResponse.next();
+// 		} 
+// 		else {
+// 			request.cookies.delete('accessToken');
+// 			request.cookies.delete('refreshToken');
+// 			return NextResponse.redirect(new URL('/', request.url));
+// 		}
+// 	} catch (error) {
+// 		console.error("Token refresh failed:");
+// 		request.cookies.delete('accessToken');
+// 		request.cookies.delete('refreshToken');
+// 		return NextResponse.redirect(new URL('/', request.url));
+// 	}
+// }
+// return NextResponse.next()
 }
 
 
