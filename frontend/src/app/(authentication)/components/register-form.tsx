@@ -53,7 +53,7 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
     mutationFn: registerUser,
     onSuccess: (data)=>{
       console.log('user created successfully', data)
-      router.push('/auth')
+      setLogin(true)
     },
     onError: (error)=>{
       console.log('user not created', error)

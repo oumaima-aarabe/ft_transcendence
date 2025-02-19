@@ -76,7 +76,7 @@ class login_view(APIView):
 
 
 class fortytwo_view(APIView):
-    def get(self, request):
+    def post(self, request):
         try:
             ft_auth_url = "https://api.intra.42.fr/oauth/authorize"
             params = {

@@ -18,21 +18,48 @@ import { Icon } from "@iconify/react";
 import Image from "next/image";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { fetcher } from "@/lib/fetcher";
 
+export interface FormDataLogin {
+  email : string;
+  password: string;
+}
 
 const LoginForm = ({ setLogin }: LoginFormProps) => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState<boolean>(true)
-  const loginMutation = useMutation({
-    mutationFn: (data: z.infer<typeof formSchema>) =>
-      axios.post("http://localhost:8000/api/auth/sign_in", data, {
-        withCredentials: true,
-      }),
-  });
 
+  const ShowPasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  }
+
+  const loginUser = async (userData : FormDataLogin) => {
+    if (userData.email.length == 0 && userData.password.length == 0){
+      console.log('hna dkhal fdfgjrghkkjdfjfdjdfjhjkdfjfkdjlkfd')
+      const response = await fetcher.post('/api/auth/42')
+      return response.data
+    }
+    const response = await fetcher.post('/api/auth/sign_in', userData)
+    return response.data
+  }
+
+  const loginMutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data)=>{
+      console.log('user logged in successfully', data)
+      if (data.url){
+        window.location.href = data.url
+        return ;
+      }
+      router.push('/dashboard')
+    },
+    onError: (error)=>{
+      console.log('user can not log in', error)
+    }
+  })
+  
   const formSchema = z.object({
     email: z.string().email("Invalid email address"),
     password: z
@@ -41,7 +68,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
         "Password must be at least 8 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character."
       ),
-  });
+    });
 
   const loginForm = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,26 +82,13 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
     loginMutation.mutate(values);
   }
 
-  if (loginMutation.isSuccess) {
-    router.push("/dashboard");
-  }
-
   const handleOauth = async () => {
-    const url = "http://localhost:8000/api/auth/42";
-
-    await axios
-      .get(url, { withCredentials: true })
-      .then((res) => {
-        window.location.href = res.data.url;
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    loginMutation.mutate({
+      email: '',
+      password: '',
+    })
   };
 
-  const ShowPasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  }
 
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
@@ -160,23 +174,23 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
             )}
           />
           {loginMutation.isError ? (
-            <span className="text-red-500 text-sm">
-              error:
-              {/* {loginMutation.error} */}
-            </span>
+            <p className="text-red-500 text-sm">
+              {loginMutation.error.message}
+            </p>
           ) : null}
           {loginMutation.isSuccess ? (
-            <span className="text-green-500 text-sm">
-              success:
-              {/* {loginMutation.data} */}
-            </span>
+            <p className="text-green-500 text-sm">
+              {loginMutation.data.data}
+            </p>
           ) : null}
           <Button
             type="submit"
             disabled={loginMutation.isPending}
             className="w-full h-[54px] bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-shd"
           >
-            <span className="text-[#c75b37]">Sign In</span>
+            <span className="text-[#c75b37]">
+              {loginMutation.isPending ? 'logged in...' :'Sign in'}
+            </span>
           </Button>
         </form>
       </Form>
