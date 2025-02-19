@@ -20,18 +20,18 @@ import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 
 const LoginForm = ({ setLogin }: LoginFormProps) => {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState<boolean>(true)
   const loginMutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) =>
       axios.post("http://localhost:8000/api/auth/sign_in", data, {
         withCredentials: true,
       }),
   });
-  // const fortyTwoMutation = useMutation({
-  //   mutationFn: () => axios.get("http://localhost:8000/api/auth/42", {withCredentials: true}),
-  // });
 
   const formSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -72,6 +72,10 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
       });
   };
 
+  const ShowPasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  }
+
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
       <div className="flex justify-center items-center h-auto p-4 mb-6 text-white text-center space-x-2">
@@ -103,11 +107,11 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
                       icon="entypo:email"
                       width="20"
                       height="20"
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black"
                     />
                     <Input
                       placeholder="Enter your email"
-                      className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl w-full"
+                      className="pl-10 !bg-[#EEE5BE] !rounded-3xl w-full"
                       {...field}
                     />
                   </div>
@@ -129,14 +133,26 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
                       icon="icon-park-solid:lock-one"
                       width="24"
                       height="24"
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black"
                     />
                     <Input
-                      type="password"
-                      placeholder="Enter your password"
-                      className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl w-full"
+                      type={showPassword ? "password" : "text"}
+                      placeholder="Enter password"
+                      className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
                     />
+                    <button
+                      type="button"
+                      onClick={ShowPasswordVisibility}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 focus:outline-none"
+                    >
+                      <Icon
+                        icon={showPassword ? "mdi:eye-off" : "mdi:eye"}
+                        width="24"
+                        height="24"
+                        className="text-[#4C4C4C]"
+                      />
+                    </button>
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -144,16 +160,16 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
             )}
           />
           {loginMutation.isError ? (
-            <p className="text-red-500 text-sm">
+            <span className="text-red-500 text-sm">
               error:
               {/* {loginMutation.error} */}
-            </p>
+            </span>
           ) : null}
           {loginMutation.isSuccess ? (
-            <p className="text-green-500 text-sm">
+            <span className="text-green-500 text-sm">
               success:
               {/* {loginMutation.data} */}
-            </p>
+            </span>
           ) : null}
           <Button
             type="submit"
