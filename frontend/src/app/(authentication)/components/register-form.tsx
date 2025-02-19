@@ -15,10 +15,10 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { Icon } from "@iconify-icon/react";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
+import { fetcher } from "@/lib/fetcher";
 
 export interface FormDataRegister {
   firstName: string;
@@ -30,14 +30,37 @@ export interface FormDataRegister {
 }
 
 export const RegisterForm = ({setLogin}: LoginFormProps) => {
-  const registerMutation = useMutation({
-    mutationFn: (data: z.infer<typeof formSchema>) => axios.post("http://127.0.0.1:8000/api/auth/sign_up", data),
-  });
+
   const router = useRouter();
-  const [data, setData] = useState("");
   const [showPassword, setShowPassword] = useState(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState(true);
   
+  const PasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+  
+  const ConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+
+  const registerUser = async (userData : FormDataRegister) => {
+    const response = await fetcher.post('/api/auth/sign_up', userData)
+    return response.data
+  }
+  
+  const registerMutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: (data)=>{
+      console.log('user created successfully', data)
+      router.push('/auth')
+    },
+    onError: (error)=>{
+      console.log('user not created', error)
+    }
+  })
+
+
   const formSchema = z
     .object({
       firstName: z.string().min(2, "First name must be at least 2 characters").max(50),
@@ -57,46 +80,23 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
       path: ["confirmPassword"],
     });
     
-  const registerForm = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-  
-  const postRegisterData = async (formData: FormDataRegister) => {
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/auth/sign_up",
-        formData
-      );
-      setData(response.data.message);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      return;
-    }
-    router.push("/dashboard");
-  };
-  
-  function submitRegister(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // postRegisterData(values);
+    const registerForm = useForm<z.infer<typeof formSchema>>({
+      resolver: zodResolver(formSchema),
+      defaultValues: {
+        firstName: "",
+        lastName: "",
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      },
+    });
+
+
+  function submitRegister(values: z.infer<typeof formSchema>) {    
     registerMutation.mutate(values);
-    if (registerMutation.isSuccess) router.push("/auth");
   }
-  
-  const PasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-  
-  const ConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
+
 
   return (
     <Card className="w-full max-w-[690px] bg-[#751d03] bg-opacity-[18%] p-8 md:p-10 flex flex-col justify-center rounded-3xl border-none backdrop-blur-lg">
@@ -122,11 +122,11 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                         <Icon icon="mdi:account" 
                         width="20" 
                         height="20"
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2 border border-green-500"
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2"
                         />
                       <Input
                         placeholder="Enter your first name"
-                        className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl border border-red-500"
+                        className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                         {...field}
                       />
                     </div>
@@ -289,7 +289,7 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
               )}
             />
           </div>
-          
+
           {registerMutation.isError ? (
             <p className="text-red-500 text-sm">
               {registerMutation.error.message}
@@ -300,12 +300,15 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
               {registerMutation.data.data.message}
             </p>
           ) : null}
-          
+
           <Button
             type="submit"
             className="w-full h-[54px] bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-lg shadow-[#8D361A]"
+            disabled={registerMutation.isPending}
           >
-            <span className="text-[#c75b37]">Sign up</span>
+            <span className="text-[#c75b37]">
+              {registerMutation.isPending ? 'creating...' :'Sign up'}
+            </span>
           </Button>
         </form>
       </Form>
