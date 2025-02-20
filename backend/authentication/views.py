@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from .serializers import UserSerializer
 from .models import User
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from django.shortcuts import redirect
 from django.utils.http import urlencode
@@ -10,10 +10,11 @@ import os
 from django.conf import settings
 import requests
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
 
 
 class signup_view(APIView):
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
         data = request.data
 
@@ -27,6 +28,8 @@ class signup_view(APIView):
 
 
 class login_view(APIView):
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
         try:
             email = request.data.get('email')
@@ -76,6 +79,8 @@ class login_view(APIView):
 
 
 class fortytwo_view(APIView):
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
         try:
             ft_auth_url = "https://api.intra.42.fr/oauth/authorize"
@@ -90,6 +95,8 @@ class fortytwo_view(APIView):
 
 
 class Login42API(APIView):
+    permission_classes = (permissions.AllowAny,)
+
     def get(self, request):
         try:
             code = request.GET.get("code")
@@ -165,21 +172,27 @@ class Login42API(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def post(self, request):
-        # Blacklist refresh token
         try:
-            refresh_token = request.data.get("refresh")
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            # Get refresh token from cookie
+            refresh_token = request.COOKIES.get("refreshToken")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
 
-            return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
+            # Create response and clear cookies
+            response = Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
+            response.delete_cookie("accessToken")
+            response.delete_cookie("refreshToken")
+
+            return response
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RefreshTokenView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
         try:
             refresh_token = request.data.get("refreshToken")
@@ -214,7 +227,5 @@ class RefreshTokenView(APIView):
 
 
 class VerifyTokenView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request):
         return Response({"message": "Token is valid"}, status=status.HTTP_200_OK)

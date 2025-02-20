@@ -2,35 +2,24 @@
 
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useState, useEffect } from "react"
-import axios from "axios"
+
+import { useQuery } from "@tanstack/react-query"
+import { fetcher } from "@/lib/fetcher"
+
 
 const Cover = () => {
-  const [userData, setUserData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Assuming your API is running on the same domain
-        // Replace 'me' with specific username if needed
-        const response = await axios.get('http://localhost:8000/api/users/me', {
-          withCredentials : true , headers: {Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM5ODk3MDU2LCJpYXQiOjE3Mzk4OTUyNTYsImp0aSI6IjMwODc2MThjOTJlZjRmOGFiNzk1NjliNTNmNzdmYzZmIiwidXNlcl9pZCI6MX0.R2s8o1-5M8PjZQxzPBxBW7IB-FB6NRB3UWlGDa2zy-8'}
-        })
-        console.log(response.data)
-        setUserData(response.data)
-        setLoading(false)
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
-      }
-    }
+  const getUser = async () => {
+    const response = await fetcher.get('/api/users/me')
+    return response.data
+  } 
 
-    fetchUserData()
-  }, [])
+  const { data: userData, isError, isLoading, error } = useQuery({
+    queryKey: ['me'],
+    queryFn: getUser,
+  })
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="w-full h-[20%] rounded-2xl bg-black flex justify-center items-center">
         <div className="text-white">Loading...</div>
@@ -38,10 +27,10 @@ const Cover = () => {
     )
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="w-full h-[20%] rounded-2xl bg-black flex justify-center items-center">
-        <div className="text-red-500">Error: {error}</div>
+        <div className="text-red-500">Error: {error.message}</div>
       </div>
     )
   }

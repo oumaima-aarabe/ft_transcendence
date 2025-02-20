@@ -1,4 +1,5 @@
-from rest_framework import permissions
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from authentication.models import User
 from authentication.serializers import UserSerializer
@@ -8,21 +9,20 @@ from django.shortcuts import get_object_or_404
 
 
 class UserView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    
     def get(self, request, username):
         try:
             if username == "me":
                 user = request.user
             else:
                 user = get_object_or_404(User, username=username)
-            
+
             serializer = UserSerializer(user)
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
             )
         except Exception as error:
+            print('here')
             return Response(
                 {"error": str(error)},
                 status=status.HTTP_404_NOT_FOUND
@@ -35,10 +35,10 @@ class UserView(APIView):
                     {"error": "You can only update your own profile"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
+
             user = request.user
             serializer = UserSerializer(user, data=request.data, partial=True)
-            
+
             if serializer.is_valid():
                 serializer.save()
                 return Response(

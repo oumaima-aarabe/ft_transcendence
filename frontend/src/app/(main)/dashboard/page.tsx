@@ -1,5 +1,5 @@
-import Cover from "@/app/(main)/components/cover";
-import Friendchat from "../components/friendchat";
+import Cover from "@/app/(main)/dashboard/components/cover";
+import Friendchat from "./components/friendchat";
 
 
 export default function DashboardPage() {
