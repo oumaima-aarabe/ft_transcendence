@@ -195,7 +195,7 @@ class RefreshTokenView(APIView):
 
     def post(self, request):
         try:
-            refresh_token = request.data.get("refreshToken")
+            refresh_token = request.data.get('refreshToken')
             if not refresh_token:
                 return Response({"error": "No refresh token found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -216,9 +216,9 @@ class RefreshTokenView(APIView):
                 max_age=settings.ACCESS_TOKEN_LIFETIME.total_seconds(),
                 **cookie_settings,
             )
-            response.status_code = status.HTTP_200_OK
             response.data = {
-                'data': 'Token refreshed successfully'
+                'data': 'Token refreshed successfully',
+                'accessToken': str(access_token)
             }
 
             return response

@@ -1,133 +1,72 @@
-import axios from 'axios'
+// middleware.ts
 import { NextResponse } from 'next/server'
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-const unprotectedPaths = [
-	'/',
-	'/auth',
-]
+const PUBLIC_PATHS = ['/', '/auth']
 
-// This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
-// 	const {pathname} = request.nextUrl
-// 	const accessToken = request.cookies.get('accessToken')
-// 	const refreshToken = request.cookies.get('refreshToken')
-// 	console.log('------>ACCESS TOKEN? :', accessToken)
-// 	console.log('------>REFRESH TOKEN? :', refreshToken)
+	const { pathname } = request.nextUrl
 
-// 	if (!accessToken && !refreshToken){
-// 		if (unprotectedPaths.includes(pathname))
-// 			return NextResponse.next()
-// 		else 
-// 		return NextResponse.redirect(new URL('/', request.url))
-// }
-// else if (!accessToken && refreshToken){
-// 	try {
-// 		const res = await axios.post('http://localhost:8000/api/auth/token/refresh', {refreshToken: refreshToken.value}, { withCredentials: true });
+	const accessToken = request.cookies.get('accessToken')?.value
+
+	if (accessToken) {
+		try {
+			const tokenData = JSON.parse(atob(accessToken.split('.')[1]))
+			const isTokenValid = tokenData.exp * 1000 > Date.now()
+			if (isTokenValid) {
+				if (PUBLIC_PATHS.includes(pathname)) {
+					if (pathname == '/dashboard')
+						return NextResponse.next()
+					return NextResponse.redirect(new URL('/dashboard', request.url))
+				}
+				return NextResponse.next()
+			}
+		} catch (error) {
+			console.log(error)
+		}
+	}
+
+	const refreshToken = request.cookies.get('refreshToken')?.value
+
+	if (refreshToken) {
+		try {
+			const response = await fetch(`http://127.0.0.1:8000/api/auth/token/refresh`, {
+				method: 'POST',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ refreshToken: refreshToken }),
+			})
+
+			if (response.ok) {
+				const data = await response.json()
+				const res = NextResponse.redirect(request.url)
 		
-// 		if (res.data.data) {
-// 			if (unprotectedPaths.includes(pathname)) {
-// 				return NextResponse.redirect(new URL('/dashboard', request.url));
-// 			}
-// 			return NextResponse.next();
-// 		} 
-// 		else {
-// 			request.cookies.delete('accessToken');
-// 			request.cookies.delete('refreshToken');
-// 			return NextResponse.redirect(new URL('/', request.url));
-// 		}
-// 	} catch (error) {
-// 		console.error("Token refresh failed:");
-// 		request.cookies.delete('accessToken');
-// 		request.cookies.delete('refreshToken');
-// 		return NextResponse.redirect(new URL('/', request.url));
-// 	}
-// }
-// return NextResponse.next()
+				res.cookies.set({
+					name: 'accessToken',
+					value: data.accessToken,
+					httpOnly: true,
+					secure: process.env.NODE_ENV !== 'development',
+					sameSite: 'strict',
+					path: '/',
+					maxAge: 60 * 30, // 30 minutes
+				})
+
+				return res
+			}
+		} catch (error) {
+			console.log(error)
+		}
+	}
+
+	const url = new URL('/auth', request.url)
+	if (pathname == '/auth')
+		return NextResponse.next()
+	return NextResponse.redirect(url)
 }
 
-
-
+// Configure which paths the middleware runs on
 export const config = {
 	matcher: '/((?!_next/static|_next/image|favicon.ico|.*\\..*|assets/|images/|backgrounds/|logos/).*)',
 }
-// export async function middleware(request: NextRequest) {
-	// const { pathname } = request.nextUrl
-
-	// const accessToken = request.cookies.get('accessToken')
-	// const refreshToken = request.cookies.get('refreshToken')
-	// console.log('accessToken: ', accessToken);
-	// console.log('refreshToken: ', refreshToken);
-
-	// if (!accessToken && !refreshToken) {
-	// 	if (unprotectedPaths.includes(pathname)) {
-	// 		return NextResponse.next()
-	// 	}
-	// 	else {
-	// 		return NextResponse.redirect(new URL('/', request.url))
-	// 	}
-	// }
-	// else if (!accessToken && refreshToken) {
-	// 	try {
-	// 		const response = await fetch('http://localhost:8000/api/auth/token/refresh', {
-	// 			method: 'POST',
-	// 			headers: {
-	// 				'Content-Type': 'application/json',
-	// 				Authorization: `Bearer ${refreshToken.value}`
-	// 			}
-	// 		});
-	// 		const response_data = await response.json();
-	// 		console.log('REF: ', response_data)
-	// 		if (response_data.data) {
-	// 			if (unprotectedPaths.includes(pathname)) {
-	// 				return NextResponse.redirect(new URL('/dashboard', request.url))
-	// 			}
-	// 			else {
-	// 				return NextResponse.next()
-	// 			}
-	// 		}
-	// 		else {
-	// 			request.cookies.delete('accessToken')
-	// 			request.cookies.delete('refreshToken')
-	// 			return NextResponse.redirect(new URL('/', request.url))
-	// 		}
-	// 	} catch (error) { 
-	// 		console.error('Error:', error)
-	// 		request.cookies.delete('accessToken')
-	// 		request.cookies.delete('refreshToken')
-	// 		return NextResponse.redirect(new URL('/', request.url))
-	// 	}
-	// }
-	// else {
-	// 	try {
-	// 		const response = await fetch('http://localhost:8000/api/auth/token/verify', {
-	// 			method: 'GET',
-	// 			headers: {
-	// 				'Content-Type': 'application/json',
-	// 				Authorization: `Bearer ${accessToken?.value}`
-	// 			}
-	// 		});
-	// 		const response_data = await response.json();
-	// 		console.log('DATA: ', response_data)
-	// 		if (response_data.message) {
-	// 			if (unprotectedPaths.includes(request.nextUrl.pathname)) {
-	// 				console.log('hhere');
-	// 				return NextResponse.redirect(new URL('/dashboard', request.url))
-	// 			}
-	// 			else {
-	// 				return NextResponse.next()
-	// 			}
-	// 		}
-	// 		else {
-	// 			request.cookies.delete('accessToken')
-	// 			request.cookies.delete('refreshToken')
-	// 			return NextResponse.redirect(new URL('/', request.url))
-	// 		}
-	// 	} catch (error) {
-	// 		console.error('Error:', error)
-	// 		request.cookies.delete('accessToken')
-	// 		request.cookies.delete('refreshToken')
-	// 		return NextResponse.redirect(new URL('/', request.url))
-	// 	}
-	// }
-// }

@@ -37,7 +37,6 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
 
   const loginUser = async (userData : FormDataLogin) => {
     if (userData.email.length == 0 && userData.password.length == 0){
-      console.log('hna dkhal fdfgjrghkkjdfjfdjdfjhjkdfjfkdjlkfd')
       const response = await fetcher.post('/api/auth/42')
       return response.data
     }
@@ -48,7 +47,6 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data)=>{
-      console.log('user logged in successfully', data)
       if (data.url){
         window.location.href = data.url
         return ;

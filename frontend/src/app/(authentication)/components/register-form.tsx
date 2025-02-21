@@ -52,7 +52,6 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
   const registerMutation = useMutation({
     mutationFn: registerUser,
     onSuccess: (data)=>{
-      console.log('user created successfully', data)
       setLogin(true)
     },
     onError: (error)=>{

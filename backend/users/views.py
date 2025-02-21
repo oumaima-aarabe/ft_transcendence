@@ -22,7 +22,6 @@ class UserView(APIView):
                 status=status.HTTP_200_OK
             )
         except Exception as error:
-            print('here')
             return Response(
                 {"error": str(error)},
                 status=status.HTTP_404_NOT_FOUND
