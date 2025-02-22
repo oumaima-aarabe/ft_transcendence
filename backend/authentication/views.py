@@ -10,8 +10,6 @@ import os
 from django.conf import settings
 import requests
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.tokens import AccessToken
-
 
 
 class signup_view(APIView):
@@ -37,13 +35,19 @@ class login_view(APIView):
             email = request.data.get('email')
             password = request.data.get('password')
 
-            user = User.objects.get(email=email)
-            if user is None:
-                return Response({"error": "User not found"}, status=status.HTTP_401_UNAUTHORIZED)
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "No account found with this email"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
             
-            check_password = user.check_password(password)
-            if not check_password:
-                return Response({"error": "Password incorrect"}, status=status.HTTP_401_UNAUTHORIZED)
+            if not user.check_password(password):
+                return Response(
+                    {"error": "Incorrect password"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
         
             refresh_token = RefreshToken.for_user(user)
             access_token = refresh_token.access_token
@@ -53,7 +57,7 @@ class login_view(APIView):
             cookie_settings = {
                 "httponly": True,
                 "secure": False,
-                "samesite": "Lax",  # Use 'None' if using HTTPS
+                "samesite": "Lax",  #'None' if using HTTPS
                 "domain": None,  # This will use the current domain
                 "path": "/"
             }
