@@ -19,6 +19,7 @@ import { Icon } from "@iconify-icon/react";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
+import { CheckCircleIcon, XCircleIcon } from "lucide-react";
 
 export interface FormDataRegister {
   first_name: string;
@@ -27,6 +28,10 @@ export interface FormDataRegister {
   password: string;
   email: string;
   confirmPassword: string;
+}
+
+interface RegisterError {
+  error: string;
 }
 
 export const RegisterForm = ({setLogin}: LoginFormProps) => {
@@ -45,8 +50,17 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
 
 
   const registerUser = async (userData : FormDataRegister) => {
-    const response = await fetcher.post('/api/auth/sign_up', userData)
-    return response.data
+    try{
+      const response = await fetcher.post('/api/auth/sign_up', userData)
+      return response.data
+    }
+    catch (error: any){
+      const errorData = error.response?.data as RegisterError
+      if (errorData?.error) {
+        throw new Error(errorData.error)
+      }
+      throw new Error('An unexpected error occurred')
+    }
   }
   
   const registerMutation = useMutation({
@@ -306,16 +320,35 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
             />
           </div>
 
-          {registerMutation.isError ? (
-            <p className="text-red-500 text-sm">
-              {registerMutation.error.message}
-            </p>
-          ) : null}
-          {registerMutation.isSuccess ? (
-            <p className="text-green-500 text-sm">
-              {registerMutation.data.data.message}
-            </p>
-          ) : null}
+          {registerMutation.isError && (
+            <div className="rounded-xl bg-red-50 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    {registerMutation.error?.message || "An error occurred during login"}
+                  </h3>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {registerMutation.isSuccess && (
+            <div className="rounded-lg bg-green-50 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-800">
+                    {registerMutation.data.data}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Button
             type="submit"
