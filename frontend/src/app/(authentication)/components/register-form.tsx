@@ -64,8 +64,19 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
     .object({
       firstName: z.string().min(2, "First name must be at least 2 characters").max(50),
       lastName: z.string().min(2, "Last name must be at least 2 characters").max(50),
-      username: z.string().min(4).max(10),
-      email: z.string().email("Invalid email address"),
+      username: z
+        .string()
+        .min(4)
+        .max(10)
+        .refine((value) => value.includes('_'), {
+          message: "Username must contain an underscore (_)"
+        }),
+      email: z
+        .string()
+        .email("Invalid email address")
+        .refine((value) => !value.toLowerCase().endsWith('@1337.ma'), {
+          message: "Email address cannot have 1337.ma extension"
+        }),
       password: z
         .string()
         .regex(

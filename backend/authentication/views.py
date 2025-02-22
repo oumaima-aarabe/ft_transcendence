@@ -10,6 +10,8 @@ import os
 from django.conf import settings
 import requests
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
+
 
 
 class signup_view(APIView):
@@ -34,15 +36,15 @@ class login_view(APIView):
         try:
             email = request.data.get('email')
             password = request.data.get('password')
+
             user = User.objects.get(email=email)
-
             if user is None:
-                return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-
+                return Response({"error": "User not found"}, status=status.HTTP_401_UNAUTHORIZED)
+            
             check_password = user.check_password(password)
             if not check_password:
-                return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-
+                return Response({"error": "Password incorrect"}, status=status.HTTP_401_UNAUTHORIZED)
+        
             refresh_token = RefreshToken.for_user(user)
             access_token = refresh_token.access_token
 

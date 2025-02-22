@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useStateContext } from "@/providers/state-context"
 
 
-const Cover = () => {
+export default function cover() {
 
   const stateContext = useStateContext();
   const userData = stateContext?.state.user
@@ -38,5 +38,3 @@ const Cover = () => {
     </div>
   )
 }
-
-export default Cover
