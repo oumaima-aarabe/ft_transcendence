@@ -21,8 +21,8 @@ import { useMutation } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
 
 export interface FormDataRegister {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   username: string;
   password: string;
   email: string;
@@ -62,8 +62,14 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
 
   const formSchema = z
     .object({
-      firstName: z.string().min(2, "First name must be at least 2 characters").max(50),
-      lastName: z.string().min(2, "Last name must be at least 2 characters").max(50),
+      first_name: z
+        .string()
+        .min(2, "First name must be at least 2 characters")
+        .max(100),
+      last_name: z
+        .string()
+        .min(2, "Last name must be at least 2 characters")
+        .max(100),
       username: z
         .string()
         .min(4)
@@ -93,8 +99,8 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
     const registerForm = useForm<z.infer<typeof formSchema>>({
       resolver: zodResolver(formSchema),
       defaultValues: {
-        firstName: "",
-        lastName: "",
+        first_name: "",
+        last_name: "",
         username: "",
         email: "",
         password: "",
@@ -123,7 +129,7 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
           <div className="flex flex-wrap gap-4">
             <FormField
               control={registerForm.control}
-              name="firstName"
+              name="first_name"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[220px]">
                   <FormLabel className="text-white">First Name</FormLabel>
@@ -147,7 +153,7 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
             />
             <FormField
               control={registerForm.control}
-              name="lastName"
+              name="last_name"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[220px]">
                   <FormLabel className="text-white">Last Name</FormLabel>

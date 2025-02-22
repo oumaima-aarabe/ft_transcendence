@@ -21,10 +21,14 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { fetcher } from "@/lib/fetcher";
+import { CheckCircleIcon, XCircleIcon } from "lucide-react";
 
 export interface FormDataLogin {
   email : string;
   password: string;
+}
+interface LoginError {
+  error: string;
 }
 
 const LoginForm = ({ setLogin }: LoginFormProps) => {
@@ -36,12 +40,20 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
   }
 
   const loginUser = async (userData : FormDataLogin) => {
-    if (userData.email.length == 0 && userData.password.length == 0){
-      const response = await fetcher.post('/api/auth/42')
+    try {
+      if (userData.email.length == 0 && userData.password.length == 0) {
+        const response = await fetcher.post('/api/auth/42')
+        return response.data
+      }
+      const response = await fetcher.post('/api/auth/sign_in', userData)
       return response.data
+    } catch (error: any) {
+      const errorData = error.response?.data as LoginError
+      if (errorData?.error) {
+        throw new Error(errorData.error)
+      }
+      throw new Error('An unexpected error occurred')
     }
-    const response = await fetcher.post('/api/auth/sign_in', userData)
-    return response.data
   }
 
   const loginMutation = useMutation({
@@ -54,7 +66,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
       router.push('/dashboard')
     },
     onError: (error)=>{
-      console.log('user can not log in', error)
+      console.log('log in error', error.message)
     }
   })
   
@@ -171,16 +183,35 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
               </FormItem>
             )}
           />
-          {loginMutation.isError ? (
-            <p className="text-red-500 text-sm">
-              {loginMutation.error.message}
-            </p>
-          ) : null}
-          {loginMutation.isSuccess ? (
-            <p className="text-green-500 text-sm">
-              {loginMutation.data.data}
-            </p>
-          ) : null}
+          {loginMutation.isError && (
+            <div className="rounded-xl bg-red-50 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    {loginMutation.error?.message || "An error occurred during login"}
+                  </h3>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loginMutation.isSuccess && (
+            <div className="rounded-lg bg-green-50 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-800">
+                    {loginMutation.data.data}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           <Button
             type="submit"
             disabled={loginMutation.isPending}

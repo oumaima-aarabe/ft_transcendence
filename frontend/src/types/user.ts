@@ -8,8 +8,8 @@ export type User = {
     username: string
     password: string
     avatar: string
-    firstname: string
-    lastname: string
+    first_name: string
+    last_name: string
     level: number
     state: UserState
     tfa: boolean
