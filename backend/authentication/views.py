@@ -136,6 +136,8 @@ class Login42API(APIView):
             username = user_data.get("login")
             images = user_data.get("image")
             avatar = images.get("link")
+            first_name = user_data.get("first_name")
+            last_name = user_data.get("last_name")
             if not user_email or not username:
                 error_query = urlencode({'error': 'no_email'})
                 return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
@@ -143,7 +145,9 @@ class Login42API(APIView):
             user = User.objects.filter(email=user_email).first()
             if user is None:
                 user = User.objects.create_user(
-                    email=user_email, username=username, avatar=avatar
+                    email=user_email, username=username, avatar=avatar,
+                    first_name=first_name or '',
+                    last_name=last_name or ''
                 )
 
             refresh = RefreshToken.for_user(user)
