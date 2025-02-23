@@ -20,5 +20,5 @@ from django.urls import path, include
 urlpatterns = [
     path('api/auth/', include("authentication.urls")),
     path('api/users/', include("users.urls")),
-    path('api/friends', include("friends.urls")),
+    path('api/friends/', include("friends.urls")),
 ]

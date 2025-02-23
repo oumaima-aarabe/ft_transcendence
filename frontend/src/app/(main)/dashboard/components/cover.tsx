@@ -1,16 +1,20 @@
 "use client"
 
-import { Progress } from "@/components/ui/progress"
+// import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useStateContext } from "@/providers/state-context"
+// import { useStateContext } from "@/providers/state-context"
+import { UseUser } from "../../api/get-user";
+import Loading from "@/app/loading/page";
 
 
 export default function cover() {
 
-  const stateContext = useStateContext();
-  const userData = stateContext?.state.user
+  // const stateContext = useStateContext();
+  // const userData = stateContext?.state.user
 
-  if (!userData) return  <></>
+  const {data : userData} = UseUser()
+
+  if (!userData) return  <Loading />
 
   return (
     <div className="border border-yellow w-full h-[20%] rounded-2xl bg-center bg-black flex flex-col justify-center items-center">

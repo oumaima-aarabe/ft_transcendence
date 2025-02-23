@@ -9,6 +9,7 @@ export async function middleware(request: NextRequest) {
 
 	const accessToken = request.cookies.get('accessToken')?.value
 
+	console.log(pathname)
 	if (accessToken) {
 		try {
 			const tokenData = JSON.parse(atob(accessToken.split('.')[1]))
@@ -60,9 +61,11 @@ export async function middleware(request: NextRequest) {
 		}
 	}
 
-	const url = new URL('/auth', request.url)
-	if (pathname == '/auth')
-		return NextResponse.next()
+	const url = new URL('/', request.url)
+	if (PUBLIC_PATHS.includes(pathname)) {
+			return NextResponse.next()
+	}
+	// return NextResponse.next()
 	return NextResponse.redirect(url)
 }
 

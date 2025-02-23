@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function loading() {
+export default function Loading() {
     return (
     <div className="flex items-center justify-center h-screen">
         <div className="relative h-10 w-1.5 text-[#40CFB7] animate-paddles">
