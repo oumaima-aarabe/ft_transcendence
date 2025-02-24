@@ -12,9 +12,9 @@ export interface LoginFormProps {
 export default function RegisterPage() {
   const [login, setLogin] = useState<boolean>(true)
   return (
-    <div className="h-full w-full justify-center flex-col flex items-center space-y-[40px]">
-      <Image src="/assets/images/logo.svg" alt="logo" width={265} height={170} />
-      {login === true ? <LoginForm setLogin={setLogin} /> : <RegisterForm setLogin={setLogin} />}
+    <div className="min-h-screen justify-center flex flex-col items-center space-y-[40px]">
+        <Image src="/assets/images/logo.svg" alt="logo" width={265} height={170} />
+        {login === true ? <LoginForm setLogin={setLogin} /> : <RegisterForm setLogin={setLogin} />}
     </div>
   );
 }

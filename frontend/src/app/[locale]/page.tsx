@@ -10,13 +10,6 @@ export default function LandingPage() {
 
   return(
     <div className="min-h-screen relative">
-    <div className="absolute inset-0">
-      <img
-        src="/assets/images/background.jpg"
-        alt="Background"
-        className="w-full h-full object-cover"
-      />
-    </div>
     <div className="relative z-10 flex flex-col items-center justify-center h-screen">
     <div className="mb-8">
         <Image 

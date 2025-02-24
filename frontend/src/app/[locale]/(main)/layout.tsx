@@ -9,13 +9,6 @@ export default function MainLayout({
   return (
     <UserProvider>
       <div className="min-h-screen relative">
-        <div className="absolute inset-0">
-          <img
-            src="/assets/images/background.jpg"
-            alt="Background"
-            className="w-full h-full object-cover"
-          />
-        </div>
         <div className="relative z-10 flex h-screen">
           <Sidebar />
           <div className="flex-1 flex flex-col">

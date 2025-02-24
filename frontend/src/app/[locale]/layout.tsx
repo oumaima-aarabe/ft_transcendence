@@ -25,13 +25,22 @@ export default async function RootLayout({ children, params }: Props) {
   return (
     <html lang={locale} translate="no" className="notranslate">
       <body className={inter.className}>
-        <main>
-          <NextIntlClientProvider messages={messages}>
-            <CustomQueryClientProvider>
-              {children}
-            </CustomQueryClientProvider>
-            <Toaster />
-          </NextIntlClientProvider>
+        <main className="min-h-screen relative">
+          <div className="absolute inset-0">
+            <img
+              src="/assets/images/background.jpg"
+              alt="Background"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="relative z-10">
+            <NextIntlClientProvider messages={messages}>
+              <CustomQueryClientProvider>
+                {children}
+              </CustomQueryClientProvider>
+              <Toaster />
+            </NextIntlClientProvider>
+          </div>
         </main>
       </body>
     </html>
