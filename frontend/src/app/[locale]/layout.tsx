@@ -19,16 +19,8 @@ type Props = {
 };
 
 export default async function RootLayout({ children, params }: Props) {
-  const messages = await getMessages();
-  const locale = await params.locale;
-
-  if (!locale) {
-    return (
-      <html lang="en" translate="no" className="notranslate">
-        <body className={inter.className}>{children}</body>
-      </html>
-    );
-  }
+  const { locale } = await params;
+  let messages = await getMessages({ locale });
 
   return (
     <html lang={locale} translate="no" className="notranslate">
