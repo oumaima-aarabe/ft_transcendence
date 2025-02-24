@@ -1,55 +1,124 @@
-# from rest_framework.permissions import IsAuthenticated
-# from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.response import Response
+import base64
+import os
+import tempfile
+from django.conf import settings
+import requests
 from authentication.models import User
-from authentication.serializers import UserSerializer
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.response import Response
+from .serializers import *
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from rest_framework.parsers import MultiPartParser, FormParser
+
+@permission_classes([IsAuthenticated])
+@api_view(["GET"])
+def get_user_data(request, user_id):
+    try:
+        user = request.user if user_id == "me" else User.objects.get(id=user_id)
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+@permission_classes([IsAuthenticated])
+@api_view(['PATCH'])
+def update_user_data(request):
+    serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserView(APIView):
-    def get(self, request, username):
+@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+def search_users(request, query):
+    if not query:
+        return Response([])
+
+    users = User.objects.filter(
+        Q(username__icontains=query) |
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query)
+    ).exclude(
+        id=request.user.id
+    ).exclude(
+        blocked_users=request.user
+    ).exclude(
+        blocked_by=request.user
+    )[:5]
+
+
+    return Response(UserSerializer(users, many=True).data)
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated])
+def upload_image(request):
+    image = request.data.get("image")
+    if not image:
+        return Response({"message": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
+    if image.size > settings.MAX_FILE_SIZE:
+        return Response({"message": "File is too large"}, status=status.HTTP_400_BAD_REQUEST)
+    if not image.name.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
+        return Response({"message": "File type not supported"}, status=status.HTTP_400_BAD_REQUEST)
+    if image.size == 0:
+        return Response({"message": "File is empty"}, status=status.HTTP_400_BAD_REQUEST)
+
+    API_KEY = os.environ.get("FREEIMAGE_API_KEY")
+    if not API_KEY:
+        return Response({"message": "Image upload service not configured"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    API_ENDPOINT = "https://freeimage.host/api/1/upload"
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         try:
-            if username == "me":
-                user = request.user
-            else:
-                user = get_object_or_404(User, username=username)
+            for chunk in image.chunks():
+                temp_file.write(chunk)
+            temp_file.flush()
+            
+            with open(temp_file.name, "rb") as f:
+                image_data = base64.b64encode(f.read()).decode("utf-8")
 
-            serializer = UserSerializer(user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        except Exception as error:
-            return Response(
-                {"error": str(error)},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            payload = {
+                "key": API_KEY,
+                "action": "upload",
+                "source": image_data,
+                "format": "json"
+            }
 
-    def put(self, request, username):
-        try:
-            if username != "me" and username != request.user.username:
-                return Response(
-                    {"error": "You can only update your own profile"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
+            response = requests.post(API_ENDPOINT, data=payload)
+            response.raise_for_status()
+            image_url = response.json()["image"]["image"]["url"]
+            return Response({"url": image_url}, status=status.HTTP_201_CREATED)
 
-            user = request.user
-            serializer = UserSerializer(user, data=request.data, partial=True)
+        except requests.exceptions.RequestException as e:
+            return Response(
+                {"message": "Error uploading image to external service"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                {"message": "Error processing image"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        finally:
+            # Clean up the temporary file
+            if os.path.exists(temp_file.name):
+                os.unlink(temp_file.name)
 
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_200_OK
-                )
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as error:
-            return Response(
-                {"error": str(error)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def update_password(request):
+    if "1337.ma" in request.user.email:
+        return Response({"code": "intra_email"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not request.data.get("old_password") or not request.data.get("new_password"):
+        return Response({"code": "data_missing"}, status=status.HTTP_400_BAD_REQUEST)
+    if not request.user.check_password(request.data.get("old_password")):
+        return Response({"code": "old_incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+    request.user.set_password(request.data.get("new_password"))
+    request.user.save()
+    return Response({"code": "password_updated"}, status=status.HTTP_200_OK)

@@ -13,10 +13,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import datetime
 from datetime import timedelta
 
-load_dotenv()
+load_dotenv(".env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,12 +25,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-@ro0=w7=_v%ap6a-&n!)2&-o-+qg93+nn_8c73%+u*9gpkiead"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,7 +39,11 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     "rest_framework",
     "authentication",
+    "users",
     "friends",
+    "chat",
+    "channels",
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -78,6 +82,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
+    # "authentication.backends.EmailOrUsernameModelBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -99,6 +104,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'backend.asgi.application'
 WSGI_APPLICATION = "backend.wsgi.application"
 
 
@@ -110,11 +116,11 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_HOST"),
-        "PORT": os.getenv("POSTGRES_PORT"),
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
     }
 }
 
@@ -157,11 +163,13 @@ STATIC_URL = "static/"
 
 AUTH_USER_MODEL = "authentication.User"
 
+CORS_ALLOW_ALL_ORIGINS = True # DEV ONLY
+
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://api.intra.42.fr",
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "https://api.intra.42.fr",
+# ]
 CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
 CSRF_TRUSTED_ORIGINS = [
@@ -169,22 +177,23 @@ CSRF_TRUSTED_ORIGINS = [
     "https://api.intra.42.fr",
 ]
 CORS_ALLOW_HEADERS = [
-    "content-type",
-    "authorization",
-    "accept",
-    "x-csrftoken",
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
-CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SAMESITE = "Lax"
 
-COOKIE_SECURE = False
-ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
-REFRESH_TOKEN_LIFETIME = timedelta(days=1)
+ACCESS_TOKEN_LIFETIME = timedelta(days=7)
+REFRESH_TOKEN_LIFETIME = timedelta(days=14)
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=2),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
@@ -195,8 +204,21 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
+# Channel layers configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# UPLOAD SUPPORT
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MAX_FILE_SIZE = 10 * 1024 * 1024 # 10MB

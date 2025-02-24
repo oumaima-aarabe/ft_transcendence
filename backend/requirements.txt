@@ -1,17 +1,30 @@
-asgiref==3.8.1
-certifi==2024.12.14
-charset-normalizer==3.4.1
-Django==4.2.16
-django-allauth==65.3.1
-django-cors-headers==4.6.0
-djangorestframework==3.15.2
-djangorestframework_simplejwt==5.4.0
-idna==3.10
-pillow==11.0.0
-psycopg==3.2.3
-psycopg2-binary==2.9.9
-python-dotenv==1.0.1
-requests==2.32.3
-sqlparse==0.5.1
-typing_extensions==4.12.2
-urllib3==2.3.0
+# Django & Ecosystem
+Django
+django-allauth
+django-cors-headers
+djangorestframework
+djangorestframework_simplejwt
+
+# Database & related
+psycopg
+psycopg2-binary
+sqlparse
+asgiref
+
+# Asynchronous
+channels
+channels-redis
+daphne
+redis
+
+# Utilities
+python-dotenv
+requests
+urllib3
+certifi
+charset-normalizer
+idna
+typing_extensions
+
+# Image Processing
+pillow

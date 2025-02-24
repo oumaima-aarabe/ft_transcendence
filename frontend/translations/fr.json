@@ -1,0 +1,170 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": {
+      "connection": "Erreur de connexion. Veuillez réessayer.",
+      "failed_load": "Échec du chargement"
+    }
+  },
+  "auth": {
+    "sign_in": {
+      "title": "Se connecter",
+      "new_user": "Nouveau sur PongArcadia ?",
+      "sign_up_link": "S'inscrire !",
+      "username_placeholder": "Entrez votre nom d'utilisateur",
+      "password_placeholder": "Entrez votre mot de passe",
+      "button": "Se connecter",
+      "or_sign_in_with": "Ou connectez-vous avec"
+    },
+    "sign_up": {
+      "title": "Rejoignez-nous en entrant vos informations",
+      "username_placeholder": "Nom d'utilisateur",
+      "email_placeholder": "Email",
+      "first_name_placeholder": "Prénom",
+      "last_name_placeholder": "Nom",
+      "password_placeholder": "Mot de passe",
+      "confirm_password_placeholder": "Confirmer le mot de passe",
+      "button": "S'inscrire",
+      "have_account": "Vous avez déjà un compte ?",
+      "sign_in_link": "Se connecter !"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "tabs": {
+      "profile": "Profil",
+      "account": "Compte",
+      "game": "Jeu"
+    },
+    "username": {
+      "error": {
+        "underscore": {
+          "title": "Nom d'utilisateur invalide",
+          "description": "Le nom d'utilisateur doit contenir un underscore"
+        }
+      }
+    },
+    "password": {
+      "title": "Modifier le mot de passe",
+      "old_password": "Ancien mot de passe",
+      "new_password": "Nouveau mot de passe",
+      "update_button": "Modifier le mot de passe",
+      "updating": "Modification...",
+      "success": {
+        "title": "Mot de passe mis à jour",
+        "description": "Votre mot de passe a été mis à jour avec succès"
+      },
+      "error": {
+        "incorrect_old": {
+          "title": "Ancien mot de passe incorrect",
+          "description": "Veuillez réessayer"
+        },
+        "data_missing": {
+          "title": "Données manquantes",
+          "description": "Veuillez remplir tous les champs"
+        },
+        "intra_account": {
+          "title": "Compte Intra",
+          "description": "Vous ne pouvez pas modifier le mot de passe d'un compte Intra"
+        },
+        "generic": {
+          "title": "Échec de la mise à jour",
+          "description": "Veuillez réessayer"
+        }
+      }
+    },
+    "two_factor": {
+      "title": "Authentification à deux facteurs",
+      "disabled_message": "L'authentification à deux facteurs est désactivée",
+      "enabled_message": "L'authentification à deux facteurs est activée",
+      "enable_button": "Activer 2FA",
+      "disable_button": "Désactiver 2FA",
+      "qr": {
+        "scan_title": "Scannez-moi",
+        "code_title": "Entrez le code généré",
+        "code_placeholder": "* * * * * *",
+        "enable_button": "Activer 2FA"
+      }
+    },
+    "game": {
+      "connectivity": {
+        "title": "Connectivité par défaut",
+        "online": "En ligne",
+        "local": "Local"
+      },
+      "theme": {
+        "title": "Thème du plateau",
+        "fire": "Thème Feu",
+        "water": "Thème Eau"
+      }
+    },
+    "language": {
+      "title": "Choisir la langue",
+      "languages": {
+        "english": "Anglais",
+        "french": "Français",
+        "italian": "Italien",
+        "spanish": "Espagnol"
+      }
+    },
+    "profile": {
+      "title": "Paramètres du profil",
+      "avatar": "Avatar",
+      "upload_avatar": "Télécharger un avatar",
+      "remove_avatar": "Supprimer l'avatar",
+      "username": "Nom d'utilisateur",
+      "email": "Email",
+      "first_name": "Prénom",
+      "last_name": "Nom",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
+      "success": {
+        "title": "Profil mis à jour",
+        "description": "Votre profil a été mis à jour avec succès"
+      },
+      "error": {
+        "title": "Échec de la mise à jour",
+        "description": "Échec de la mise à jour du profil. Veuillez réessayer."
+      }
+    }
+  },
+  "chat": {
+    "loading": "Chargement du chat...",
+    "messages": {
+      "send_placeholder": "Tapez votre message...",
+      "failed_fetch": "Échec de la récupération des messages"
+    },
+    "profile": {
+      "title": "Profil de chat",
+      "status": "Statut",
+      "mute": "Désactiver les notifications",
+      "block": "Bloquer l'utilisateur",
+      "report": "Signaler l'utilisateur",
+      "options": "Options",
+      "view_profile": "Voir le profil",
+      "challenge": "Défier",
+      "delete_chat": "Supprimer la conversation",
+      "friend_status": "Vous êtes ami avec cette personne"
+    },
+    "list": {
+      "title": "Conversations",
+      "search": "Rechercher des utilisateurs ou des conversations",
+      "search_results": "Résultats de recherche",
+      "click_to_start": "Cliquez pour démarrer la conversation",
+      "no_messages": "Pas encore de messages",
+      "start_chat": "Démarrer une nouvelle conversation"
+    }
+  },
+  "header": {
+    "search": {
+      "placeholder": "Rechercher des personnes, des tournois et plus"
+    },
+    "status": {
+      "online": "en ligne",
+      "offline": "hors ligne",
+      "away": "absent",
+      "busy": "ne pas déranger",
+      "invisible": "invisible"
+    }
+  }
+}

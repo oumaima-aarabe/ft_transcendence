@@ -1,0 +1,170 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "error": {
+      "connection": "Errore di connessione. Per favore riprova.",
+      "failed_load": "Caricamento fallito"
+    }
+  },
+  "auth": {
+    "sign_in": {
+      "title": "Accedi",
+      "new_user": "Nuovo su PongArcadia?",
+      "sign_up_link": "Registrati!",
+      "username_placeholder": "Inserisci il tuo nome utente",
+      "password_placeholder": "Inserisci la tua password",
+      "button": "Accedi",
+      "or_sign_in_with": "Oppure accedi con"
+    },
+    "sign_up": {
+      "title": "Unisciti inserendo le tue informazioni",
+      "username_placeholder": "Nome utente",
+      "email_placeholder": "Email",
+      "first_name_placeholder": "Nome",
+      "last_name_placeholder": "Cognome",
+      "password_placeholder": "Password",
+      "confirm_password_placeholder": "Conferma password",
+      "button": "Registrati",
+      "have_account": "Hai già un account?",
+      "sign_in_link": "Accedi!"
+    }
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "tabs": {
+      "profile": "Profilo",
+      "account": "Account",
+      "game": "Gioco"
+    },
+    "username": {
+      "error": {
+        "underscore": {
+          "title": "Nome utente invalido",
+          "description": "Il nome utente deve contenere un underscore"
+        }
+      }
+    },
+    "password": {
+      "title": "Aggiorna password",
+      "old_password": "Vecchia password",
+      "new_password": "Nuova password",
+      "update_button": "Aggiorna password",
+      "updating": "Aggiornamento...",
+      "success": {
+        "title": "Password aggiornata",
+        "description": "La tua password è stata aggiornata con successo"
+      },
+      "error": {
+        "incorrect_old": {
+          "title": "Vecchia password errata",
+          "description": "Per favore riprova"
+        },
+        "data_missing": {
+          "title": "Dati mancanti",
+          "description": "Per favore compila tutti i campi"
+        },
+        "intra_account": {
+          "title": "Account Intra",
+          "description": "Non puoi aggiornare la password di un account Intra"
+        },
+        "generic": {
+          "title": "Aggiornamento fallito",
+          "description": "Per favore riprova"
+        }
+      }
+    },
+    "two_factor": {
+      "title": "Autenticazione a due fattori",
+      "disabled_message": "L'autenticazione a due fattori è disattivata",
+      "enabled_message": "L'autenticazione a due fattori è attivata",
+      "enable_button": "Attiva 2FA",
+      "disable_button": "Disattiva 2FA",
+      "qr": {
+        "scan_title": "Scansiona",
+        "code_title": "Inserisci il codice generato",
+        "code_placeholder": "* * * * * *",
+        "enable_button": "Attiva 2FA"
+      }
+    },
+    "game": {
+      "connectivity": {
+        "title": "Connettività predefinita",
+        "online": "Online",
+        "local": "Locale"
+      },
+      "theme": {
+        "title": "Tema della tavola",
+        "fire": "Tema Fuoco",
+        "water": "Tema Acqua"
+      }
+    },
+    "language": {
+      "title": "Scegli lingua",
+      "languages": {
+        "english": "Inglese",
+        "french": "Francese",
+        "italian": "Italiano",
+        "spanish": "Spagnolo"
+      }
+    },
+    "profile": {
+      "title": "Impostazioni profilo",
+      "avatar": "Avatar",
+      "upload_avatar": "Carica avatar",
+      "remove_avatar": "Rimuovi avatar",
+      "username": "Nome utente",
+      "email": "Email",
+      "first_name": "Nome",
+      "last_name": "Cognome",
+      "save": "Salva modifiche",
+      "saving": "Salvataggio...",
+      "success": {
+        "title": "Profilo aggiornato",
+        "description": "Il tuo profilo è stato aggiornato con successo"
+      },
+      "error": {
+        "title": "Aggiornamento fallito",
+        "description": "Impossibile aggiornare il profilo. Per favore riprova."
+      }
+    }
+  },
+  "chat": {
+    "loading": "Caricamento chat...",
+    "messages": {
+      "send_placeholder": "Scrivi il tuo messaggio...",
+      "failed_fetch": "Impossibile caricare i messaggi"
+    },
+    "profile": {
+      "title": "Profilo chat",
+      "status": "Stato",
+      "mute": "Disattiva notifiche",
+      "block": "Blocca utente",
+      "report": "Segnala utente",
+      "options": "Opzioni",
+      "view_profile": "Visualizza profilo",
+      "challenge": "Sfida",
+      "delete_chat": "Elimina chat",
+      "friend_status": "Sei amico di questa persona"
+    },
+    "list": {
+      "title": "Conversazioni",
+      "search": "Cerca utenti o conversazioni",
+      "search_results": "Risultati ricerca",
+      "click_to_start": "Clicca per iniziare la conversazione",
+      "no_messages": "Ancora nessun messaggio",
+      "start_chat": "Inizia nuova conversazione"
+    }
+  },
+  "header": {
+    "search": {
+      "placeholder": "Cerca persone, tornei e altro"
+    },
+    "status": {
+      "online": "online",
+      "offline": "offline",
+      "away": "assente",
+      "busy": "non disturbare",
+      "invisible": "invisibile"
+    }
+  }
+}

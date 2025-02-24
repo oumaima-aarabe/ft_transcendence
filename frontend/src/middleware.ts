@@ -1,72 +1,79 @@
-// middleware.ts
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
 
-const PUBLIC_PATHS = ['/', '/auth']
+// Create the next-intl middleware
+const intlMiddleware = createMiddleware(routing);
+
+// List of public routes that don't require authentication
+const publicRoutes = ["/", "/auth"];
+
+// List of protected routes
+const protectedRoutes = [
+  "/dashboard",
+  "/chat",
+  "/game",
+  "/tournaments",
+  "/settings",
+];
 
 export async function middleware(request: NextRequest) {
-	const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl;
+  const accessToken = request.cookies.get("accessToken");
 
-	const accessToken = request.cookies.get('accessToken')?.value
+  // Get locale from URL (will be in the format /en/path, /fr/path, etc.)
+  const pathnameSegments = pathname.split("/");
+  const locale =
+    (pathnameSegments[1] as (typeof routing.locales)[number]) ||
+    routing.defaultLocale;
 
-	if (accessToken) {
-		try {
-			const tokenData = JSON.parse(atob(accessToken.split('.')[1]))
-			const isTokenValid = tokenData.exp * 1000 > Date.now()
-			if (isTokenValid) {
-				if (PUBLIC_PATHS.includes(pathname)) {
-					if (pathname == '/dashboard')
-						return NextResponse.next()
-					return NextResponse.redirect(new URL('/dashboard', request.url))
-				}
-				return NextResponse.next()
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
+  // Handle root path redirect
+  if (pathname === "/") {
+    if (accessToken) {
+      try {
+        const tokenData = JSON.parse(atob(accessToken.split(".")[1]));
+        const isTokenValid = tokenData.exp * 1000 > Date.now();
+        if (isTokenValid) {
+          return NextResponse.redirect(
+            new URL(`/${locale}/dashboard`, request.url)
+          );
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
+  }
 
-	const refreshToken = request.cookies.get('refreshToken')?.value
+  // Allow access to public routes without authentication
+  if (publicRoutes.some((route) => pathname.endsWith(route))) {
+    // If user is already authenticated, redirect to their dashboard
+    if (accessToken) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/dashboard`, request.url)
+      );
+    }
+    return intlMiddleware(request);
+  }
 
-	if (refreshToken) {
-		try {
-			const response = await fetch(`http://127.0.0.1:8000/api/auth/token/refresh`, {
-				method: 'POST',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ refreshToken: refreshToken }),
-			})
+  // For protected routes, check if user is authenticated
+  if (protectedRoutes.some((route) => pathname.endsWith(route))) {
+    if (!accessToken) {
+      return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
+    }
+  }
 
-			if (response.ok) {
-				const data = await response.json()
-				const res = NextResponse.redirect(request.url)
-		
-				res.cookies.set({
-					name: 'accessToken',
-					value: data.accessToken,
-					httpOnly: true,
-					secure: process.env.NODE_ENV !== 'development',
-					sameSite: 'strict',
-					path: '/',
-					maxAge: 60 * 30, // 30 minutes
-				})
-
-				return res
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
-
-	const url = new URL('/auth', request.url)
-	if (pathname == '/auth')
-		return NextResponse.next()
-	return NextResponse.redirect(url)
+  // For all other routes, use the next-intl middleware
+  return intlMiddleware(request);
 }
 
-// Configure which paths the middleware runs on
 export const config = {
-	matcher: '/((?!_next/static|_next/image|favicon.ico|.*\\..*|assets/|images/|backgrounds/|logos/).*)',
-}
+  matcher: [
+    // Match all pathnames except static files and api routes
+    "/((?!api|_next|public|.*\\.(?:jpg|jpeg|gif|png|svg|ico)$|favicon.ico).*)",
+    // Match all localized pathnames
+    "/",
+    "/(fr|en|it|es)/:path*",
+  ],
+};

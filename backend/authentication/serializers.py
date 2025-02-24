@@ -2,10 +2,10 @@ from rest_framework import serializers
 from .models import User
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'username', 'password', 'first_name', 'last_name', 'avatar')
+        fields = ('email', 'username', 'password', 'first_name', 'last_name', 'avatar', 'cover', 'status', 'last_activity', 'experience', 'level')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_username(self, value):

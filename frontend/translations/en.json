@@ -1,0 +1,170 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": {
+      "connection": "Connection error. Please try again.",
+      "failed_load": "Failed to load"
+    }
+  },
+  "auth": {
+    "sign_in": {
+      "title": "Sign in",
+      "new_user": "New to PongArcadia?",
+      "sign_up_link": "Sign up!",
+      "username_placeholder": "Enter your username",
+      "password_placeholder": "Enter your password",
+      "button": "Sign in",
+      "or_sign_in_with": "Or sign in with"
+    },
+    "sign_up": {
+      "title": "Join us by entering your information",
+      "username_placeholder": "Username",
+      "email_placeholder": "Email",
+      "first_name_placeholder": "First name",
+      "last_name_placeholder": "Last name",
+      "password_placeholder": "Password",
+      "confirm_password_placeholder": "Confirm password",
+      "button": "Sign up",
+      "have_account": "Already have an account?",
+      "sign_in_link": "Sign in!"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "profile": "Profile",
+      "account": "Account",
+      "game": "Game"
+    },
+     "username": {
+          "error": {
+            "underscore": {
+              "title": "Invalid username",
+              "description": "Username must contain an underscore"
+          }
+      }
+    },
+    "password": {
+      "title": "Update Password",
+      "old_password": "Old password",
+      "new_password": "New password",
+      "update_button": "Update Password",
+      "updating": "Updating...",
+      "success": {
+        "title": "Password updated successfully",
+        "description": "Your password has been updated successfully"
+      },
+      "error": {
+        "incorrect_old": {
+          "title": "Old password is incorrect",
+          "description": "Please try again"
+        },
+        "data_missing": {
+          "title": "Data missing",
+          "description": "Please fill in all fields"
+        },
+        "intra_account": {
+          "title": "Intra account",
+          "description": "You can't update your password with an intra account"
+        },
+        "generic": {
+          "title": "Failed to update password",
+          "description": "Please try again"
+        }
+      }
+    },
+    "two_factor": {
+      "title": "Two-Factor Authentication",
+      "disabled_message": "Two-factor authentication is disabled",
+      "enabled_message": "Two-factor authentication is enabled",
+      "enable_button": "Enable 2FA",
+      "disable_button": "Disable 2FA",
+      "qr": {
+        "scan_title": "Scan me",
+        "code_title": "Enter the generated code",
+        "code_placeholder": "* * * * * *",
+        "enable_button": "Enable 2FA"
+      }
+    },
+    "game": {
+      "connectivity": {
+        "title": "Default connectivity",
+        "online": "Online",
+        "local": "Local"
+      },
+      "theme": {
+        "title": "Board theme",
+        "fire": "Fire Theme",
+        "water": "Water Theme"
+      }
+    },
+    "language": {
+      "title": "Choose Language",
+      "languages": {
+        "english": "English",
+        "french": "French",
+        "italian": "Italian",
+        "spanish": "Spanish"
+      }
+    },
+    "profile": {
+      "title": "Profile Settings",
+      "avatar": "Avatar",
+      "upload_avatar": "Upload Avatar",
+      "remove_avatar": "Remove Avatar",
+      "username": "Username",
+      "email": "Email",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "success": {
+        "title": "Profile Updated",
+        "description": "Your profile has been updated successfully"
+      },
+      "error": {
+        "title": "Update Failed",
+        "description": "Failed to update profile. Please try again."
+      }
+    }
+  },
+  "chat": {
+    "loading": "Loading chat...",
+    "messages": {
+      "send_placeholder": "Type your message...",
+      "failed_fetch": "Failed to fetch messages"
+    },
+    "profile": {
+      "title": "Chat Profile",
+      "status": "Status",
+      "mute": "Mute Notifications",
+      "block": "Block User",
+      "report": "Report User",
+      "options": "Options",
+      "view_profile": "View profile",
+      "challenge": "Challenge",
+      "delete_chat": "Delete chat",
+      "friend_status": "You are friends with this person"
+    },
+    "list": {
+      "title": "Conversations",
+      "search": "Search users or conversations",
+      "search_results": "Search Results",
+      "click_to_start": "Click to start conversation",
+      "no_messages": "No messages yet",
+      "start_chat": "Start a new chat"
+    }
+  },
+  "header": {
+    "search": {
+      "placeholder": "Search for people, tournaments and more"
+    },
+    "status": {
+      "online": "online",
+      "offline": "offline",
+      "away": "away",
+      "busy": "do not disturb",
+      "invisible": "invisible"
+    }
+  }
+}

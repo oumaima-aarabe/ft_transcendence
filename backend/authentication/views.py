@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from .serializers import UserSerializer
+from .serializers import UserRegisterSerializer
 from .models import User
 from rest_framework import status, permissions
 from rest_framework.response import Response
@@ -18,7 +18,7 @@ class signup_view(APIView):
     def post(self, request):
         data = request.data
 
-        userserializer = UserSerializer(data=data)
+        userserializer = UserRegisterSerializer(data=data)
         userserializer.is_valid(raise_exception=True)
         userserializer.save()
         return Response(
@@ -52,10 +52,13 @@ class login_view(APIView):
             refresh_token = RefreshToken.for_user(user)
             access_token = refresh_token.access_token
 
+            user.status = "online"
+            user.save()
+
             response = Response()
 
             cookie_settings = {
-                "httponly": True,
+                "httponly": False,
                 "secure": False,
                 "samesite": "Lax",  #'None' if using HTTPS
                 "domain": None,  # This will use the current domain
@@ -134,8 +137,7 @@ class Login42API(APIView):
             user_data = user_data.json()
             user_email = user_data.get("email")
             username = user_data.get("login")
-            images = user_data.get("image")
-            avatar = images.get("link")
+            avatar = user_data.get("image").get("versions").get("medium")
             first_name = user_data.get("first_name")
             last_name = user_data.get("last_name")
             if not user_email or not username:
@@ -153,10 +155,14 @@ class Login42API(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-            url = os.getenv('FRONTEND_URL') + '/dashboard'
+
+            user.status = "online"
+            user.save()
+
+            url = os.getenv('FRONTEND_URL') + '/en/dashboard'
             response = redirect(url)
             cookie_settings = {
-                "httponly": True,
+                "httponly": False,
                 "secure": False,
                 "samesite": "Lax",  # Use 'None' if using HTTPS
                 "domain": None,  # This will use the current domain
@@ -179,13 +185,20 @@ class Login42API(APIView):
             }
             return response
         except Exception as e:
+            print('error', e)
             error_query = urlencode({'error': str(e)})
             return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
-
+        
 
 class LogoutView(APIView):
     def post(self, request):
         try:
+            # update user status to offline
+            if request.user and request.user.is_authenticated:
+                user = request.user
+                user.status = "offline"
+                user.save()
+
             # Get refresh token from cookie
             refresh_token = request.COOKIES.get("refreshToken")
             if refresh_token:
@@ -216,7 +229,7 @@ class RefreshTokenView(APIView):
 
             response = Response()
             cookie_settings = {
-                "httponly": True,
+                "httponly": False,
                 "secure": False,
                 "samesite": "Lax",  # Use 'None' if using HTTPS
                 "domain": None,  # This will use the current domain

@@ -36,7 +36,7 @@ const config: Config = {
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
   			'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-			'global-background': "url('/background_image.svg')",
+			'global-background': "url('/assets/images/background.jpg')",
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
