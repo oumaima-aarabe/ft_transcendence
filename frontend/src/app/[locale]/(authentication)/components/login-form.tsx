@@ -15,6 +15,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { Icon } from "@iconify-icon/react";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
@@ -128,7 +129,8 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Mail
+                   <Icon
+                      icon="entypo:email"
                       width="20"
                       height="20"
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black"
@@ -153,7 +155,8 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Lock
+                    <Icon
+                      icon="icon-park-solid:lock-one"
                       width="24"
                       height="24"
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black"
@@ -169,19 +172,12 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
                       onClick={ShowPasswordVisibility}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 focus:outline-none"
                     >
-                      {showPassword ? (
-                      <Eye
+                      <Icon
+                        icon={showPassword ? "mdi:eye-off" : "mdi:eye"}
                         width="24"
                         height="24"
                         className="text-[#4C4C4C]"
                       />
-                      ) : (
-                        <EyeOff
-                          width="24"
-                          height="24"
-                          className="text-[#4C4C4C]"
-                        />
-                      )}
                     </button>
                   </div>
                 </FormControl>

@@ -14,11 +14,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/routing";
-import React, {  useState } from "react";
+import React, { useState } from "react";
+import { Icon } from "@iconify-icon/react";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
-import { CheckCircleIcon, User, XCircleIcon, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+} from "lucide-react";
 
 export interface FormDataRegister {
   first_name: string;
@@ -33,45 +37,41 @@ interface RegisterError {
   error: string;
 }
 
-export const RegisterForm = ({setLogin}: LoginFormProps) => {
-
+export const RegisterForm = ({ setLogin }: LoginFormProps) => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState(true);
-  
+
   const PasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  
+
   const ConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-
-  const registerUser = async (userData : FormDataRegister) => {
-    try{
-      const response = await fetcher.post('/api/auth/sign_up', userData)
-      return response.data
-    }
-    catch (error: any){
-      const errorData = error.response?.data as RegisterError
+  const registerUser = async (userData: FormDataRegister) => {
+    try {
+      const response = await fetcher.post("/api/auth/sign_up", userData);
+      return response.data;
+    } catch (error: any) {
+      const errorData = error.response?.data as RegisterError;
       if (errorData?.error) {
-        throw new Error(errorData.error)
+        throw new Error(errorData.error);
       }
-      throw new Error('An unexpected error occurred')
+      throw new Error("An unexpected error occurred");
     }
-  }
-  
+  };
+
   const registerMutation = useMutation({
     mutationFn: registerUser,
-    onSuccess: (data)=>{
-      setLogin(true)
+    onSuccess: (data) => {
+      setLogin(true);
     },
-    onError: (error)=>{
-      console.log('user not created', error)
-    }
-  })
-
+    onError: (error) => {
+      console.log("user not created", error);
+    },
+  });
 
   const formSchema = z
     .object({
@@ -87,14 +87,14 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
         .string()
         .min(4)
         .max(10)
-        .refine((value) => value.includes('_'), {
-          message: "Username must contain an underscore (_)"
+        .refine((value) => value.includes("_"), {
+          message: "Username must contain an underscore (_)",
         }),
       email: z
         .string()
         .email("Invalid email address")
-        .refine((value) => !value.toLowerCase().endsWith('@1337.ma'), {
-          message: "Email address cannot have 1337.ma extension"
+        .refine((value) => !value.toLowerCase().endsWith("@1337.ma"), {
+          message: "Email address cannot have 1337.ma extension",
         }),
       password: z
         .string()
@@ -108,24 +108,22 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
       message: "Passwords must match",
       path: ["confirmPassword"],
     });
-    
-    const registerForm = useForm<z.infer<typeof formSchema>>({
-      resolver: zodResolver(formSchema),
-      defaultValues: {
-        first_name: "",
-        last_name: "",
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      },
-    });
 
+  const registerForm = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  function submitRegister(values: z.infer<typeof formSchema>) {    
+  function submitRegister(values: z.infer<typeof formSchema>) {
     registerMutation.mutate(values);
   }
-
 
   return (
     <Card className="w-full max-w-[690px] bg-[#751d03] bg-opacity-[18%] p-8 md:p-10 flex flex-col justify-center rounded-3xl border-none backdrop-blur-lg">
@@ -148,11 +146,12 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                   <FormLabel className="text-white">First Name</FormLabel>
                   <FormControl>
                     <div className="relative">
-                        <User
-                        width="20" 
+                      <Icon
+                        icon="mdi:account"
+                        width="20"
                         height="20"
                         className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                        />
+                      />
                       <Input
                         placeholder="Enter your first name"
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
@@ -172,11 +171,12 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                   <FormLabel className="text-white">Last Name</FormLabel>
                   <FormControl>
                     <div className="relative">
-                        <User
-                        width="20" 
-                        height="20" 
+                      <Icon
+                        icon="mdi:account"
+                        width="20"
+                        height="20"
                         className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                        />
+                      />
                       <Input
                         placeholder="Enter your last name"
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
@@ -189,7 +189,7 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
               )}
             />
           </div>
-          
+
           <FormField
             control={registerForm.control}
             name="username"
@@ -198,23 +198,24 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                 <FormLabel className="text-white">Username</FormLabel>
                 <FormControl>
                   <div className="relative">
-                      <User
-                      width="20" 
-                      height="20" 
+                    <Icon
+                      icon="mdi:account-circle"
+                      width="20"
+                      height="20"
                       className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                      />
+                    />
                     <Input
                       placeholder="Enter your username"
                       className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
-                      />
+                    />
                   </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={registerForm.control}
             name="email"
@@ -223,23 +224,24 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                 <FormLabel className="text-white">Email</FormLabel>
                 <FormControl>
                   <div className="relative">
-                      <Mail
-                      width="20" 
+                    <Icon
+                      icon="entypo:email"
+                      width="20"
                       height="20"
                       className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                      />
+                    />
                     <Input
                       placeholder="Enter your email"
                       className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
-                      />
+                    />
                   </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <div className="flex flex-wrap gap-4">
             <FormField
               control={registerForm.control}
@@ -249,11 +251,12 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                   <FormLabel className="text-white">Password</FormLabel>
                   <FormControl>
                     <div className="relative">
-                        <Lock
-                          width="24"
-                          height="24"
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                        />
+                      <Icon
+                        icon="icon-park-solid:lock-one"
+                        width="24"
+                        height="24"
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2"
+                      />
                       <Input
                         type={showPassword ? "password" : "text"}
                         placeholder="Enter password"
@@ -265,19 +268,12 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                         onClick={PasswordVisibility}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 focus:outline-none"
                       >
-                        {showPassword ? (
-                        <Eye
+                        <Icon
+                          icon={showPassword ? "mdi:eye-off" : "mdi:eye"}
                           width="24"
                           height="24"
                           className="text-[#4C4C4C]"
                         />
-                        ) : (
-                          <EyeOff
-                            width="24"
-                            height="24"
-                            className="text-[#4C4C4C]"
-                        />
-                        )}
                       </button>
                     </div>
                   </FormControl>
@@ -293,11 +289,12 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                   <FormLabel className="text-white">Confirm password</FormLabel>
                   <FormControl>
                     <div className="relative">
-                        <Lock
-                          width="24"
-                          height="24"
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                        />
+                      <Icon
+                        icon="icon-park-solid:lock-one"
+                        width="24"
+                        height="24"
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2"
+                      />
                       <Input
                         type={showConfirmPassword ? "password" : "text"}
                         placeholder="Confirm password"
@@ -309,19 +306,12 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
                         onClick={ConfirmPasswordVisibility}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 focus:outline-none"
                       >
-                        {showConfirmPassword ? (
-                        <Eye
+                        <Icon
+                          icon={showConfirmPassword ? "mdi:eye-off" : "mdi:eye"}
                           width="24"
                           height="24"
                           className="text-[#4C4C4C]"
                         />
-                        ) : (
-                          <EyeOff
-                            width="24"
-                            height="24"
-                            className="text-[#4C4C4C]"
-                        />
-                        )}
                       </button>
                     </div>
                   </FormControl>
@@ -335,11 +325,15 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
             <div className="rounded-xl bg-red-50 p-4 mb-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                  <XCircleIcon
+                    className="h-5 w-5 text-red-400"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">
-                    {registerMutation.error?.message || "An error occurred during login"}
+                    {registerMutation.error?.message ||
+                      "An error occurred during login"}
                   </h3>
                 </div>
               </div>
@@ -350,7 +344,10 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
             <div className="rounded-lg bg-green-50 p-4 mb-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
+                  <CheckCircleIcon
+                    className="h-5 w-5 text-green-400"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-green-800">
@@ -367,7 +364,7 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
             disabled={registerMutation.isPending}
           >
             <span className="text-[#c75b37]">
-              {registerMutation.isPending ? 'creating...' :'Sign up'}
+              {registerMutation.isPending ? "creating..." : "Sign up"}
             </span>
           </Button>
         </form>
@@ -375,7 +372,12 @@ export const RegisterForm = ({setLogin}: LoginFormProps) => {
       <div className="text-center text-sm text-white mt-6">
         <p>
           Already have an account?{" "}
-          <button onClick={() => {setLogin(true)}} className="text-[#40CFB7] hover:text-[#8D361A] focus:outline-none">
+          <button
+            onClick={() => {
+              setLogin(true);
+            }}
+            className="text-[#40CFB7] hover:text-[#8D361A] focus:outline-none"
+          >
             Sign in!
           </button>
         </p>

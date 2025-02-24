@@ -69,9 +69,9 @@ const PasswordUpdate = () => {
                     />
                     <Image src="/assets/icons/password_icon.svg" alt="Lock" width={11} height={11} className="absolute top-3 left-4" />
                     {showOldPassword ?
-                        <EyeOff size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowOldPassword(!showOldPassword)}/> 
+                        <Eye size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowOldPassword(!showOldPassword)}/> 
                     :
-                        <Eye size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowOldPassword(!showOldPassword)}/>}
+                        <EyeOff size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowOldPassword(!showOldPassword)}/>}
                 </div>
                 <div className="relative gap-4">
                     <input
@@ -83,9 +83,9 @@ const PasswordUpdate = () => {
                     />
                     <Image src="/assets/icons/password_icon.svg" alt="Lock" width={11} height={11} className="absolute top-3 left-4" />
                     {showNewPassword ? 
-                        <EyeOff size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowNewPassword(!showNewPassword)}/>
+                        <Eye size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowNewPassword(!showNewPassword)}/>
                     :
-                        <Eye size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowNewPassword(!showNewPassword)}/>}  
+                        <EyeOff size={18} className="absolute top-3 right-3 text-gray-500 cursor-pointer" onClick={() => setShowNewPassword(!showNewPassword)}/>}  
                 </div>
             </div>
             <button
