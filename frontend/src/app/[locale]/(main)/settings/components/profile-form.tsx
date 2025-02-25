@@ -1,19 +1,19 @@
 "use Client";
 
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { Option, CustomSelect } from "./CustomSelect";
 import { sendRequest } from "@/lib/axios";
 import { useToast } from "@/hooks/use-toast";
-import { UserContext } from "@/contexts/UserContext";
 import { useTranslations } from 'next-intl';
+import { QueryClient } from "@tanstack/react-query";
 
 export default function ProfileForm({ formData, setFormData }: { formData: any, setFormData: any }) {
     const { toast } = useToast();
+    const queryClient = new QueryClient()
     const settingsT = useTranslations('settings');
     const t = useTranslations('settings.profile');
     const statusT = useTranslations('header.status');
     const [selectedValue, setSelectedValue] = useState<string>(formData?.status || '');
-    const { fetchMyUserData } = useContext(UserContext);
 
     const statusOptions: Option[] = [
         { value: 'online', label: statusT('online'), src: '/assets/icons/online-icon.svg' },
@@ -39,12 +39,14 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
         }
 
         sendRequest("patch", "/users/update/", formData)
-        .then((res: any) => {
+        .then(async (res: any) => {
             toast({
                 title: t('success.title'),
                 description: t('success.description'),
             });
-            fetchMyUserData();
+            // I have changed this to refetch with react query
+            // fetchMyUserData();
+            await queryClient.refetchQueries({queryKey: 'me'})
 
         })
         .catch((err: any) => {

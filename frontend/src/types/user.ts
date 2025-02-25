@@ -1,16 +1,12 @@
-export enum UserState {
-    ONLINE,
-    OFFLINE,
-}
-
-export type User = {
-    email: string
-    username: string
-    password: string
-    avatar: string
-    first_name: string
-    last_name: string
-    level: number
-    state: UserState
+export interface User {
+    id: string;
+    email: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+    avatar: string;
+    cover: string;
+    level: number;
+    status: "online" | "offline" | "donotdisturb" | "invisible";
     tfa: boolean
 }

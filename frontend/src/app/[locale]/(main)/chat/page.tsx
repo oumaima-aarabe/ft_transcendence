@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useState, useCallback, useContext, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ChatList } from "./components/chat-list";
 import { ChatMessages } from "./components/chat-messages";
 import { ChatProfile } from "./components/chat-profile";
 import { Message, Conversation } from "./types/chat";
 import { initSocket, getSocket, sendWebSocketMessage } from "@/lib/websocket";
 import { sendRequest } from "@/lib/axios";
-import { UserContext } from "@/contexts/UserContext";
+import { UseUser } from "@/api/get-user";
 
 export default function ChatApp() {
   const [showProfile, setShowProfile] = useState(true);
   const [chats, setChats] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const { myUserData } = useContext(UserContext);
+  const { data: myUserData } = UseUser()
   const selectedChatRef = useRef<Conversation | null>(null);
 
   const loadConversations = async () => {

@@ -2,12 +2,11 @@
 
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { UserContext } from "@/contexts/UserContext"
-import { useContext } from "react"
+import { UseUser } from "@/api/get-user"
 
 export default function cover() {
 
-  const {myUserData} = useContext(UserContext)
+  const {data: myUserData} = UseUser()
 
   if (!myUserData) return  <></>
 

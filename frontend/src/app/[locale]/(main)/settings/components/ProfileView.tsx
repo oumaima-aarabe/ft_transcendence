@@ -1,15 +1,15 @@
 "use client";
 
+import { UseUser } from "@/api/get-user";
 import ProfileForm from "./profile-form";
-import { UserContext } from "@/contexts/UserContext";
 import { sendRequest } from "@/lib/axios";
-import { useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const defaultAvatar = "https://iili.io/2D8ByIj.png";
 const defaultCover = "https://iili.io/2bE295P.png";
 
 export default function ProfileView() {
-  const { myUserData } = useContext(UserContext);
+  const { data: myUserData } = UseUser();
 
   const [formData, setFormData] = useState({
     first_name: "",

@@ -15,12 +15,11 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { Icon } from "@iconify-icon/react";
+import { Icon } from "@iconify/react";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { fetcher } from "@/lib/fetcher";
-import { CheckCircleIcon, XCircleIcon, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "@/i18n/routing";
 import endpoints from "@/constants/endpoints";
 
@@ -68,7 +67,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data)=>{
-      router.push('/dashboard')
+      router.push('/dashboard');
     },
     onError: (error)=>{
       console.log('log in error', error.message)
@@ -79,10 +78,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
     email: z.string().email("Invalid email address"),
     password: z
       .string()
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Password must be at least 8 characters long, include at least one uppercase letter, one lowercase letter, one number, and one special character."
-      ),
+      .min(1, "String is required")
     });
 
   const loginForm = useForm<z.infer<typeof formSchema>>({
@@ -96,11 +92,6 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
   function submitLogin(values: z.infer<typeof formSchema>) {
     loginMutation.mutate(values);
   }
-
-  // const handleOauth = async () => {
-  //   login42Mutation.mutate()
-  // };
-
 
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
@@ -129,7 +120,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <div className="relative">
-                   <Icon
+                    <Icon
                       icon="entypo:email"
                       width="20"
                       height="20"
@@ -185,35 +176,16 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
               </FormItem>
             )}
           />
-          {loginMutation.isError && (
-            <div className="rounded-xl bg-red-50 p-4 mb-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
-                    {loginMutation.error?.message || "An error occurred during login"}
-                  </h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {loginMutation.isSuccess && (
-            <div className="rounded-lg bg-green-50 p-4 mb-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-green-800">
-                    {loginMutation.data.data}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {loginMutation.isError ? (
+            <p className="text-red-500 text-sm">
+              {loginMutation.error.message}
+            </p>
+          ) : null}
+          {loginMutation.isSuccess ? (
+            <p className="text-green-500 text-sm">
+              {loginMutation.data.data}
+            </p>
+          ) : null}
           <Button
             type="submit"
             disabled={loginMutation.isPending}

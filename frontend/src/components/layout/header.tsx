@@ -1,16 +1,15 @@
 "use client";
 
-import { useContext } from "react";
 import { Input } from "@/components/ui/input";
 import { Bell, Search } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserContext } from "@/contexts/UserContext";
 import { useTranslations } from "next-intl";
+import { UseUser } from "@/api/get-user";
 
 export function Header() {
-  const { myUserData } = useContext(UserContext);
+  const { data: myUserData } = UseUser();
   const t = useTranslations();
 
   return (

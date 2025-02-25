@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/routing";
 import React, { useState } from "react";
-import { Icon } from "@iconify-icon/react";
+import { Icon } from "@iconify/react";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
@@ -146,12 +146,11 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                   <FormLabel className="text-white">First Name</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Icon
-                        icon="mdi:account"
-                        width="20"
+                        <Icon icon="mdi:account" 
+                        width="20" 
                         height="20"
                         className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                      />
+                        />
                       <Input
                         placeholder="Enter your first name"
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
@@ -171,12 +170,11 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                   <FormLabel className="text-white">Last Name</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Icon
-                        icon="mdi:account"
-                        width="20"
-                        height="20"
+                        <Icon icon="mdi:account" 
+                        width="20" 
+                        height="20" 
                         className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                      />
+                        />
                       <Input
                         placeholder="Enter your last name"
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
@@ -189,7 +187,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
               )}
             />
           </div>
-
+          
           <FormField
             control={registerForm.control}
             name="username"
@@ -198,24 +196,23 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                 <FormLabel className="text-white">Username</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Icon
-                      icon="mdi:account-circle"
-                      width="20"
-                      height="20"
+                      <Icon icon="mdi:account-circle" 
+                      width="20" 
+                      height="20" 
                       className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                    />
+                      />
                     <Input
                       placeholder="Enter your username"
                       className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
-                    />
+                      />
                   </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           <FormField
             control={registerForm.control}
             name="email"
@@ -224,24 +221,23 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                 <FormLabel className="text-white">Email</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Icon
-                      icon="entypo:email"
-                      width="20"
+                      <Icon icon="entypo:email" 
+                      width="20" 
                       height="20"
                       className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                    />
+                      />
                     <Input
                       placeholder="Enter your email"
                       className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
-                    />
+                      />
                   </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           <div className="flex flex-wrap gap-4">
             <FormField
               control={registerForm.control}
@@ -251,12 +247,12 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                   <FormLabel className="text-white">Password</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Icon
-                        icon="icon-park-solid:lock-one"
-                        width="24"
-                        height="24"
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                      />
+                        <Icon
+                          icon="icon-park-solid:lock-one"
+                          width="24"
+                          height="24"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2"
+                        />
                       <Input
                         type={showPassword ? "password" : "text"}
                         placeholder="Enter password"
@@ -289,12 +285,12 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                   <FormLabel className="text-white">Confirm password</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Icon
-                        icon="icon-park-solid:lock-one"
-                        width="24"
-                        height="24"
-                        className="absolute left-3 top-1/2 transform -translate-y-1/2"
-                      />
+                        <Icon
+                          icon="icon-park-solid:lock-one"
+                          width="24"
+                          height="24"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2"
+                        />
                       <Input
                         type={showConfirmPassword ? "password" : "text"}
                         placeholder="Confirm password"
