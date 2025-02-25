@@ -1,13 +1,11 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
-import { UserProvider } from "@/contexts/UserContext";
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <UserProvider>
       <div className="min-h-screen relative">
         <div className="relative z-10 flex h-screen">
           <Sidebar />
@@ -19,6 +17,5 @@ export default function MainLayout({
           </div>
         </div>
       </div>
-    </UserProvider>
   );
 }
