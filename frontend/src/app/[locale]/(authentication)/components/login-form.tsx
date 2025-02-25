@@ -208,7 +208,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
             src="/assets/icons/42.svg"
             alt="logo"
             width={69}
-            height={50}
+            height={69}
             className="w-16 h-auto"
           />
         </button>

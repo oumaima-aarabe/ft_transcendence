@@ -13,7 +13,7 @@ export default function RegisterPage() {
   const [login, setLogin] = useState<boolean>(true)
   return (
     <div className="min-h-screen justify-center flex flex-col items-center space-y-[40px]">
-        <Image src="/assets/images/logo.svg" alt="logo" width={265} height={170} />
+        <Image src="/assets/images/logo.svg" alt="logo" width={265} height={170} priority />
         {login === true ? <LoginForm setLogin={setLogin} /> : <RegisterForm setLogin={setLogin} />}
     </div>
   );

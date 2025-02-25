@@ -20,6 +20,7 @@ export function Header() {
         width={120}
         height={32}
         className="w-[120px] lg:w-[150px] my-auto"
+        priority
       />
       <div className="relative border-white/20">
         <Search

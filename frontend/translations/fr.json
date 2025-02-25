@@ -148,7 +148,7 @@
     },
     "list": {
       "title": "Conversations",
-      "search": "Rechercher des utilisateurs ou des conversations",
+      "search": "Rechercher des utilisateurs",
       "search_results": "Résultats de recherche",
       "click_to_start": "Cliquez pour démarrer la conversation",
       "no_messages": "Pas encore de messages",
