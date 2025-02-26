@@ -5,11 +5,11 @@ import { Option, CustomSelect } from "./CustomSelect";
 import { sendRequest } from "@/lib/axios";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileForm({ formData, setFormData }: { formData: any, setFormData: any }) {
     const { toast } = useToast();
-    const queryClient = new QueryClient()
+    const queryClient = useQueryClient()
     const settingsT = useTranslations('settings');
     const t = useTranslations('settings.profile');
     const statusT = useTranslations('header.status');
@@ -46,7 +46,8 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
             });
             // I have changed this to refetch with react query
             // fetchMyUserData();
-            await queryClient.refetchQueries({queryKey: 'me'})
+            console.log('shi haja')
+            queryClient.refetchQueries({queryKey: ['me']})
 
         })
         .catch((err: any) => {
