@@ -17,7 +17,6 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className=" xl:w-[50%] font-bold text-xl w-[100%] backdrop-blur-sm bg-black/50 rounded-2xl h-[100%] p-4 ">
-            Friends
             <Friendchat />
           </div>
         </div>
