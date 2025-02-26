@@ -1,86 +1,78 @@
-'use client'
+"use client";
 
-import { UseUser } from '@/api/get-user'
-import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
-import React from 'react'
+import { UseUser } from "@/api/get-user";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import React from "react";
 
 const list = [
   {
-    firstname : 'kawtar ',
-    lastname : 'aboussi',
-    username : 'kaboussi',
-    avatar : '"/assets/images/logo.svg"'
+    firstname: "kawtar ",
+    lastname: "aboussi",
+    username: "ka",
+    avatar: "/assets/images/logo.svg",
   },
   {
-    firstname : 'kawtar ',
-    lastname : 'aboussi',
-    username : 'kaboussi',
-    avatar : '"/assets/images/logo.svg"'
+    firstname: "kawtar ",
+    lastname: "aboussi",
+    username: "kaboussi",
+    avatar: "/assets/images/logo.svg",
   },
   {
-    firstname : 'kawtar ',
-    lastname : 'aboussi',
-    username : 'kaboussi',
-    avatar : '"/assets/images/logo.svg"'
+    firstname: "kawtar ",
+    lastname: "aboussi",
+    username: "ussi",
+    avatar: "/assets/images/logo.svg",
   },
   {
-    firstname : 'kawtar ',
-    lastname : 'aboussi',
-    username : 'kaboussi',
-    avatar : '"/assets/images/logo.svg"'
+    firstname: "kawtar ",
+    lastname: "aboussi",
+    username: "aboussi",
+    avatar: "/assets/images/logo.svg",
   },
-  {
-    firstname : 'kawtar ',
-    lastname : 'aboussi',
-    username : 'kaboussi',
-    avatar : '"/assets/images/logo.svg"'
-  },
-
-]
+];
 
 export default function Friendchat() {
-
   // const {data: myUserData} = UseUser()
-  
+
   // if (!myUserData) return <></>;
 
   return (
-    <div className='w-full h-full flex flex-col justify-center items-center bg-black/40 rounded-2xl'>
-      <div className='w-[80%] h-[15%] border red flex justify-center items-center'>
-        <p>
-          you are friend with
-        </p>
+    <div className="p-4 w-full space-y-8 flex justify-center flex-col items-center">
+      <div className="flex justify-center font-bold items-center p-5">
+        <p>3shrani</p>
       </div>
-      <div className="w-[80%] h-[65%] green flex justify-center flex-col items-center space-y-1">
-        {list.map((item)=>(
-          <div key={item.username} className="h-[18%] w-[80%] rounded-full bg-black/100 flex flex-row items-center">
-            <div className='blue h-[80%] w-[25%]'>
-              <div className='rounded-full size-16 border border-white'>
-                {/* <Avatar>
-                  <AvatarImage  alt='profile' className='w-full h-full'>
-                    <AvatarFallback> :3 </AvatarFallback>
-                  </AvatarImage>
-                </Avatar> */}
-                <img src={item.avatar} className="w-full h-full object-cover" alt="avatar" ></img>
+      <div className=" max-h-screen w-[85%]">
+        {list.map((item) => (
+          <div
+            key={item.username}
+            className="relative flex items-center p-4 mb-3  rounded-full bg-black"
+          >
+            <img
+              src={item.avatar}
+              className="rounded-full red object-cover size-20"
+            />
+            <div className="ml-4">
+              <div>
+                <h1 className="text-lg font-extralight">{item.username}</h1>
+              </div>
+              <div className="flex flex-row space-x-1">
+                <h2>{item.firstname}</h2>
+                <h3>{item.lastname}</h3>
               </div>
             </div>
-            <div className='red h-[80%] w-[75%] flex justify-center flex-col items-start pl-4' >
-              <div>
-                {item.firstname}
-                {item.lastname}
-              </div>
-              <div>
-                {item.username}
-              </div>
-            </div>
+            <Icon
+              icon="token:chat"
+              width="50"
+              height="50"
+              className="absolute right-5 top-1/2 transform -translate-y-1/2 text-white"
+            />
           </div>
         ))}
       </div>
-      <div className='w-[80%] h-[10%] red flex justify-center items-center'>
-        <button className='border text-black bg-[#40CFB7] border-[#40CFB7] w-min-[10%] h-min-[10%] lg:w-[50%] lg:h-[60%] rounded-2xl'>
-          show more ...
-        </button>
-      </div>
+      <button className="border text-black p-4 bg-[#40CFB7] border-[#40CFB7] lg:w-[50%] rounded-full">
+        show more ...
+      </button>
     </div>
-  )
+  );
 }

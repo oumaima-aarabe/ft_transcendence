@@ -16,7 +16,7 @@ export default function DashboardPage() {
               Match history 
             </div>
           </div>
-          <div className=" xl:w-[50%] font-bold text-xl w-[100%] backdrop-blur-sm bg-black/50 rounded-2xl h-[100%] p-4 ">
+          <div className=" xl:w-[50%] text-xl w-[100%] backdrop-blur-sm bg-black/50 rounded-2xl h-[100%] p-4 ">
             <Friendchat />
           </div>
         </div>

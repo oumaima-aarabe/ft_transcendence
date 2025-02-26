@@ -211,3 +211,5 @@ class UnblockView(APIView):
             return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
         blocked.delete()
         return Response({'data': 'User unblocked'}, status=status.HTTP_200_OK)
+    
+# class OldFriendsView(APIView)
