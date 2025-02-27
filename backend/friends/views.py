@@ -12,7 +12,6 @@ from django.shortcuts import get_object_or_404
 # lists
 class BaseFriendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
 
     def serialize_friend(self, friendship, current_user):
         friend_user = friendship.recipient if friendship.sender == current_user else friendship.sender
@@ -25,6 +24,7 @@ class BaseFriendView(APIView):
 
 
 class AcceptedFriendView(BaseFriendView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_user = request.user
 
@@ -44,7 +44,9 @@ class AcceptedFriendView(BaseFriendView):
         )
 
 
+
 class BlockedFriendView(BaseFriendView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_user = request.user
 
@@ -67,6 +69,7 @@ class BlockedFriendView(BaseFriendView):
 
 
 class IncomingFriendRequestView(BaseFriendView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_user = request.user
 
@@ -89,6 +92,7 @@ class IncomingFriendRequestView(BaseFriendView):
 
 
 class OutgoingFriendRequestView(BaseFriendView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         current_user = request.user
 
@@ -114,7 +118,6 @@ class OutgoingFriendRequestView(BaseFriendView):
 
 
 class SendFriendRequestView(APIView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -127,7 +130,6 @@ class SendFriendRequestView(APIView):
 
 
 class ConfirmFriendRequestView(APIView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -144,7 +146,6 @@ class ConfirmFriendRequestView(APIView):
 
 
 class CancelFriendRequestView(APIView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -163,7 +164,6 @@ class CancelFriendRequestView(APIView):
 
 
 class RemoveFriendView(APIView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -181,7 +181,6 @@ class RemoveFriendView(APIView):
 
 
 class BlockView(APIView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -198,7 +197,6 @@ class BlockView(APIView):
 
 
 class UnblockView(APIView):
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
