@@ -16,16 +16,23 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-      <div className="min-h-screen relative">
-        <div className="relative z-10 flex h-screen">
-          <Sidebar />
-          <div className="flex-1 flex flex-col">
-            <Header />
-            <main className="flex-1 py-20 ps-28 pe-16 overflow-auto">
-              {children}
-            </main>
-          </div>
+    <div className={`min-h-screen relative ${inter.className} ${orbitron.variable}`}>
+      <div className="absolute inset-0">
+        <img
+          src="/assets/images/background.jpg"
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="relative z-10 flex h-screen overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <main className="flex-1 flex items-center justify-center py-2 ps-28 pe-16 overflow-hidden">
+            {children}
+          </main>
         </div>
       </div>
+    </div>
   );
 }

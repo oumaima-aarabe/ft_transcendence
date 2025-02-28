@@ -16,10 +16,10 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
 
   useEffect(() => {
     if (isPlaying) {
-      // Small delay to ensure smooth transition
+      // Smoother transition with a bit longer delay
       const timer = setTimeout(() => {
         setVisible(true);
-      }, 100);
+      }, 300);
       return () => clearTimeout(timer);
     } else {
       setVisible(false);
@@ -27,19 +27,23 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
   }, [isPlaying]);
 
   useEffect(() => {
-    // Handle theme changes
+    // Handle theme changes with more robust transition
     if (currentTheme !== theme && isPlaying) {
       setTransitioning(true);
       setVisible(false);
 
       const timer = setTimeout(() => {
         setCurrentTheme(theme);
-        setVisible(true);
+        
+        // Slight delay before making visible to ensure clean swap
+        setTimeout(() => {
+          setVisible(true);
+        }, 100);
 
         // Reset transitioning state
         setTimeout(() => {
           setTransitioning(false);
-        }, 500);
+        }, 700);
       }, 500);
 
       return () => clearTimeout(timer);
@@ -54,21 +58,30 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
 
   const backgroundImage =
     currentTheme === "fire"
-      ? "/assets/images/fire-game.jpeg"
-      : "/assets/images/water-game.jpeg";
+      ? "/assets/images/fire-game.png"
+      : "/assets/images/water-game.png";
 
   return (
     <div
-      className={`fixed inset-0 z-[5] transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[5] transition-all duration-700 ease-in-out ${
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
-      <div className="absolute inset-0 bg-black/50"></div>
-      <img
-        src={backgroundImage}
-        alt={`${currentTheme} background`}
-        className="w-full h-full object-cover"
-      />
+      {/* Background image with darkening filter */}
+      <div className="relative w-full h-full">
+        <img
+          src={backgroundImage}
+          alt={`${currentTheme} background`}
+          className={`w-full h-full object-cover transition-all duration-700 ease-in-out transform
+            ${visible ? 'scale-100 blur-0' : 'scale-105 blur-sm'}`}
+        />
+        
+        {/* Absolute positioned dark overlay on top of the image */}
+        <div 
+          className={`absolute inset-0 bg-black transition-opacity duration-700 ease-in-out
+            ${visible ? 'opacity-70' : 'opacity-0'}`}
+        ></div>
+      </div>
     </div>
   );
 };

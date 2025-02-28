@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import GameOptions from './components/game-options';
 import LocalGameSetup from './components/local-game-setup';
@@ -14,6 +14,7 @@ type GameFlowState = 'options' | 'setup' | 'playing';
 export default function GamePage() {
   // Flow state management
   const [flowState, setFlowState] = useState<GameFlowState>('options');
+  const gameAreaRef = useRef<HTMLDivElement>(null);
   
   // Game configuration
   const [player1Name, setPlayer1Name] = useState<string>('Player 1');
@@ -56,65 +57,71 @@ export default function GamePage() {
   };
 
   return (
-    <>
-      {/* the game-specific background that overlays the global background */}
-      <GameBackground isPlaying={flowState === 'playing'} theme={gameTheme} />
-      
-      <div className="w-full min-h-[calc(100vh-120px)] flex flex-col items-center justify-center py-8 relative z-[10]">
-        <AnimatePresence mode="wait">
-          {flowState === 'options' && (
-            <motion.div
-              key="options"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="w-full"
-            >
-              <GameOptions onSelectMode={handleSelectGameMode} />
-            </motion.div>
-          )}
-
-          {flowState === 'setup' && (
-            <motion.div
-              key="setup"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="w-full max-w-2xl"
-            >
-              <LocalGameSetup 
-                onStart={handleStartGame} 
-                onBack={handleBackToOptions}
-                initialP1Name={player1Name}
-                initialP2Name={player2Name}
-                initialTheme={gameTheme}
-                initialDifficulty={gameDifficulty}
-              />
-            </motion.div>
-          )}
-
+    <div className="w-full h-screen overflow-hidden flex items-center justify-center">
+      <div className="w-full max-w-6xl px-4 relative">
+        {/* Game area that will contain the background when playing */}
+        <div ref={gameAreaRef} className="relative">
+          {/* Background for playing state - positioned relative to this container */}
           {flowState === 'playing' && (
-            <motion.div
-              key="playing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-full"
-            >
-              <PongGame
-                player1Name={player1Name}
-                player2Name={player2Name}
-                theme={gameTheme}
-                difficulty={gameDifficulty}
-                onBackToSetup={handleBackToSetup}
-              />
-            </motion.div>
+            <GameBackground 
+              isPlaying={flowState === 'playing'} 
+              theme={gameTheme}
+            />
           )}
-        </AnimatePresence>
+
+          <AnimatePresence mode="wait">
+            {flowState === 'options' && (
+              <motion.div
+                key="options"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <GameOptions onSelectMode={handleSelectGameMode} />
+              </motion.div>
+            )}
+
+            {flowState === 'setup' && (
+              <motion.div
+                key="setup"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <LocalGameSetup 
+                  onStart={handleStartGame} 
+                  onBack={handleBackToOptions}
+                  initialP1Name={player1Name}
+                  initialP2Name={player2Name}
+                  initialTheme={gameTheme}
+                  initialDifficulty={gameDifficulty}
+                />
+              </motion.div>
+            )}
+
+            {flowState === 'playing' && (
+              <motion.div
+                key="playing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="z-30 relative"
+              >
+                <PongGame
+                  player1Name={player1Name}
+                  player2Name={player2Name}
+                  theme={gameTheme}
+                  difficulty={gameDifficulty}
+                  onBackToSetup={handleBackToSetup}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

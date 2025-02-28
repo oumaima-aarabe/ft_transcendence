@@ -70,7 +70,7 @@ const themeProperties = {
     lineColor: "#D05F3B",
     shadowBlur: 25,
     textColor: "#D05F3B",
-    background: "url('/assets/images/fire-game.jpeg')",
+    background: "url('/assets/images/fire-game.png')",
   },
   water: {
     color: "#40CFB7",
@@ -81,7 +81,7 @@ const themeProperties = {
     lineColor: "#40CFB7",
     shadowBlur: 25,
     textColor: "#40CFB7",
-    background: "url('/assets/images/water-game.jpeg')",
+    background: "url('/assets/images/water-game.png')",
   },
 };
 
@@ -585,184 +585,134 @@ const PongGame: React.FC<PongGameProps> = ({
   const drawMenuScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
     const { color } = themeProps;
     const { currentMatch } = gameStateRef.current;
-
+    
     // Semi-transparent overlay with exact positioning and rounded corners
     ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH - 4, BASE_HEIGHT - 4, 20);
+    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
     ctx.fill();
-
+    
     // Game title
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 15;
-    ctx.font = "bold 48px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("PONG ARCADIA", BASE_WIDTH / 2, BASE_HEIGHT / 3);
-
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('PONG ARCADIA', BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    
     // Match info
-    ctx.font = "bold 24px Arial";
-    ctx.fillText(
-      `MATCH ${currentMatch} OF ${MATCHES_TO_WIN_GAME * 2 - 1}`,
-      BASE_WIDTH / 2,
-      BASE_HEIGHT / 2 - 40
-    );
-
+    ctx.font = 'bold 24px Arial';
+    ctx.fillText(`MATCH ${currentMatch} OF ${MATCHES_TO_WIN_GAME * 2 - 1}`, BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
+    
     // Start instructions
-    ctx.font = "24px Arial";
-    ctx.fillText(
-      "Click or press any key to start",
-      BASE_WIDTH / 2,
-      BASE_HEIGHT / 2 + 10
-    );
-
+    ctx.font = '24px Arial';
+    ctx.fillText('Click or press any key to start', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 10);
+    
     // Controls
     ctx.shadowBlur = 5;
-    ctx.font = "18px Arial";
+    ctx.font = '18px Arial';
     ctx.fillText(`${player1Name}: W/S keys`, BASE_WIDTH / 4, BASE_HEIGHT * 0.7);
-    ctx.fillText(
-      `${player2Name}: Arrow Up/Down`,
-      (BASE_WIDTH / 4) * 3,
-      BASE_HEIGHT * 0.7
-    );
-    ctx.fillText("Press Space to pause", BASE_WIDTH / 2, BASE_HEIGHT * 0.8);
+    ctx.fillText(`${player2Name}: Arrow Up/Down`, (BASE_WIDTH / 4) * 3, BASE_HEIGHT * 0.7);
+    ctx.fillText('Press Space to pause', BASE_WIDTH / 2, BASE_HEIGHT * 0.8);
     ctx.restore();
   };
 
   // Draw pause screen
   const drawPauseScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
     const { color } = themeProps;
-
+    
     // Semi-transparent overlay with exact positioning and rounded corners
     ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH - 4, BASE_HEIGHT - 4, 20);
+    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
     ctx.fill();
-
+    
     // Pause text
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 15;
-    ctx.font = "bold 48px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("PAUSED", BASE_WIDTH / 2, BASE_HEIGHT / 2);
-
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('PAUSED', BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    
     // Resume instructions
     ctx.shadowBlur = 5;
-    ctx.font = "20px Arial";
-    ctx.fillText(
-      "Press Space to continue",
-      BASE_WIDTH / 2,
-      BASE_HEIGHT / 2 + 50
-    );
+    ctx.font = '20px Arial';
+    ctx.fillText('Press Space to continue', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 50);
     ctx.restore();
   };
 
   // Draw match over screen
-  const drawMatchOverScreen = (
-    ctx: CanvasRenderingContext2D,
-    themeProps: any
-  ) => {
+  const drawMatchOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
     const { color } = themeProps;
     const { winner, matchWins, currentMatch } = gameStateRef.current;
-
+    
     // Semi-transparent overlay with exact positioning and rounded corners
     ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH - 4, BASE_HEIGHT - 4, 20);
+    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
     ctx.fill();
-
+    
     // Winner text
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 15;
-    ctx.font = "bold 48px Arial";
-    ctx.textAlign = "center";
-
-    if (winner === "player1") {
-      ctx.fillText(
-        `${player1Name} WINS MATCH ${currentMatch}!`,
-        BASE_WIDTH / 2,
-        BASE_HEIGHT / 3
-      );
-    } else if (winner === "player2") {
-      ctx.fillText(
-        `${player2Name} WINS MATCH ${currentMatch}!`,
-        BASE_WIDTH / 2,
-        BASE_HEIGHT / 3
-      );
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    
+    if (winner === 'player1') {
+      ctx.fillText(`${player1Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    } else if (winner === 'player2') {
+      ctx.fillText(`${player2Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
     }
-
+    
     // Current match score
-    ctx.font = "bold 36px Arial";
-    ctx.fillText(
-      `MATCH SCORE: ${matchWins.player1} - ${matchWins.player2}`,
-      BASE_WIDTH / 2,
-      BASE_HEIGHT / 2
-    );
-
+    ctx.font = 'bold 36px Arial';
+    ctx.fillText(`MATCH SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    
     // Continue instructions
     ctx.shadowBlur = 5;
-    ctx.font = "20px Arial";
-    ctx.fillText(
-      "Click to continue to next match",
-      BASE_WIDTH / 2,
-      BASE_HEIGHT * 0.7
-    );
+    ctx.font = '20px Arial';
+    ctx.fillText('Click to continue to next match', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
     ctx.restore();
   };
 
   // Draw game over screen
-  const drawGameOverScreen = (
-    ctx: CanvasRenderingContext2D,
-    themeProps: any
-  ) => {
+  const drawGameOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
     const { color } = themeProps;
     const { winner, matchWins } = gameStateRef.current;
-
+    
     // Semi-transparent overlay with exact positioning and rounded corners
     ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH - 4, BASE_HEIGHT - 4, 20);
+    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
     ctx.fill();
-
+    
     // Winner text
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 15;
-    ctx.font = "bold 48px Arial";
-    ctx.textAlign = "center";
-
-    if (winner === "player1") {
-      ctx.fillText(
-        `${player1Name} WINS THE GAME!`,
-        BASE_WIDTH / 2,
-        BASE_HEIGHT / 3
-      );
-    } else if (winner === "player2") {
-      ctx.fillText(
-        `${player2Name} WINS THE GAME!`,
-        BASE_WIDTH / 2,
-        BASE_HEIGHT / 3
-      );
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    
+    if (winner === 'player1') {
+      ctx.fillText(`${player1Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    } else if (winner === 'player2') {
+      ctx.fillText(`${player2Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
     }
-
+    
     // Final score
-    ctx.font = "bold 36px Arial";
-    ctx.fillText(
-      `FINAL SCORE: ${matchWins.player1} - ${matchWins.player2}`,
-      BASE_WIDTH / 2,
-      BASE_HEIGHT / 2
-    );
-
+    ctx.font = 'bold 36px Arial';
+    ctx.fillText(`FINAL SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    
     // Restart instructions
     ctx.shadowBlur = 5;
-    ctx.font = "20px Arial";
-    ctx.fillText("Click to play again", BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.font = '20px Arial';
+    ctx.fillText('Click to play again', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
     ctx.restore();
   };
   // Set up game canvas and event listeners
