@@ -47,7 +47,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
 
   return (
     <div className="w-full flex flex-col items-center justify-center py-4">
-      <div className="bg-black bg-opacity-80 rounded-xl border-2 border-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.6)] w-full">
+      <div className="bg-black bg-opacity-60 backdrop-blur-sm rounded-xl border-2 border-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.6)] w-full max-w-4xl">
         {/* Header */}
         <div className="text-center mb-6 relative px-6 pt-6">
           <button 
@@ -79,7 +79,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
                 value={player1Name}
                 onChange={(e) => setPlayer1Name(e.target.value)}
                 placeholder="Enter name"
-                className="bg-black border-2 border-[#D05F3B] text-white rounded-lg focus:ring-[#D05F3B] focus:border-[#D05F3B] shadow-[0_0_10px_rgba(208,95,59,0.3)]"
+                className="bg-black bg-opacity-70 border-2 border-[#D05F3B] text-white rounded-lg focus:ring-[#D05F3B] focus:border-[#D05F3B] shadow-[0_0_10px_rgba(208,95,59,0.3)]"
                 style={{ 
                   height: '50px',
                   fontSize: '16px'
@@ -96,7 +96,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
                 value={player2Name}
                 onChange={(e) => setPlayer2Name(e.target.value)}
                 placeholder="Enter name"
-                className="bg-black border-2 border-[#40CFB7] text-white rounded-lg focus:ring-[#40CFB7] focus:border-[#40CFB7] shadow-[0_0_10px_rgba(64,207,183,0.3)]"
+                className="bg-black bg-opacity-70 border-2 border-[#40CFB7] text-white rounded-lg focus:ring-[#40CFB7] focus:border-[#40CFB7] shadow-[0_0_10px_rgba(64,207,183,0.3)]"
                 style={{ 
                   height: '50px',
                   fontSize: '16px'
@@ -112,7 +112,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Fire Theme */}
               <div 
-                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-500 ${
+                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-500 backdrop-blur-sm bg-black bg-opacity-50 ${
                   selectedTheme === 'fire' 
                     ? 'border-[#D05F3B] shadow-[0_0_15px_rgba(208,95,59,0.7)]' 
                     : 'border-gray-700'
@@ -137,7 +137,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
 
               {/* Water Theme */}
               <div 
-                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-500 ${
+                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-500 backdrop-blur-sm bg-black bg-opacity-50 ${
                   selectedTheme === 'water' 
                     ? 'border-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.7)]' 
                     : 'border-gray-700'
@@ -169,7 +169,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Easy */}
               <motion.div
-                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 ${
+                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 backdrop-blur-sm bg-black bg-opacity-50 ${
                   selectedDifficulty === 'easy' 
                     ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.7)]' 
                     : 'border-gray-700'
@@ -188,7 +188,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
 
               {/* Medium */}
               <motion.div
-                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 ${
+                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 backdrop-blur-sm bg-black bg-opacity-50 ${
                   selectedDifficulty === 'medium' 
                     ? 'border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.7)]' 
                     : 'border-gray-700'
@@ -207,7 +207,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
 
               {/* Hard */}
               <motion.div
-                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 ${
+                className={`relative cursor-pointer rounded-xl border-2 transition-all duration-300 backdrop-blur-sm bg-black bg-opacity-50 ${
                   selectedDifficulty === 'hard' 
                     ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.7)]' 
                     : 'border-gray-700'

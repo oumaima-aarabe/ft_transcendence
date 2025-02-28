@@ -1005,7 +1005,7 @@ const PongGame: React.FC<PongGameProps> = ({
                 : "0 0 20px #40CFB7, inset 0 0 10px rgba(64, 207, 183, 0.5)",
             background: "black",
             margin: "0 auto",
-            borderRadius: "20px",
+            borderRadius: "30px",
           }}
         >
           <canvas
