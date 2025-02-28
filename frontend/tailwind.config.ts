@@ -10,6 +10,7 @@ const config: Config = {
   theme: {
   	extend: {
 		fontFamily: {
+			orbitron: ['var(--font-orbitron)'],
 			sans: ['Poppins', 'sans-serif'],
 		  },
 		keyframes: {

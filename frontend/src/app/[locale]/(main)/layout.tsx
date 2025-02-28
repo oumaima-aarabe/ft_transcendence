@@ -1,5 +1,15 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { Inter, Orbitron } from "next/font/google";
+
+// Initialize the fonts
+const inter = Inter({ subsets: ["latin"] });
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-orbitron",
+});
+
 export default function MainLayout({
   children,
 }: {
