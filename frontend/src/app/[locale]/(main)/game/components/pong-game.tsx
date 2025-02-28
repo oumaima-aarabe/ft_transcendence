@@ -92,19 +92,19 @@ const themeProperties = {
 // Difficulty settings
 const difficultySettings = {
   easy: {
+    ballSpeed: 3,
+    incrementMultiplier: 0.02,
+    maxBallSpeed: 6
+  },
+  medium: {
     ballSpeed: 5,
     incrementMultiplier: 0.05,
     maxBallSpeed: 8
   },
-  medium: {
+  hard: {
     ballSpeed: 7,
     incrementMultiplier: 0.1,
     maxBallSpeed: 11
-  },
-  hard: {
-    ballSpeed: 9,
-    incrementMultiplier: 0.15,
-    maxBallSpeed: 15
   }
 };
 
