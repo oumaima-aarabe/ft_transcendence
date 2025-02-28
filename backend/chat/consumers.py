@@ -7,6 +7,8 @@ from .models import Message
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from .models import Conversation, Message
+from django.db.models import Q
+from friends.models import Friend
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -40,7 +42,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def get_conversations(self):
-        conversations = Conversation.objects.filter(participants=self.user).prefetch_related('participants')
+        blocked_users = Friend.objects.filter(
+            sender=self.user,
+            state='blocked'
+        ).values_list('recipient', flat=True)
+        
+        blocked_by = Friend.objects.filter(
+            recipient=self.user,
+            state='blocked'
+        ).values_list('sender', flat=True)
+        
+        conversations = Conversation.objects.filter(participants=self.user)\
+            .exclude(participants__in=blocked_users)\
+            .exclude(participants__in=blocked_by)\
+            .prefetch_related('participants')
+        
         self.conversations = list(conversations)
 
     @sync_to_async
@@ -69,6 +85,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.get_conversations()
             if event == "create_conversation":
                 receiver = data.get("data").get("receiver")
+                # Check if either user has blocked the other
+                is_blocked = await database_sync_to_async(Friend.objects.filter)(
+                    Q(sender=self.user, recipient__username=receiver, state='blocked') |
+                    Q(sender__username=receiver, recipient=self.user, state='blocked')
+                ).exists()
+                
+                if is_blocked:
+                    return
+                
                 receiver_user = await database_sync_to_async(User.objects.get)(username=receiver)
                 conversation = await database_sync_to_async(Conversation.objects.create)()
                 await database_sync_to_async(conversation.participants.add)(self.user, receiver_user)
@@ -173,4 +198,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "event": "update_conversations",
                 }
             )
+        )
+        
+    async def block_status_update(self, event):
+        """
+        Handle block status update notifications.
+        This is called when a user blocks or unblocks the current user.
+        """
+        await self.send(
+            text_data=json.dumps({
+                "event": event["event"],
+                "status": event["status"],
+                "blocker": event["blocker"]
+            })
         )

@@ -128,7 +128,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
                     />
                     <Input
                       placeholder="Enter your email"
-                      className="pl-10 !bg-[#EEE5BE] !rounded-3xl w-full"
+                      className="pl-10 !bg-[#EEE5BE] text-black !rounded-3xl w-full"
                       {...field}
                     />
                   </div>

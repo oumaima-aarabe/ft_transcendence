@@ -132,7 +132,10 @@
     "loading": "Caricamento chat...",
     "messages": {
       "send_placeholder": "Scrivi il tuo messaggio...",
-      "failed_fetch": "Impossibile caricare i messaggi"
+      "failed_fetch": "Impossibile caricare i messaggi",
+      "blocked_by_other": "Sei stato bloccato da questo utente 😔",
+      "blocked_by_me": "Hai bloccato questo utente",
+      "placeholder": "Scrivi il tuo messaggio..."
     },
     "profile": {
       "title": "Profilo chat",
@@ -144,7 +147,11 @@
       "view_profile": "Visualizza profilo",
       "challenge": "Sfida",
       "delete_chat": "Elimina chat",
-      "friend_status": "Sei amico di questa persona"
+      "deleting": "Eliminazione...",
+      "friend_status": "Sei amico di questa persona",
+      "unblock": "Sblocca utente",
+      "blocked_by_other": "Sei bloccato",
+      "loading": "Caricamento..."
     },
     "list": {
       "title": "Conversazioni",
@@ -152,7 +159,10 @@
       "search_results": "Risultati ricerca",
       "click_to_start": "Clicca per iniziare la conversazione",
       "no_messages": "Ancora nessun messaggio",
-      "start_chat": "Inizia nuova conversazione"
+      "start_chat": "Inizia nuova conversazione",
+      "no_users_or_conversations": "Nessun utente o conversazione trovata",
+      "no_conversations": "Nessuna conversazione trovata",
+      "failed_to_start_conversation": "Impossibile iniziare la conversazione. Per favore riprova."
     }
   },
   "header": {

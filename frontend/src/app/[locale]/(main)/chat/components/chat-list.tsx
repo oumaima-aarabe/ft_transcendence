@@ -7,9 +7,7 @@ import { StatusAvatar } from "./status-avatar";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { sendRequest } from "@/lib/axios";
-import endpoints from "@/constants/endpoints";
 import { debounce } from "lodash";
-import { sendWebSocketMessage } from "@/lib/websocket";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from 'next-intl';
 
@@ -27,6 +25,8 @@ interface SearchUser {
   first_name: string;
   last_name: string;
   avatar: string;
+  cover: string;
+  level: number;
   status: "online" | "offline" | "donotdisturb" | "invisible";
 }
 
@@ -41,7 +41,6 @@ export function ChatList({
   const statusT = useTranslations('header.status');
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredConversations, setFilteredConversations] = useState<Conversation[]>(conversations || []);
-  const [searchedUsers, setSearchedUsers] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -49,41 +48,6 @@ export function ChatList({
   useEffect(() => {
     setFilteredConversations(conversations || []);
   }, [conversations]);
-
-  // useEffect(() => {
-  //   if (!searchQuery.trim()) {
-  //     setFilteredConversations(conversations || []);
-  //     setSearchedUsers([]);
-  //     setIsSearching(false);
-  //     return;
-  //   }
-
-  //   const query = searchQuery.toLowerCase();
-  //   const filtered = conversations.filter(conv => 
-  //     conv.other_participant.username.toLowerCase().includes(query)
-  //   );
-  //   setFilteredConversations(filtered);
-
-  //   // Search for users if no conversations match
-  //   if (filtered.length === 0) {
-  //     searchUsers(query);
-  //   } else {
-  //     setSearchedUsers([]);
-  //   }
-  // }, [searchQuery, conversations]);
-
-  // const searchUsers = async (query: string) => {
-  //   setIsSearching(true);
-  //   try {
-  //     const response = await sendRequest("GET", `${endpoints.searchUsers}/${query}`);
-  //     setSearchedUsers(response.data);
-  //   } catch (error) {
-  //     console.error("Error searching users:", error);
-  //     setSearchedUsers([]);
-  //   } finally {
-  //     setIsSearching(false);
-  //   }
-  // };
 
   // Debounced search function
   const debouncedSearch = debounce(async (query: string) => {
@@ -124,25 +88,10 @@ export function ChatList({
         onChatSelect(response.data.id);
       }
     } catch (error) {
-      setError("Failed to start conversation. Please try again.");
+      setError(t('failed_to_start_conversation'));
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsSearching(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online':
-        return 'bg-green-500';
-      case 'offline':
-        return 'bg-gray-500';
-      case 'donotdisturb':
-        return 'bg-red-500';
-      case 'invisible':
-        return 'bg-yellow-500';
-      default:
-        return 'bg-gray-500';
     }
   };
 
@@ -282,9 +231,9 @@ export function ChatList({
                   className="text-center text-[#808080] mt-8 py-4"
                 >
                   {searchQuery ? (
-                    <p>No users or conversations found</p>
+                    <p>{t('no_users_or_conversations')}</p>
                   ) : (
-                    <p>No conversations yet</p>
+                    <p>{t('no_conversations')}</p>
                   )}
                 </motion.div>
               )}

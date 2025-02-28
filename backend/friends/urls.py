@@ -10,6 +10,7 @@ from .views import (
     RemoveFriendView,
     BlockView,
     UnblockView,
+    CheckBlockedByView,
 )
 
 
@@ -24,4 +25,5 @@ urlpatterns = [
     path('friends/remove-friend/', RemoveFriendView.as_view(), name='remove_friend'),
     path('friends/block/', BlockView.as_view(), name='block'),
     path('friends/unblock/', UnblockView.as_view(), name='unblock'),
+    path('check-blocked-by/<int:user_id>/', CheckBlockedByView.as_view(), name='check_blocked_by'),
 ]

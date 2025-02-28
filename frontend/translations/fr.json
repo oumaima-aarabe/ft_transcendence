@@ -132,7 +132,10 @@
     "loading": "Chargement du chat...",
     "messages": {
       "send_placeholder": "Tapez votre message...",
-      "failed_fetch": "Échec de la récupération des messages"
+      "failed_fetch": "Échec de la récupération des messages",
+      "blocked_by_other": "Vous avez été bloqué par cet utilisateur 😔",
+      "blocked_by_me": "Vous avez bloqué cet utilisateur",
+      "placeholder": "Tapez votre message..."
     },
     "profile": {
       "title": "Profil de chat",
@@ -144,7 +147,11 @@
       "view_profile": "Voir le profil",
       "challenge": "Défier",
       "delete_chat": "Supprimer la conversation",
-      "friend_status": "Vous êtes ami avec cette personne"
+      "deleting": "Suppression...",
+      "friend_status": "Vous êtes ami avec cette personne",
+      "unblock": "Débloquer l'utilisateur",
+      "blocked_by_other": "Vous êtes bloqué",
+      "loading": "Chargement..."
     },
     "list": {
       "title": "Conversations",
@@ -152,7 +159,10 @@
       "search_results": "Résultats de recherche",
       "click_to_start": "Cliquez pour démarrer la conversation",
       "no_messages": "Pas encore de messages",
-      "start_chat": "Démarrer une nouvelle conversation"
+      "start_chat": "Démarrer une nouvelle conversation",
+      "no_users_or_conversations": "Aucun utilisateur ou conversation trouvé",
+      "no_conversations": "Aucune conversation trouvée",
+      "failed_to_start_conversation": "Échec de la création de la conversation. Veuillez réessayer."
     }
   },
   "header": {

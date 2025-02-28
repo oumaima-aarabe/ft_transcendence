@@ -7,6 +7,8 @@ from authentication.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 # lists
@@ -193,6 +195,22 @@ class BlockView(APIView):
             Q(sender=target_user, recipient=current_user)
         ).delete()
         Friend.objects.create(sender=current_user, recipient=target_user, state='blocked')
+        
+        # Send WebSocket notification to the blocked user
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{target_user.username}",
+            {
+                "type": "block_status_update",
+                "event": "block_status_update",
+                "status": "blocked",
+                "blocker": {
+                    "id": current_user.id,
+                    "username": current_user.username,
+                }
+            }
+        )
+        
         return Response({'data': 'User blocked'}, status=status.HTTP_200_OK)
 
 
@@ -208,4 +226,39 @@ class UnblockView(APIView):
         if not blocked:
             return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
         blocked.delete()
+        
+        # Send WebSocket notification to the unblocked user
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{target_user.username}",
+            {
+                "type": "block_status_update",
+                "event": "block_status_update",
+                "status": "unblocked",
+                "blocker": {
+                    "id": current_user.id,
+                    "username": current_user.username,
+                }
+            }
+        )
+        
         return Response({'data': 'User unblocked'}, status=status.HTTP_200_OK)
+
+
+class CheckBlockedByView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        current_user = request.user
+        target_user = get_object_or_404(User, id=user_id)
+        
+        # Check if target_user has blocked current_user
+        is_blocked = Friend.objects.filter(
+            sender=target_user,
+            recipient=current_user,
+            state='blocked'
+        ).exists()
+        
+        return Response({
+            'is_blocked': is_blocked
+        }, status=status.HTTP_200_OK)

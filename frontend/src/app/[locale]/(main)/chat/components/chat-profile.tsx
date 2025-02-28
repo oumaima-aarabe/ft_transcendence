@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UserCircle,
   Swords,
@@ -11,22 +11,87 @@ import { User } from "../types/chat";
 import { Button } from "@/components/ui/button";
 import { sendRequest } from "@/lib/axios";
 import { useTranslations } from 'next-intl';
+import { toast } from "sonner";
+import { BlockState } from '../page';
+import { sendWebSocketMessage } from "@/lib/websocket";
 
 interface ChatProfileProps {
   user: User;
   conversationId: string;
   onConversationDeleted: () => void;
+  blockState: BlockState;
+  setBlockState: (state: BlockState) => void;
 }
 
-export function ChatProfile({ user, conversationId, onConversationDeleted }: ChatProfileProps) {
+export function ChatProfile({ user, conversationId, onConversationDeleted, blockState, setBlockState }: ChatProfileProps) {
   const t = useTranslations('chat.profile');
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+
+  useEffect(() => {
+
+    const checkBlockStatus = async () => {
+      try {
+        // Check if we've blocked them
+        const outgoingBlockResponse = await sendRequest("GET", "/friends/blocked/");
+        const blockedByUs = outgoingBlockResponse.data.data.some(
+          (blockedUser: any) => blockedUser.friend_id === user.id
+        );
+        
+        if (blockedByUs) {
+          setBlockState(BlockState.BLOCKED_BY_ME);
+          return;
+        }
+        
+        // Check if they've blocked us
+        const incomingBlockResponse = await sendRequest("GET", `/friends/check-blocked-by/${user.id}/`);
+        const blockedByThem = incomingBlockResponse.data.is_blocked;
+        
+        setBlockState(blockedByThem ? BlockState.BLOCKED_BY_OTHER : BlockState.UNBLOCKED);
+      } catch (error) {
+        console.error("Error checking block status:", error);
+      }
+    };
+    checkBlockStatus();
+  }, [user.id, setBlockState]);
+
+  const handleBlockToggle = async () => {
+    try {
+      setBlockState(BlockState.PENDING);
+      if (blockState === BlockState.BLOCKED_BY_ME) {
+        await sendRequest("POST", "/friends/friends/unblock/", {
+          target_user_id: user.id
+        });
+        
+        sendWebSocketMessage("update_conversations", {});
+        
+        setBlockState(BlockState.UNBLOCKED);
+      } else {
+        await sendRequest("POST", "/friends/friends/block/", {
+          target_user_id: user.id
+        });
+        
+        sendWebSocketMessage("update_conversations", {});
+        
+        setBlockState(BlockState.BLOCKED_BY_ME);
+      }
+    } catch (error) {
+      console.error("Error toggling block status:", error);
+      toast.error("Failed to update block status");
+
+      setBlockState(blockState);
+    }
+  };
 
   const handleDeleteChat = async () => {
     try {
+      setIsDeleting(true);
       await sendRequest("DELETE", `/chat/conversations/${conversationId}/`);
       onConversationDeleted();
     } catch (error) {
       console.error("Error deleting conversation:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -64,6 +129,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted }: Cha
           </Button>
           <Button
             variant="outline"
+            disabled={blockState === BlockState.BLOCKED_BY_ME || blockState === BlockState.BLOCKED_BY_OTHER}
             className="relative w-full text-sm text-white bg-transparent border border-white/20 hover:border-white/30 hover:bg-white/10 hover:text-white rounded-full h-11"
           >
             <div className="absolute top-3 left-3">
@@ -75,17 +141,30 @@ export function ChatProfile({ user, conversationId, onConversationDeleted }: Cha
           </Button>
           <Button
             variant="outline"
-            className="relative w-full text-sm text-[#CC0202] bg-transparent border border-white/20 hover:border-[#CC0202]/30 hover:text-[#CC0202] hover:bg-[#6e2626]/10 rounded-full h-11"
+            className={`relative w-full text-sm bg-transparent border border-white/20 rounded-full h-11
+              ${blockState === BlockState.UNBLOCKED ?
+                  "text-[#CC0202] hover:text-[#CC0202] hover:bg-[#6e2626]/10 hover:border-[#CC0202]/30" :
+                  blockState === BlockState.BLOCKED_BY_ME ?
+                  "text-white hover:text-white hover:bg-white/10 hover:border-white/30" :
+                  "text-[#CC0202] hover:text-[#CC0202] hover:bg-[#6e2626]/10 hover:border-[#CC0202]/30 opacity-50 cursor-not-allowed"
+                }
+              `}
+
+            disabled={blockState === BlockState.PENDING || blockState === BlockState.BLOCKED_BY_OTHER}
+            onClick={handleBlockToggle}
           >
             <div className="absolute top-3 left-3">
               <UserMinus className="h-4 w-4" />
             </div>
-            <span className="flex justify-center text-xs  items-center h-full">
-              {t('block')}
+            <span className="flex justify-center text-xs items-center h-full">
+              {blockState === BlockState.BLOCKED_BY_ME ? t('unblock') : 
+               blockState === BlockState.BLOCKED_BY_OTHER ? t('blocked_by_other') : 
+               blockState === BlockState.PENDING ? t('loading') : t('block')}
             </span>
           </Button>
           <Button
             variant="outline"
+            disabled={isDeleting}
             className="relative w-full text-sm text-[#CC0202] bg-transparent border border-white/20 hover:border-[#CC0202]/30 hover:text-[#CC0202] hover:bg-[#6e2626]/10 rounded-full h-11"
             onClick={handleDeleteChat}
           >
@@ -93,7 +172,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted }: Cha
               <Trash2 className="h-4 w-4" />
             </div>
             <span className="flex justify-center text-xs items-center h-full">
-              {t('delete_chat')}
+              {isDeleting ? t('deleting') : t('delete_chat')}
             </span>
           </Button>
         </div>

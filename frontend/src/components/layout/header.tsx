@@ -10,8 +10,10 @@ import { UseUser } from "@/api/get-user";
 
 export function Header() {
   const { data: myUserData } = UseUser();
-  const t = useTranslations();
-
+  const t = useTranslations('header');
+  const tc = useTranslations('common');
+  const statusT = useTranslations('header.status');
+  
   return (
     <div className="h-20 backdrop-blur-sm flex items-center justify-between px-6 py-2">
       <Image
@@ -29,7 +31,7 @@ export function Header() {
         />
         <Input
           className="w-[320px] lg:w-[400px] h-11 lg:h-12 pl-10 bg-black/20 border-white/20 text-white text-xs lg:text-sm rounded-full"
-          placeholder={t('header.search.placeholder')}
+          placeholder={t('search.placeholder')}
         />
       </div>
       <div className="flex items-center gap-6 lg:gap-9">
@@ -58,10 +60,10 @@ export function Header() {
             <h2 className="font-semibold text-xs lg:text-sm text-white">
               {myUserData
                 ? `${myUserData.first_name} ${myUserData.last_name}`
-                : t('common.loading')}
+                : tc('loading')}
             </h2>
             <p className="text-[10px] text-xs lg:text-xs text-[#808080]">
-              {myUserData?.status || t('header.status.offline')}
+              {statusT(myUserData?.status || 'offline')}
             </p>
           </div>
         </div>

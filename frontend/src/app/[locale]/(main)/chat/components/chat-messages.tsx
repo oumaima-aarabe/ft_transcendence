@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { StatusAvatar } from "./status-avatar";
-
+import { BlockState } from "../page";
+import { useTranslations } from "next-intl";
 interface ChatMessagesProps {
   messages: Message[];
   currentUser: User;
@@ -14,6 +15,7 @@ interface ChatMessagesProps {
   onSendMessage: (content: string) => void;
   onToggleProfile: () => void;
   showProfile: boolean;
+  blockState: BlockState;
 }
 
 export function ChatMessages({
@@ -23,6 +25,7 @@ export function ChatMessages({
   onSendMessage,
   onToggleProfile,
   showProfile,
+  blockState
 }: ChatMessagesProps) {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -42,6 +45,9 @@ export function ChatMessages({
     }
   };
 
+  const t = useTranslations('chat.messages');
+  const th = useTranslations('header');
+
   return (
     <div className={`flex-1 flex flex-col h-full bg-black/10 backdrop-blur-sm overflow-hidden ml-3 ${showProfile ? "mr-3" : "rounded-r-[20px]"}`}>
       <div className="p-4 border-b border-[#2A2A2A] flex items-center justify-between">
@@ -50,7 +56,7 @@ export function ChatMessages({
           <div>
             <h2 className="font-semibold text-white">{selectedUser.username}</h2>
             <p className="text-sm text-[#808080]">
-              {selectedUser.status === "online" ? "Online" : "Offline"}
+              {th(`status.${selectedUser.status}`)}
             </p>
           </div>
         </div>
@@ -65,6 +71,16 @@ export function ChatMessages({
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-6">
+        {(blockState === BlockState.BLOCKED_BY_ME || blockState === BlockState.BLOCKED_BY_OTHER) && (
+          <div className="flex justify-center my-4">
+            <div className="bg-red-900/30 text-white px-4 py-2 rounded-full text-sm">
+              {blockState === BlockState.BLOCKED_BY_OTHER ? 
+                t('blocked_by_other') : 
+                t('blocked_by_me')}
+            </div>
+          </div>
+        )}
+        
         {messages.map((message) => {
           const isCurrentUser = message.sender.id === currentUser.id;
           return (
@@ -99,20 +115,30 @@ export function ChatMessages({
 
       <div className="p-4 border-none">
         <div className="absolute left-0 right-0 bottom-0 border-t border-zinc-700 bg-stone-900 rounded-t-xl p-1">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="bg-transparent border-none text-white placeholder:text-[#808080] focus:outline-none focus:ring-0 text-sm"
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          />
-          <Button
-            onClick={handleSend}
-            size="icon"
-            className="absolute right-2 top-2 bg-white/20 hover:bg-[#4CB5AB] hover:text-white text-gray rounded-full h-8 w-8"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          {blockState === BlockState.BLOCKED_BY_ME || blockState === BlockState.BLOCKED_BY_OTHER ? (
+            <div className="flex items-center justify-center h-10 text-sm text-red-400">
+              {blockState === BlockState.BLOCKED_BY_OTHER ? 
+                t('blocked_by_other') : 
+                t('blocked_by_me')}
+            </div>
+          ) : (
+            <>
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder={t('placeholder')}
+                className="bg-transparent border-none text-white placeholder:text-[#808080] focus:outline-none focus:ring-0 text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              />
+              <Button
+                onClick={handleSend}
+                size="icon"
+                className="absolute right-2 top-2 bg-white/20 hover:bg-[#4CB5AB] hover:text-white text-gray rounded-full h-8 w-8"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
