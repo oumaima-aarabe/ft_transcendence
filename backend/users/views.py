@@ -7,20 +7,23 @@ from authentication.models import User
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.response import Response
 from .serializers import *
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.db.models import Q
 from rest_framework.parsers import MultiPartParser, FormParser
 
-@permission_classes([IsAuthenticated])
+
+@permission_classes([AllowAny])
 @api_view(["GET"])
 def get_user_data(request, user_id):
     try:
-        user = request.user if user_id == "me" else User.objects.get(id=user_id)
+        print(user_id)
+        user = request.user if user_id == "me" else User.objects.get(username=user_id)
         return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-    
+
+
 @permission_classes([IsAuthenticated])
 @api_view(['PATCH'])
 def update_user_data(request):
@@ -29,6 +32,15 @@ def update_user_data(request):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@permission_classes([AllowAny])
+@api_view(['GET'])
+def all_users(request):
+    print('here')
+
+    users = User.objects.all()
+    return Response(UserSerializer(users, many=True).data)
 
 
 @permission_classes([IsAuthenticated])
@@ -44,11 +56,10 @@ def search_users(request, query):
     ).exclude(
         id=request.user.id
     ).exclude(
-        blocked_users=request.user
+        blocked_users=request.user9
     ).exclude(
         blocked_by=request.user
     )[:5]
-
 
     return Response(UserSerializer(users, many=True).data)
 
@@ -78,7 +89,7 @@ def upload_image(request):
             for chunk in image.chunks():
                 temp_file.write(chunk)
             temp_file.flush()
-            
+
             with open(temp_file.name, "rb") as f:
                 image_data = base64.b64encode(f.read()).decode("utf-8")
 
@@ -108,6 +119,7 @@ def upload_image(request):
             # Clean up the temporary file
             if os.path.exists(temp_file.name):
                 os.unlink(temp_file.name)
+
 
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])

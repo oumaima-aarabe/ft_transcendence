@@ -38,11 +38,11 @@ export default function Friendchat() {
   // if (!myUserData) return <></>;
 
   return (
-    <div className="p-4 w-full space-y-8 flex justify-center flex-col items-center">
-      <div className="flex justify-center font-bold items-center p-5">
+    <div className="h-full w-full space-y-8 flex justify-center flex-col items-center">
+      <div className="flex justify-center font-bold items-center ">
         <p>3shrani</p>
       </div>
-      <div className=" max-h-screen w-[85%]">
+      <div className="overflow-auto scrollbar-hide h-full w-[85%]">
         {list.map((item) => (
           <div
             key={item.username}

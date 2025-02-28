@@ -212,4 +212,7 @@ class UnblockView(APIView):
         blocked.delete()
         return Response({'data': 'User unblocked'}, status=status.HTTP_200_OK)
     
-# class OldFriendsView(APIView)
+    
+# class OldFriendsView(APIView):
+#     def get(self, request):
+        
