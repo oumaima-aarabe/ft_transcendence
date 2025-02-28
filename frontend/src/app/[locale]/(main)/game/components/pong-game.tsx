@@ -891,7 +891,7 @@ const PongGame: React.FC<PongGameProps> = ({
                   </div>
                   {uiState.matchWins.player2 > 0 && (
                     <span className={`text-xs ${
-                      theme === 'water' ? 'text-teal-300' : 'text-blue-300'
+                      theme === 'water' ? 'text-teal-300' : 'text-orange-300'
                     }`}>
                       {uiState.matchWins.player2} {uiState.matchWins.player2 === 1 ? 'match' : 'matches'} won
                     </span>
