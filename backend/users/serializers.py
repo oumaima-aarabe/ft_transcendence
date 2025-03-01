@@ -7,11 +7,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'first_name',
             'last_name', 'avatar', 'status', 'last_activity',
-            'experience', 'is_anonymized', 'cover'
+            'experience', 'is_anonymized', 'cover', 'is_2fa_enabled'
         ]
         read_only_fields = [
             'id', 'status', 'last_activity',
-            'experience', 'is_anonymized'
+            'experience', 'is_anonymized', 'is_2fa_enabled'
         ]
 
 

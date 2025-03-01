@@ -10,6 +10,11 @@ import os
 from django.conf import settings
 import requests
 from rest_framework_simplejwt.tokens import RefreshToken
+import pyotp
+import qrcode
+import io
+import base64
+from PIL import Image
 
 
 class signup_view(APIView):
@@ -48,7 +53,116 @@ class login_view(APIView):
                     {"error": "Incorrect password"},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
+            
+            # Check if 2FA is enabled for this user
+            if user.is_2fa_enabled:
+                # Return a response indicating 2FA is required
+                return Response({
+                    "requires2FA": True,
+                    "userId": str(user.id),
+                    "message": "2FA verification required"
+                }, status=status.HTTP_200_OK)
         
+            # If 2FA is not enabled, proceed with normal login
+            refresh_token = RefreshToken.for_user(user)
+            access_token = refresh_token.access_token
+
+            user.status = "online"
+            user.save()
+
+            response = Response()
+
+            cookie_settings = {
+                "httponly": False,
+                "secure": False,
+                "samesite": "Lax",  #'None' if using HTTPS
+                "domain": None,  # This will use the current domain
+                "path": "/"
+            }
+            response.set_cookie(
+                key="refreshToken",
+                value=str(refresh_token),
+                max_age=settings.REFRESH_TOKEN_LIFETIME.total_seconds(),
+                **cookie_settings,
+            )
+            response.set_cookie(
+                key="accessToken",
+                value=str(access_token),
+                max_age=settings.ACCESS_TOKEN_LIFETIME.total_seconds(),
+                **cookie_settings,
+            )
+
+            response.status_code = status.HTTP_200_OK
+            response.data = {
+                'data': 'User authenticated successfully',
+                'requires2FA': False
+            }
+
+            return response
+        except Exception as error:
+            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyTwoFactorView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        try:
+            user_id = request.data.get('userId')
+            code = request.data.get('code')
+
+            if not code:
+                return Response(
+                    {"error": "Verification code is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # If userId is not provided, this might be a verification during 2FA setup
+            if not user_id:
+                # Get the authenticated user
+                if not request.user.is_authenticated:
+                    return Response(
+                        {"error": "Authentication required"},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+                
+                user = request.user
+                
+                # Verify the 2FA code
+                totp = pyotp.TOTP(user.tfa_secret)
+                if not totp.verify(code):
+                    return Response(
+                        {"error": "Invalid verification code"},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+                
+                # Enable 2FA for the user
+                user.is_2fa_enabled = True
+                user.save()
+                
+                # Return a success response
+                return Response({
+                    "message": "2FA has been successfully enabled"
+                }, status=status.HTTP_200_OK)
+
+            # If userId is provided, this is a login verification
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "User not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Verify the 2FA code
+            totp = pyotp.TOTP(user.tfa_secret)
+            if not totp.verify(code):
+                return Response(
+                    {"error": "Invalid verification code"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            # If verification is successful, generate tokens and log in the user
             refresh_token = RefreshToken.for_user(user)
             access_token = refresh_token.access_token
 
@@ -83,6 +197,91 @@ class login_view(APIView):
             }
 
             return response
+        except Exception as error:
+            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EnableTwoFactorView(APIView):
+    def post(self, request):
+        try:
+            # Ensure user is authenticated
+            if not request.user.is_authenticated:
+                return Response(
+                    {"error": "Authentication required"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            user = request.user
+            
+            # Check if 2FA is already enabled
+            if user.is_2fa_enabled:
+                return Response(
+                    {"error": "2FA is already enabled for this account"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Generate a new secret key for the user
+            secret = pyotp.random_base32()
+            user.tfa_secret = secret
+            user.save()
+            
+            # Generate a QR code URL
+            totp = pyotp.TOTP(secret)
+            provisioning_uri = totp.provisioning_uri(user.email, issuer_name="PongArcadia")
+            
+            # Generate QR code image
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(provisioning_uri)
+            qr.make(fit=True)
+            
+            img = qr.make_image(fill_color="black", back_color="white")
+            
+            # Convert image to base64
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            
+            return Response({
+                "message": "2FA setup initiated",
+                "secret": secret,
+                "qr_code": f"data:image/png;base64,{qr_code_base64}"
+            }, status=status.HTTP_200_OK)
+        except Exception as error:
+            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DisableTwoFactorView(APIView):
+    def post(self, request):
+        try:
+            # Ensure user is authenticated
+            if not request.user.is_authenticated:
+                return Response(
+                    {"error": "Authentication required"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            user = request.user
+            
+            # Check if 2FA is enabled
+            if not user.is_2fa_enabled:
+                return Response(
+                    {"error": "2FA is not enabled for this account"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Disable 2FA
+            user.is_2fa_enabled = False
+            user.tfa_secret = None
+            user.save()
+            
+            return Response({
+                "message": "2FA has been successfully disabled"
+            }, status=status.HTTP_200_OK)
         except Exception as error:
             return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -142,7 +341,7 @@ class Login42API(APIView):
             last_name = user_data.get("last_name")
             if not user_email or not username:
                 error_query = urlencode({'error': 'no_email'})
-                return redirect(f"{os.getenv('FRONTEND_URL')}?{error_query}")
+                return redirect(f"{os.getenv('FRONTEND_URL')}/en/auth/?{error_query}")
 
             user = User.objects.filter(email=user_email).first()
             if user is None:
@@ -151,6 +350,14 @@ class Login42API(APIView):
                     first_name=first_name or '',
                     last_name=last_name or ''
                 )
+
+            response = Response()
+
+            # Check if 2FA is enabled for this user
+            if user.is_2fa_enabled:
+                # Return a JSON response indicating 2FA is required
+                response = redirect(f"{os.getenv('FRONTEND_URL')}/en/auth/?error=2fa_required&userId={user.id}")
+                return response
 
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
