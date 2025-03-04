@@ -181,5 +181,12 @@
       "busy": "ne pas déranger",
       "invisible": "invisible"
     }
+  },
+  "Tournaments": {
+    "title": "Tournois",
+    "join": "Rejoindre un tournoi",
+    "create": "Créer un tournoi",
+    "joinDescription": "Rejoignez un tournoi et participez à la compétition",
+    "createDescription": "Créez un tournoi et invitez d'autres joueurs"
   }
 }

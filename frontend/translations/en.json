@@ -181,5 +181,12 @@
       "busy": "do not disturb",
       "invisible": "invisible"
     }
+  },
+  "Tournaments": {
+    "title": "Tournaments",
+    "join": "Join a Tournament",
+    "create": "Create a Tournament",
+    "joinDescription": "Join a tournament and compete against other players",
+    "createDescription": "Create a tournament and invite other players"
   }
 }
