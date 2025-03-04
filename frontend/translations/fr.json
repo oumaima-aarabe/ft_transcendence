@@ -172,7 +172,7 @@
   },
   "header": {
     "search": {
-      "placeholder": "Rechercher des personnes, des tournois et plus"
+      "placeholder": "Rechercher des joueurs, des amis et plus"
     },
     "status": {
       "online": "en ligne",
@@ -187,6 +187,58 @@
     "join": "Rejoindre un tournoi",
     "create": "Créer un tournoi",
     "joinDescription": "Rejoignez un tournoi et participez à la compétition",
-    "createDescription": "Créez un tournoi et invitez d'autres joueurs"
+    "createDescription": "Créez un tournoi et invitez d'autres joueurs",
+    "select": "Sélectionner"
+  },
+  "Game": {
+    "title": "Mode de jeu",
+    "local": "Jeu local",
+    "invite": "Inviter un ami",
+    "matchmaking": "Matchmaking",
+    "localDescription": "Jouez contre un ami sur le même appareil",
+    "inviteDescription": "Envoyez une invitation à jouer à distance",
+    "matchmakingDescription": "Trouvez des adversaires et participez à la compétition en ligne",
+    "select": "Sélectionner",
+    "gameSetup": "Configuration du jeu",
+    "player1": "Joueur 1",
+    "player2": "Joueur 2",
+    "selectTheme": "Sélectionner le thème",
+    "fireTheme": "Thème Feu",
+    "fireThemeDescription": "Lumière orange chaude",
+    "waterTheme": "Thème Eau",
+    "waterThemeDescription": "Effet teinté bleu",
+    "selectDifficulty": "Sélectionner la difficulté",
+    "easy": "Facile",
+    "medium": "Moyen",
+    "hard": "Difficile",
+    "startGame": "Démarrer le jeu",
+    "back": "Retour"
+  },
+  "localGame": {
+    "points": "Points",
+    "match": "Match",
+    "of": "de",
+    "clickOrPressAnyKeyToStart": "Cliquez ou appuyez sur une touche pour commencer",
+    "wSKeys": "W/S keys",
+    "arrowUpDownKeys": "Flèches haut/bas",
+    "pressSpaceToPause": "Appuyez sur espace pour mettre en pause",
+    "paused": "En pause",
+    "pressSpaceToContinue": "Appuyez sur espace pour reprendre",
+    "winsMatch": "Gagne le match",
+    "matchScore": "Score du match",
+    "clickToContinueToNextMatch": "Cliquez pour continuer au prochain match",
+    "finalScore": "Score final",
+    "clickToPlayAgain": "Cliquez pour rejouer",
+    "pongArcadia": "PONG ARCADIA",
+    "firstToWin": "Premier à gagner",
+    "matchesWinsGame": "matches gagne la partie !",
+    "winsGame": "Gagne la partie",
+    "won": "gagné",
+    "matchWon": "match gagné",
+    "matchesWon": "matches gagnés",
+    "firstTo": "Premier à",
+    "backToSetup": "Retour à la configuration",
+    "resumeGame": "Reprendre le jeu",
+    "pauseGame": "Mettre en pause le jeu"
   }
 }

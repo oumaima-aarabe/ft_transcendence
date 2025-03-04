@@ -7,18 +7,20 @@ import LocalGameSetup from './components/local-game-setup';
 import PongGame from './components/pong-game';
 import GameBackground from './components/game-background';
 import { GameTheme, GameDifficulty } from './types/game';
+import { useTranslations } from 'next-intl';
 
 // Game flow state type
 type GameFlowState = 'options' | 'setup' | 'playing';
 
 export default function GamePage() {
+  const t = useTranslations('Game');
   // Flow state management
   const [flowState, setFlowState] = useState<GameFlowState>('options');
   const gameAreaRef = useRef<HTMLDivElement>(null);
   
   // Game configuration
-  const [player1Name, setPlayer1Name] = useState<string>('Player 1');
-  const [player2Name, setPlayer2Name] = useState<string>('Player 2');
+  const [player1Name, setPlayer1Name] = useState<string>(t('player1'));
+  const [player2Name, setPlayer2Name] = useState<string>(t('player2'));
   const [gameTheme, setGameTheme] = useState<GameTheme>('fire');
   const [gameDifficulty, setGameDifficulty] = useState<GameDifficulty>('medium');
 

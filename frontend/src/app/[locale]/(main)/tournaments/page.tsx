@@ -152,7 +152,7 @@ export default function TournamentsPage({ onSelectMode }: TournamentsOptionsProp
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          SELECT
+                          {t('select')}
                         </motion.button>
                       </div>
                     </motion.div>

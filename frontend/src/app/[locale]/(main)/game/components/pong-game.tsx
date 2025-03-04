@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Flame, Waves, Trophy } from "lucide-react";
 import { GameDifficulty, GameTheme, KeyStates } from "../types/game";
+import { useTranslations } from "next-intl";
 
 //Game State interface
 interface EnhancedGameState {
@@ -113,6 +114,7 @@ const PongGame: React.FC<PongGameProps> = ({
   player1Avatar = "https://iili.io/2D8ByIj.png",
   player2Avatar = "https://iili.io/2D8ByIj.png",
 }) => {
+  const t = useTranslations('localGame');
   // Canvas reference
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -560,10 +562,10 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.shadowColor = color;
     ctx.shadowBlur = 5;
     ctx.textAlign = "left";
-    ctx.fillText(`Points: ${leftPaddle.score}`, 20, BASE_HEIGHT - 20);
+    ctx.fillText(`${t('points')}: ${leftPaddle.score}`, 20, BASE_HEIGHT - 20);
     ctx.textAlign = "right";
     ctx.fillText(
-      `Points: ${rightPaddle.score}`,
+      `${t('points')}: ${rightPaddle.score}`,
       BASE_WIDTH - 20,
       BASE_HEIGHT - 20
     );
@@ -599,22 +601,22 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.shadowBlur = 15;
     ctx.font = 'bold 48px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('PONG ARCADIA', BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    ctx.fillText('Pong Arcadia', BASE_WIDTH / 2, BASE_HEIGHT / 3);
     
     // Match info
     ctx.font = 'bold 24px Arial';
-    ctx.fillText(`MATCH ${currentMatch} OF ${MATCHES_TO_WIN_GAME * 2 - 1}`, BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
+    ctx.fillText(`${t('match')} ${currentMatch} ${t('of')} ${MATCHES_TO_WIN_GAME * 2 - 1}`, BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
     
     // Start instructions
     ctx.font = '24px Arial';
-    ctx.fillText('Click or press any key to start', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 10);
+    ctx.fillText(t('clickOrPressAnyKeyToStart'), BASE_WIDTH / 2, BASE_HEIGHT / 2 + 10);
     
     // Controls
     ctx.shadowBlur = 5;
     ctx.font = '18px Arial';
-    ctx.fillText(`${player1Name}: W/S keys`, BASE_WIDTH / 4, BASE_HEIGHT * 0.7);
-    ctx.fillText(`${player2Name}: Arrow Up/Down`, (BASE_WIDTH / 4) * 3, BASE_HEIGHT * 0.7);
-    ctx.fillText('Press Space to pause', BASE_WIDTH / 2, BASE_HEIGHT * 0.8);
+    ctx.fillText(`${player1Name}: ${t('wSKeys')}`, BASE_WIDTH / 4, BASE_HEIGHT * 0.7);
+    ctx.fillText(`${player2Name}: ${t('arrowUpDownKeys')}`, (BASE_WIDTH / 4) * 3, BASE_HEIGHT * 0.7);
+    ctx.fillText(t('pressSpaceToPause'), BASE_WIDTH / 2, BASE_HEIGHT * 0.8);
     ctx.restore();
   };
 
@@ -635,12 +637,12 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.shadowBlur = 15;
     ctx.font = 'bold 48px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    ctx.fillText(t('paused'), BASE_WIDTH / 2, BASE_HEIGHT / 2);
     
     // Resume instructions
     ctx.shadowBlur = 5;
     ctx.font = '20px Arial';
-    ctx.fillText('Press Space to continue', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 50);
+    ctx.fillText(t('pressSpaceToContinue'), BASE_WIDTH / 2, BASE_HEIGHT / 2 + 50);
     ctx.restore();
   };
 
@@ -664,19 +666,19 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.textAlign = 'center';
     
     if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(`${player1Name} ${t('winsMatch')} ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
     } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(`${player2Name} ${t('winsMatch')} ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
     }
     
     // Current match score
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(`MATCH SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    ctx.fillText(`${t('matchScore')}: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
     
     // Continue instructions
     ctx.shadowBlur = 5;
     ctx.font = '20px Arial';
-    ctx.fillText('Click to continue to next match', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.fillText(t('clickToContinueToNextMatch'), BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
     ctx.restore();
   };
 
@@ -700,19 +702,19 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.textAlign = 'center';
     
     if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(`${player1Name} ${t('winsGame')}`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
     } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(`${player2Name} ${t('winsGame')}`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
     }
     
     // Final score
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(`FINAL SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    ctx.fillText(`${t('finalScore')}: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
     
     // Restart instructions
     ctx.shadowBlur = 5;
     ctx.font = '20px Arial';
-    ctx.fillText('Click to play again', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.fillText(t('clickToPlayAgain'), BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
     ctx.restore();
   };
   // Set up game canvas and event listeners
@@ -839,7 +841,7 @@ const PongGame: React.FC<PongGameProps> = ({
               : "border-[#40CFB7] text-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.5)]"
           }`}
         >
-          Back to Setup
+          {t('backToSetup')}
         </Button>
 
         <Button
@@ -855,7 +857,7 @@ const PongGame: React.FC<PongGameProps> = ({
             uiState.gameStatus === "gameOver"
           }
         >
-          {uiState.gameStatus === "paused" ? "Resume Game" : "Pause Game"}
+          {uiState.gameStatus === "paused" ? t('resumeGame') : t('pauseGame')}
         </Button>
       </div>
 
@@ -915,8 +917,8 @@ const PongGame: React.FC<PongGameProps> = ({
                       }`}
                     >
                       {uiState.matchWins.player1}{" "}
-                      {uiState.matchWins.player1 === 1 ? "match" : "matches"}{" "}
-                      won
+                      {uiState.matchWins.player1 === 1 ? t('matchWon') : t('matchesWon')}{" "}
+                      {t('won')}
                     </span>
                   )}
                 </div>
@@ -931,13 +933,13 @@ const PongGame: React.FC<PongGameProps> = ({
                 theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
               }`}
             >
-              MATCH {uiState.currentMatch}
+               {t('match')} {uiState.currentMatch}
             </div>
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-black/50 border border-white/20">
               <span className="text-white font-bold">VS</span>
             </div>
             <div className="mt-1 text-xs text-gray-400">
-              First to {POINTS_TO_WIN_MATCH} points
+              {t('firstTo')} {POINTS_TO_WIN_MATCH} {t('points')}
             </div>
           </div>
 
@@ -963,8 +965,8 @@ const PongGame: React.FC<PongGameProps> = ({
                       }`}
                     >
                       {uiState.matchWins.player2}{" "}
-                      {uiState.matchWins.player2 === 1 ? "match" : "matches"}{" "}
-                      won
+                      {uiState.matchWins.player2 === 1 ? t('matchWon') : t('matchesWon')}{" "}
+                      {t('won')}
                     </span>
                   )}
                 </div>
@@ -1029,7 +1031,7 @@ const PongGame: React.FC<PongGameProps> = ({
           >
             <Trophy size={16} />
             <span className="font-medium">
-              First to win {MATCHES_TO_WIN_GAME} matches wins the game!
+              {t('firstToWin')} {MATCHES_TO_WIN_GAME} {t('matchesWinsGame')}
             </span>
           </div>
 

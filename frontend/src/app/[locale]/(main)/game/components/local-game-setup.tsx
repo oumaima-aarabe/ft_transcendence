@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { GameTheme, GameDifficulty } from '../types/game';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface LocalGameSetupProps {
   onStart: (
@@ -27,6 +28,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
   initialTheme,
   initialDifficulty
 }) => {
+  const t = useTranslations('Game');
   // Form state
   const [player1Name, setPlayer1Name] = useState(initialP1Name);
   const [player2Name, setPlayer2Name] = useState(initialP2Name);
@@ -38,8 +40,8 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onStart(
-      player1Name || 'Player 1',
-      player2Name || 'Player 2',
+      player1Name || t('player1'),
+      player2Name || t('player2'),
       selectedTheme,
       selectedDifficulty
     );
@@ -55,14 +57,14 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
             className="absolute left-6 top-1/2 -translate-y-1/2 text-[#40CFB7] hover:text-white transition-colors duration-300"
             style={{ textShadow: '0 0 10px rgba(64,207,183,0.7)' }}
           >
-            ← Back
+            ← {t('back')}
           </button>
           
           <h1 className="text-4xl font-bold tracking-wider font-orbitron" style={{
             color: '#40CFB7',
             textShadow: '0 0 10px #40CFB7, 0 0 20px rgba(208,95,59,0.8), 0 0 30px rgba(208,95,59,0.4)',
           }}>
-            GAME SETUP
+            {t('gameSetup')}
           </h1>
         </div>
 
@@ -73,7 +75,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
             {/* Player 1 */}
             <div className="space-y-3">
               <label className="text-[#D05F3B] font-bold" style={{ textShadow: '0 0 5px rgba(208,95,59,0.5)' }}>
-                PLAYER 1
+                {t('player1')}
               </label>
               <Input
                 value={player1Name}
@@ -90,7 +92,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
             {/* Player 2 */}
             <div className="space-y-3">
               <label className="text-[#40CFB7] font-bold" style={{ textShadow: '0 0 5px rgba(64,207,183,0.5)' }}>
-                PLAYER 2
+                {t('player2')}
               </label>
               <Input
                 value={player2Name}
@@ -107,7 +109,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
 
           {/* Theme Selection */}
           <div className="space-y-4">
-            <h2 className="text-white text-xl font-bold">SELECT THEME</h2>
+            <h2 className="text-white text-xl font-bold">{t('selectTheme')}</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Fire Theme */}
@@ -121,8 +123,8 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
               >
                 <div className="p-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-[#D05F3B] font-bold">Fire Theme</h3>
-                    <p className="text-gray-400 text-sm">Hot orange glow</p>
+                    <h3 className="text-[#D05F3B] font-bold">{t('fireTheme')}</h3>
+                    <p className="text-gray-400 text-sm">{t('fireThemeDescription')}</p>
                   </div>
                   <div className="w-12 h-12 flex items-center justify-center">
                     <Image
@@ -146,8 +148,8 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
               >
                 <div className="p-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-[#40CFB7] font-bold">Water Theme</h3>
-                    <p className="text-gray-400 text-sm">Cool teal effect</p>
+                    <h3 className="text-[#40CFB7] font-bold">{t('waterTheme')}</h3>
+                    <p className="text-gray-400 text-sm">{t('waterThemeDescription')}</p>
                   </div>
                   <div className="w-12 h-12 flex items-center justify-center">
                     <Image
@@ -164,7 +166,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
 
           {/* Difficulty Selection */}
           <div className="space-y-4">
-            <h2 className="text-white text-xl font-bold">SELECT DIFFICULTY</h2>
+            <h2 className="text-white text-xl font-bold">{t('selectDifficulty')}</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Easy */}
@@ -181,7 +183,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
               >
                 <div className="p-4 flex justify-center items-center">
                   <span className={`font-bold ${selectedDifficulty === 'easy' ? 'text-green-500' : 'text-white'}`}>
-                    EASY
+                    {t('easy')}
                   </span>
                 </div>
               </motion.div>
@@ -200,7 +202,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
               >
                 <div className="p-4 flex justify-center items-center">
                   <span className={`font-bold ${selectedDifficulty === 'medium' ? 'text-yellow-500' : 'text-white'}`}>
-                    MEDIUM
+                    {t('medium')}
                   </span>
                 </div>
               </motion.div>
@@ -219,7 +221,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
               >
                 <div className="p-4 flex justify-center items-center">
                   <span className={`font-bold ${selectedDifficulty === 'hard' ? 'text-red-500' : 'text-white'}`}>
-                    HARD
+                    {t('hard')}
                   </span>
                 </div>
               </motion.div>
@@ -246,7 +248,7 @@ const LocalGameSetup: React.FC<LocalGameSetupProps> = ({
             }}
             whileTap={{ scale: 0.98 }}
           >
-            START GAME
+            {t('startGame')}
           </motion.button>
         </form>
       </div>

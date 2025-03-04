@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 interface GameOptionsProps {
   onSelectMode: (mode: 'local' | 'invite' | 'matchmaking') => void;
@@ -8,28 +9,28 @@ interface GameOptionsProps {
 
 const GameOptions: React.FC<GameOptionsProps> = ({ onSelectMode }) => {
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
-
+  const t = useTranslations('Game');
   const options = [
     {
       id: 'local',
-      title: 'Local Game',
-      description: 'Play against a friend on the same device',
+      title: t('local'),
+      description: t('localDescription'),
       theme: 'fire',
       icon: '/assets/icons/icon-pong.svg',
       clickHandler: () => onSelectMode('local')
     },
     {
       id: 'invite',
-      title: 'Invite a Friend',
-      description: 'Send an invitation to play remotely',
+      title: t('invite'),
+      description: t('inviteDescription'),
       theme: 'water',
       icon: '/assets/icons/icon-@.svg',
       clickHandler: () => onSelectMode('invite')
     },
     {
       id: 'matchmaking',
-      title: 'Matchmaking',
-      description: 'Find opponents and compete online',
+      title: t('matchmaking'),
+      description: t('matchmakingDescription'),
       theme: 'fire',
       icon: '/assets/icons/icon-user.svg',
       clickHandler: () => onSelectMode('matchmaking')
@@ -46,7 +47,7 @@ const GameOptions: React.FC<GameOptionsProps> = ({ onSelectMode }) => {
             color: '#40CFB7',
             textShadow: '0 0 10px #40CFB7, 0 0 20px rgba(208,95,59,0.8), 0 0 30px rgba(208,95,59,0.4)',
           }}>
-            GAME MODE
+            {t('title')}
           </h1>
         </div>
         
@@ -143,7 +144,7 @@ const GameOptions: React.FC<GameOptionsProps> = ({ onSelectMode }) => {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          SELECT
+                          {t('select')}
                         </motion.button>
                       </div>
                     </motion.div>
