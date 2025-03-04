@@ -88,7 +88,7 @@
     },
     "game": {
       "connectivity": {
-        "title": "Connectivité par défaut",
+        "title": "Connectivité",
         "online": "En ligne",
         "local": "Local"
       },
@@ -96,6 +96,11 @@
         "title": "Thème du plateau",
         "fire": "Thème Feu",
         "water": "Thème Eau"
+      },
+      "alias": {
+        "title": "Alias du tournoi",
+        "placeholder": "Alias par défaut",
+        "save": "Enregistrer"
       }
     },
     "language": {

@@ -10,14 +10,34 @@ const GameComponent: React.FC = () => {
     //State for board theme selection
     const [theme, setTheme] = useState<'fire' | 'water'>('fire');
 
+    //State for alias selection
+    const [alias, setAlias] = useState<string>('');
+
     return (
-        <div className="flex flex-col items-start gap-10 text-white pt-20">
-            {/* Connectivity Selection */}
+        <div className="flex flex-col items-start gap-8 text-white pt-20">
+            {/* Alias Selection */}
             <div className="flex flex-col items-start gap-2">
+                <h2 className="text-sm mb-3">{t('alias.title')}</h2>
+                <div className="flex gap-4">
+                    <div className="relative">
+                    <div className="absolute top-1/2 left-3 transform -translate-y-1/2">
+                        <img src="/assets/icons/icon-@.svg" alt="At Icon" className="h-4 w-4" />
+                    </div>
+                    <input type="text" placeholder={t('alias.placeholder')}
+                        className=" w-[12rem] py-2 pl-10 bg-[#2D2A2A]/30 border border-white/20 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D05F3B]/40" />
+                    </div>
+                    <button onClick={() => setAlias(alias)} className="w-[8rem] py-1 bg-[#D05F3B]/90 hover:bg-[#D05F3B]/80 text-white text-sm text-center border-none rounded-xl transition focus:outline-none">
+                        {t('alias.save')}
+                    </button>
+                </div>
+            </div>
+
+            {/* Connectivity Selection */}
+            <div className="flex flex-col items-start gap-2 mt-4">
                 <h2 className="text-sm mb-3">{t('connectivity.title')}</h2>
                 <div className="flex gap-4">
                     <button
-                        className={`relative gap-2 w-[9rem] py-2 border text-sm rounded-xl ${connectivity === 'online' ? 'bg-[#A86F43]/30 border-white/30'
+                        className={`relative gap-2 w-[10rem] py-2 border text-sm rounded-xl ${connectivity === 'online' ? 'bg-[#A86F43]/30 border-white/30'
                             : 'bg-[#2D2A2A]/30 border-white/20'
                             } transition focus:outline-none`}
                         onClick={() => setConnectivity('online')}
@@ -28,7 +48,7 @@ const GameComponent: React.FC = () => {
                         {t('connectivity.online')}
                     </button>
                     <button
-                        className={`relative gap-2 w-[9rem] py-2 border text-sm rounded-xl ${connectivity === 'local' ? 'bg-[#A86F43]/30 border-white/30'
+                        className={`relative gap-2 w-[10rem] py-2 border text-sm rounded-xl ${connectivity === 'local' ? 'bg-[#A86F43]/30 border-white/30'
                             : 'bg-[#2D2A2A]/30 border-white/20'
                             } transition focus:outline-none`}
                         onClick={() => setConnectivity('local')}
@@ -42,11 +62,11 @@ const GameComponent: React.FC = () => {
             </div>
 
             {/* Board Theme Selection */}
-            <div className="flex flex-col gap-2 mt-8">
+            <div className="flex flex-col gap-2 mt-4">
                 <h2 className="text-sm mb-3">{t('theme.title')}</h2>
                 <div className="flex gap-4">
                     <button
-                        className={`flex items-center w-[9rem] py-1  border text-sm rounded-xl ${theme === 'fire' ? 'bg-[#A86F43]/30 border-white/30'
+                        className={`flex items-center w-[10rem] py-1  border text-sm rounded-xl ${theme === 'fire' ? 'bg-[#A86F43]/30 border-white/30'
                             : 'bg-[#2D2A2A]/30 border-white/20'
                             } transition focus:outline-none`}
                         onClick={() => setTheme('fire')}
@@ -55,7 +75,7 @@ const GameComponent: React.FC = () => {
                     <img src='/assets/icons/fire-icon.svg' alt="Fire Icon" className="h-7 w-7 w-full" />
                     </button>
                     <button
-                        className={`flex items-center w-[9rem] py-1  border text-sm rounded-xl ${theme === 'water' ? 'bg-[#A86F43]/30 border-white/30'
+                        className={`flex items-center w-[10rem] py-1  border text-sm rounded-xl ${theme === 'water' ? 'bg-[#A86F43]/30 border-white/30'
                             : 'bg-[#2D2A2A]/30 border-white/20'
                             } transition focus:outline-none`}
                         onClick={() => setTheme('water')}
@@ -67,7 +87,7 @@ const GameComponent: React.FC = () => {
             </div>
 
             {/* Pong Table Preview */}
-            <div className="mt-12">
+            <div className="mt-4">
                 {theme === 'fire' ? (
                     <Image
                         src="/assets/images/game-board-fire.svg"

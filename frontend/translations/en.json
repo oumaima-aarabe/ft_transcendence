@@ -88,7 +88,7 @@
     },
     "game": {
       "connectivity": {
-        "title": "Default connectivity",
+        "title": "Connectivity",
         "online": "Online",
         "local": "Local"
       },
@@ -96,6 +96,11 @@
         "title": "Board theme",
         "fire": "Fire Theme",
         "water": "Water Theme"
+      },
+      "alias": {
+        "title": "Tournament alias",
+        "placeholder": "Default alias",
+        "save": "Save"
       }
     },
     "language": {

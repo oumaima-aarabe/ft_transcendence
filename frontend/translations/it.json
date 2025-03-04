@@ -88,7 +88,7 @@
     },
     "game": {
       "connectivity": {
-        "title": "Connettività predefinita",
+        "title": "Connettività",
         "online": "Online",
         "local": "Locale"
       },
@@ -96,6 +96,11 @@
         "title": "Tema della tavola",
         "fire": "Tema Fuoco",
         "water": "Tema Acqua"
+      },
+      "alias": {
+        "title": "Alias del torneo",
+        "placeholder": "Alias predefinito",
+        "save": "Salva"
       }
     },
     "language": {
