@@ -81,7 +81,7 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ is2FAEnabled, toggle2FA }
 
     return (
         <div className="flex flex-col gap-4">
-            <h2 className="text-sm font-normal">{t('title')}</h2>
+            <h2 className="text-lg font-normal">{t('title')}</h2>
             <div className="p-4 bg-[#2D2A2A]/30 border border-white/20 w-full rounded-xl">
                 {error && (
                     <div className="bg-red-500/20 text-red-300 p-2 mb-4 rounded-lg text-sm">

@@ -57,7 +57,7 @@ const PasswordUpdate = () => {
 
     return (
         <div className="flex flex-col gap-4">
-            <h2 className="text-sm font-normal">{t('title')}</h2>
+            <h2 className="text-lg font-normal">{t('title')}</h2>
             <div className="flex gap-7">
                 <div className="relative gap-4">
                     <input

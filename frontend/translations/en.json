@@ -92,6 +92,12 @@
         "online": "Online",
         "local": "Local"
       },
+      "difficulty": {
+        "title": "Game difficulty",
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
       "theme": {
         "title": "Board theme",
         "fire": "Fire Theme",

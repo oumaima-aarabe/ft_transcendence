@@ -92,6 +92,12 @@
         "online": "En línea",
         "local": "Local"
       },
+      "difficulty": {
+        "title": "Dificultad del juego",
+        "easy": "Fácil",
+        "medium": "Medio",
+        "hard": "Difícil"
+      },
       "theme": {
         "title": "Tema del tablero",
         "fire": "Tema Fuego",
