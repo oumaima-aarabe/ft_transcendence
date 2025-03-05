@@ -4,6 +4,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 // import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import React from "react";
+import { FriendsProps } from "../page";
 
 const list = [
   {
@@ -50,7 +51,7 @@ export default function Blocked() {
   // if (!myUserData) return <></>;
 
   return (
-    <div className="h-full w-full space-y-8 flex justify-center flex-col items-center">
+    <div className="white h-full w-full space-y-8 flex justify-center flex-col items-center">
       <div className="overflow-auto scrollbar-hide h-[90%] w-[85%]">
         {list.map((item) => (
           <div

@@ -44,13 +44,13 @@ const list = [
   
 ];
 
-export default function InvitaionSent() {
+export default function Sent() {
   // const {data: myUserData} = UseUser()
 
   // if (!myUserData) return <></>;
 
   return (
-    <div className="h-full w-full space-y-8 flex justify-center flex-col items-center">
+    <div className=" red h-full w-full space-y-8 flex justify-center flex-col items-center">
       <div className="overflow-auto scrollbar-hide h-[90%] w-[85%]">
         {list.map((item) => (
           <div
