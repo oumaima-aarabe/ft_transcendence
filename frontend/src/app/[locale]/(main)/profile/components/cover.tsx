@@ -1,25 +1,22 @@
-"use client"
+"use client";
 
-import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { UseUser } from "@/api/get-user"
-import { User } from "@/types/user"
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UseUser } from "@/api/get-user";
+import { User } from "@/types/user";
 
-export default function cover({user}: {user: User}) {
+export default function cover(props: {user : User}) {
 
-  if (!user) return  <></>
-
+  const {user} = props
   return (
-    <div className="border border-yellow w-full h-[20%] rounded-2xl bg-center bg-black flex flex-col justify-center items-center">
-      <div className="border border-yellow-400 w-[50%] h-[70%]">
-        <div className="flex justify-center items-center border h-[75%]">
-          <Avatar className="border border-yellow-200 h-20 w-20">
-            <AvatarImage
-              src={user.avatar}
-              alt="profile image" />
-            <AvatarFallback>
-              KA
-            </AvatarFallback>
+    <div className="relative w-full min-h-[30%] rounded-2xl bg-cover  backdrop-blur-sm bg-center flex flex-col justify-center items-center">
+      <div className="absolute -z-10 inset-0 w-full h-full bg-black/70 rounded-2xl"></div>
+      <div className="w-[50%] h-[70%]">
+        <div className="flex justify-center items-center h-[75%]">
+          <Avatar className="h-28 w-28">
+            <AvatarImage src={user.avatar} alt="profile image" className="h-full w-full" />
+            zinc
+            <AvatarFallback>KA</AvatarFallback>
           </Avatar>
         </div>
         <div className="flex justify-center items-center">
@@ -27,11 +24,12 @@ export default function cover({user}: {user: User}) {
         </div>
       </div>
 
-      <div className="border border-green-400 w-full h-[30%]">
-        <div className="border border-white ml-10 font-re">
-          {user.level || 'Level 0'}
+      <div className=" w-[80%] h-[30%]">
+        <div className="space-y-4">
+          {user.level || "Level 0"}
+          <Progress value={60} />
         </div>
       </div>
     </div>
-  )
+  );
 }

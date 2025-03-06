@@ -7,18 +7,18 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <UserProvider>
-      <div className="min-h-screen relative">
-        <div className="relative z-10 flex h-screen">
-          <Sidebar />
-          <div className="flex-1 flex flex-col">
-            <Header />
-            <main className="flex-1 py-20 ps-28 pe-16 overflow-auto">
-              {children}
-            </main>
-          </div>
+    // <UserProvider>
+    <div className="min-h-screen relative">
+      <div className="relative z-10 flex h-screen">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <main className="flex-1 py-20 ps-28 pe-16 overflow-auto">
+            {children}
+          </main>
         </div>
       </div>
-    </UserProvider>
+    </div>
+    // </UserProvider>
   );
 }

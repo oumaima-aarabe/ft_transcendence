@@ -1,57 +1,43 @@
-import Cover from "@/app/[locale]/(main)/profile/components/cover";
+"use client";
+
+import Cover from "@/app/[locale]/(main)/dashboard/components/cover";
 import Friendchat from "../components/friendchat";
-import { User } from "@/types/user";
-import { fetcher } from "@/lib/fetcher";
+import { UseOtherUser, UseUser } from "@/api/get-user";
+import { useParams } from "next/navigation";
+// import { useEffect, useState } from "react";
 
-// ISR configuration - revalidate every 60 seconds
-export const revalidate = 60;
+export default function Page() {
+  // const [user, setUser] = useState<string>("me")
 
-// Control how ungenerated paths are handled
-export const dynamicParams = true;
+  const { username } = useParams();
 
-// Generate static paths at build time
-export async function generateStaticParams() {
-  try {
-    const users = await fetcher.get('/api/users/all-users');
-    return users.data.map((user: User) => ({
-      username: String(user.username),
-    }));
-  } catch (error) {
-    console.error('Error fetching users for static paths:', error);
-    return [];
+  const { data: me } = UseUser();
+  const { data: other } = UseOtherUser(username as string);
+
+  if (!me) {
+    return <div> loeading...</div>;
   }
-}
 
-// Page component with proper params typing
-export default async function DashboardPage({ params }: { params: { username: string } }) {
-  try {
-    const { username } = params;
-    const user_id = username
-    const user = await fetcher.get(`/api/users/profile/${user_id}`);
-    
-    return (
-      <div className="h-full w-full justify-center flex-col flex items-center space-y-[40px] text-white">
-        <div className="w-[100%] h-[100%] border border-yellow-300 space-y-8">
-          <Cover user={user.data} />
-          <div className="border-6 border-green-200 w-[100%] h-[70%] flex space-x-4">
-            <div className="border border-emerald-600 w-[70%] h-[100%] flex flex-col space-y-4">
-              <div className="border border-white h-[48%] w-[100%]">
-                dashboard
-              </div>
-              <div className="border border-s-red-500 h-[50%] w-[100%]">
-                match-history
-              </div>
+  return (
+    <div className="h-full w-full justify-center flex-col flex items-center space-y-[40px] text-white">
+      <div className="w-[100%] h-[100%]  space-y-8">
+        <Cover />
+        <div className=" w-[100%] xl:flex-row flex-col h-[70%] flex gap-4">
+          <div className=" xl:w-[50%] w-full h-[100%] flex flex-col space-y-4">
+            <div className="backdrop-blur-sm font-bold text-xl bg-black/50 rounded-2xl p-4 h-[48%] w-[100%]">
+              {/* Achievement */}
+              {/* <Achievement/> */}
             </div>
-            <div className="border border-red-600 w-[30%] h-[100%]">
-              friends
-              <Friendchat />
+            <div className="backdrop-blur-sm bg-black/50 rounded-2xl text-xl font-bold p-4 h-[50%] w-[100%]">
+              {/* Match history  */}
+              {/* <MatchHistory/> */}
             </div>
+          </div>
+          <div className=" xl:w-[50%] text-xl w-[100%] backdrop-blur-sm bg-black/50 rounded-2xl h-[100%] p-4 ">
+            <Friendchat />
           </div>
         </div>
       </div>
-    );
-  } catch (error) {
-    console.error('Error rendering dashboard:', error);
-    return <div>Error loading profile</div>;
-  }
+    </div>
+  );
 }

@@ -67,7 +67,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data)=>{
-      router.push('/dashboard');
+      router.push('/profile/me');
     },
     onError: (error)=>{
       console.log('log in error', error.message)
