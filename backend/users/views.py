@@ -13,7 +13,7 @@ from django.db.models import Q
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def get_user_data(request, user_id):
     try:
@@ -34,7 +34,7 @@ def update_user_data(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def all_users(request):
     print('here')
