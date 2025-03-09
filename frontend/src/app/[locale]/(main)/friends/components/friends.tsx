@@ -4,55 +4,27 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 // import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import React from "react";
+import { FriendsProps } from "../page";
+import { UseBlocked } from "@/api/get-blocked";
+import { UseFriend } from "@/api/get-friends";
 
-const list = [
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "ka",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "kaboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "ussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  
-];
 
-export default function Friends() {
-  // const {data: myUserData} = UseUser()
 
-  // if (!myUserData) return <></>;
+export default function MyFriends() {
+  const {data: friendUsers} = UseFriend()
+
+  if (!friendUsers || friendUsers?.length === 0){
+    return (
+      <div className="h-full w-full flex justify-center items-center">
+        empty list ...
+      </div>
+    )
+  }
 
   return (
-    <div className="h-full w-full space-y-8 flex justify-center flex-col items-center">
+    <div className="white h-full w-full space-y-8 flex justify-center flex-col items-center">
       <div className="overflow-auto scrollbar-hide h-[90%] w-[85%]">
-        {list.map((item) => (
+        {friendUsers.map((item) => (
           <div
             key={item.username}
             className="relative flex items-center p-4 mb-3  rounded-full bg-black"
@@ -66,8 +38,8 @@ export default function Friends() {
                 <h1 className="text-lg font-extralight">{item.username}</h1>
               </div>
               <div className="flex flex-row space-x-1">
-                <h2>{item.firstname}</h2>
-                <h3>{item.lastname}</h3>
+                <h2>{item.first_name}</h2>
+                <h3>{item.last_name}</h3>
               </div>
             </div>
             <Icon

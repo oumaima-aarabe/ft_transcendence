@@ -134,7 +134,6 @@ class OutgoingFriendRequestView(BaseFriendView):
 
 # actions
 
-
 class SendFriendRequestView(BaseFriendView):
     def post(self, request):
         username = request.data.get('username')

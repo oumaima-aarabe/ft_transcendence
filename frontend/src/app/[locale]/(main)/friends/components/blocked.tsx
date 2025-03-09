@@ -12,12 +12,29 @@ import { UseBlocked } from "@/api/get-blocked";
 export default function Blocked() {
   const {data: blockedUsers} = UseBlocked()
 
-  if (!blockedUsers || blockedUsers?.length === 0){
+  // if (!blockedUsers || blockedUsers?.length === 0){
+  //   return (
+  //     <div className="flex justify-center items-center  h-full w-full">
+  //       empty list ...
+  //     </div>
+  //   )
+  // }
+
+  if (!blockedUsers || blockedUsers?.length === 0) {
     return (
-      <div className="flex justify-center items-center">
-        empty list ...
+      <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
+        <div className="bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
+          <h3 className="text-2xl font-medium text-white mb-2">No Blocked Users</h3>
+          <p className="text-white/70 mb-4">
+            Your blocked users list is currently empty.
+          </p>
+          <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full my-2" />
+          <p className="text-white/50 text-sm mt-2">
+            let it empty :P
+          </p>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -37,8 +54,8 @@ export default function Blocked() {
                 <h1 className="text-lg font-extralight">{item.username}</h1>
               </div>
               <div className="flex flex-row space-x-1">
-                <h2>{item.firstname}</h2>
-                <h3>{item.lastname}</h3>
+                <h2>{item.first_name}</h2>
+                <h3>{item.last_name}</h3>
               </div>
             </div>
             <Icon
