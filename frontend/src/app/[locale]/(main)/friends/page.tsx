@@ -39,8 +39,8 @@ export default function Page() {
 					<div className="w-[70%] h-[100%] rounded-tr-lg rounded-br-lg">
 						{friends === "friends" ? <Friends/> : null}
 						{friends === "sent" ? <Sent/> : null}
-						{friends === "blocked" ? <Invitations/> : null}
-						{friends === "received" ? <Blocked/> : null}
+						{friends === "received" ? <Invitations/> : null}
+						{friends === "blocked" ? <Blocked/> : null}
 					</div>
 				</div>
 			</div>

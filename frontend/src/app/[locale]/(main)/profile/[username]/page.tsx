@@ -5,6 +5,7 @@ import Friendchat from "../components/friendchat";
 import { UseOtherUser, UseUser } from "@/api/get-user";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Loading from "@/app/[locale]/loading";
 
 export default function Page() {
   const [owner, setOwner] = useState<boolean>(false)
@@ -22,7 +23,7 @@ export default function Page() {
   }, [me, other])
 
   if (!me || !other) {
-    return <div> loading...</div>;
+    return <Loading />
   }
 
   return (

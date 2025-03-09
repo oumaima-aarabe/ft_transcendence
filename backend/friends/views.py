@@ -15,7 +15,15 @@ class BaseFriendView(APIView):
             'id': friendship.id,
             'recipient': friendship.recipient.username,
             'sender': friendship.sender.username,
-            'state': friendship.state
+            'state': friendship.state,
+        }
+
+    def serialize_list_friends(self, target_user):
+        return {
+            'username': target_user.username,
+            'first_name': target_user.first_name,
+            'last_name': target_user.last_name,
+            'avatar': target_user.avatar
         }
 
 
@@ -53,10 +61,10 @@ class AcceptedFriendView(BaseFriendView):
             state='accepted'
         )
 
-        serialized_friends = [
-            self.serialize_friend(friendship)
-            for friendship in accepted_friends
-        ]
+        serialized_friends = []
+        for friendship in accepted_friends:
+            target_user = friendship.recipient if friendship.sender == current_user else friendship.sender
+            serialized_friends.append(self.serialize_list_friends(target_user))
 
         return Response(
             serialized_friends,
@@ -73,10 +81,10 @@ class BlockedFriendView(BaseFriendView):
             state='blocked'
         )
 
-        serialized_friends = [
-            self.serialize_friend(friendship)
-            for friendship in blocked_friends
-        ]
+        serialized_friends = []
+        for friendship in blocked_friends:
+            target_user = friendship.recipient
+            serialized_friends.append(self.serialize_list_friends(target_user))
 
         return Response(
             serialized_friends,
@@ -93,10 +101,10 @@ class IncomingFriendRequestView(BaseFriendView):
             state='pending'
         )
 
-        serialized_friends = [
-            self.serialize_friend(friendship)
-            for friendship in incoming_requests
-        ]
+        serialized_friends = []
+        for friendship in incoming_requests:
+            target_user = friendship.sender
+            serialized_friends.append(self.serialize_list_friends(target_user))
 
         return Response(
             serialized_friends,
@@ -113,10 +121,10 @@ class OutgoingFriendRequestView(BaseFriendView):
             state='pending'
         )
 
-        serialized_friends = [
-            self.serialize_friend(friendship)
-            for friendship in outgoing_requests
-        ]
+        serialized_friends = []
+        for friendship in outgoing_requests:
+            target_user = friendship.recipient
+            serialized_friends.append(self.serialize_list_friends(target_user))
 
         return Response(
             serialized_friends,
@@ -136,7 +144,7 @@ class SendFriendRequestView(BaseFriendView):
         print('target_user: ', target_user)
 
         try:
-            friendship = Friend.objects.get(sender=target_user, recipient=current_user, state='none')
+            friendship = Friend.objects.get(sender=current_user, recipient=target_user, state='none')
             friendship.state = 'pending'
             friendship.save()
             friend = self.serialize_friend(friendship)
@@ -171,6 +179,7 @@ class CancelFriendRequestView(BaseFriendView):
                 Q(sender=current_user, recipient=target_user, state='pending') |
                 Q(sender=target_user, recipient=current_user, state='pending')
             ).delete()
+            friendship = Friend.objects.create(sender=current_user, recipient=target_user, state="none")
             friend = self.serialize_friend(friendship)
             return Response(friend, status=status.HTTP_200_OK)
         except Friend.DoesNotExist:
@@ -187,6 +196,7 @@ class RemoveFriendView(BaseFriendView):
                 Q(sender=current_user, recipient=target_user, state='accepted') |
                 Q(sender=target_user, recipient=current_user, state='accepted')
             ).delete()
+            friendship = Friend.objects.create(sender=current_user, recipient=target_user, state="none")
             friend = self.serialize_friend(friendship)
             return Response(friend, status=status.HTTP_200_OK)
         except Friend.DoesNotExist:
@@ -221,6 +231,7 @@ class UnblockView(BaseFriendView):
             friendship = Friend.objects.filter(
                 Q(sender=current_user, recipient=target_user, state='blocked')
             ).delete()
+            friendship = Friend.objects.create(sender=current_user, recipient=target_user, state="none")
             friend = self.serialize_friend(friendship)
             return Response(friend, status=status.HTTP_200_OK)
         except Friend.DoesNotExist:

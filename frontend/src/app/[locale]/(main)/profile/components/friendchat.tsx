@@ -40,7 +40,6 @@ const list = [
   },
 ];
 
-// Add more friends for the full list
 const fullFriendsList = [
   ...list,
   // Add more friends here

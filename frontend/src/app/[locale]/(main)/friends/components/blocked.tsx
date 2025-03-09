@@ -5,55 +5,25 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 // import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import React from "react";
 import { FriendsProps } from "../page";
+import { UseBlocked } from "@/api/get-blocked";
 
-const list = [
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "ka",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "kaboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "ussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    firstname: "kawtar ",
-    lastname: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  
-];
+
 
 export default function Blocked() {
-  // const {data: myUserData} = UseUser()
+  const {data: blockedUsers} = UseBlocked()
 
-  // if (!myUserData) return <></>;
+  if (!blockedUsers || blockedUsers?.length === 0){
+    return (
+      <div className="flex justify-center items-center">
+        empty list ...
+      </div>
+    )
+  }
 
   return (
     <div className="white h-full w-full space-y-8 flex justify-center flex-col items-center">
       <div className="overflow-auto scrollbar-hide h-[90%] w-[85%]">
-        {list.map((item) => (
+        {blockedUsers.map((item) => (
           <div
             key={item.username}
             className="relative flex items-center p-4 mb-3  rounded-full bg-black"
