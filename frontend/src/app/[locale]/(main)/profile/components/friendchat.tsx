@@ -60,7 +60,7 @@ const fullFriendsList = [
 
 const FriendItem = ({ item }: { item: (typeof list)[0] }) => (
   <div className="relative flex items-center p-4 mb-3 rounded-full bg-black">
-    <img src={item.avatar} className="rounded-full red object-cover size-20" />
+    <img src={item.avatar} className="rounded-full object-cover size-20" />
     <div className="ml-4">
       <div>
         <h1 className="text-lg font-extralight">{item.username}</h1>

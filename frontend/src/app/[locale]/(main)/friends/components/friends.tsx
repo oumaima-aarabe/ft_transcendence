@@ -15,10 +15,19 @@ export default function MyFriends() {
 
   if (!friendUsers || friendUsers?.length === 0){
     return (
-      <div className="h-full w-full flex justify-center items-center">
-        empty list ...
+      <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
+        <div className="bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
+          <h3 className="text-2xl font-medium text-white mb-2">No Blocked Users</h3>
+          <p className="text-white/70 mb-4">
+            Your friends list is currently empty.
+          </p>
+          <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full my-2" />
+          <p className="text-white/50 text-sm mt-2">
+            add friends 
+          </p>
+        </div>
       </div>
-    )
+    );
   }
 
   return (

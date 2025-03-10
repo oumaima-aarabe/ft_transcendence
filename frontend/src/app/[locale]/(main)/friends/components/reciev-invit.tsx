@@ -13,10 +13,15 @@ export default function Blocked() {
 
   if (!invitation || invitation?.length === 0){
     return (
-      <div className="flex justify-center items-center  h-full w-full">
-        empty list ...
+      <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
+        <div className="bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
+          <h3 className="text-2xl font-medium text-white mb-2">No Blocked Users</h3>
+          <p className="text-white/70 mb-4">
+            empty list.
+          </p>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
