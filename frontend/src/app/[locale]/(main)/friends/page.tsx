@@ -21,9 +21,9 @@ interface FriendsData {
 	requestsReceived: Friend[];
 }
 
-export interface FriendsProps {
-	data: Friend[];
-}
+// export interface FriendsProps {
+// 	data: Friend[];
+// }
 
 export default function Page() {
 

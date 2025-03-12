@@ -4,8 +4,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 // import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import React from "react";
-import { FriendsProps } from "../page";
-import { UseBlocked } from "@/api/get-blocked";
 import { UseFriend } from "@/api/get-friends";
 
 

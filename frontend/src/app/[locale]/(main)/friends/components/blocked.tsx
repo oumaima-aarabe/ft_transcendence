@@ -12,14 +12,6 @@ import { UseBlocked } from "@/api/get-blocked";
 export default function Blocked() {
   const {data: blockedUsers} = UseBlocked()
 
-  // if (!blockedUsers || blockedUsers?.length === 0){
-  //   return (
-  //     <div className="flex justify-center items-center  h-full w-full">
-  //       empty list ...
-  //     </div>
-  //   )
-  // }
-
   if (!blockedUsers || blockedUsers?.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">

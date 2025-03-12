@@ -37,13 +37,17 @@ export default function Page() {
             <div className="backdrop-blur-sm font-bold text-xl bg-black/50 rounded-2xl p-4 h-[48%] w-[100%]">
               <Achievements/>
             </div>
+
             <div className="backdrop-blur-sm bg-black/50 rounded-2xl text-xl font-bold p-4 h-[50%] w-[100%]">
               <MatchHistory/>
             </div>
+
           </div>
-          <div className=" xl:w-[50%] text-xl w-[100%] backdrop-blur-sm bg-black/50 rounded-2xl h-[100%] p-4 ">
+
+          <div className=" xl:w-[50%] text-xl w-[100%] backdrop-blur-sm bg-black/50 rounded-2xl h-[100%] p-4 flex justify-center items-center">
             <Friendchat />
           </div>
+
         </div>
       </div>
     </div>

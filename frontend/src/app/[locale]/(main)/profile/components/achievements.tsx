@@ -77,9 +77,18 @@ export default function Achievements() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Achievements</h2>
         <Dialog>
-          <DialogTrigger className="text-[#40CFB7] underline text-sm hover:text-[#35b09c]">
-            Show all achievements
-          </DialogTrigger>
+          <div className="flex justify-center items-center h-[15%] w-full">
+            <DialogTrigger className="text-[#40CFB7] underline text-sm hover:text-[#35b09c]">
+              <button
+                onClick={() => {
+                  // router.push("/friends/");
+                }}
+                className="border text-black p-3 border-[#40CFB7] bg-[#40CFB7] hover:bg-[#EEE5BE] shadow-shd lg:w-[50%] rounded-full transition-colors"
+              >
+              show more ...
+              </button>
+            </DialogTrigger>
+          </div>
           <DialogContent className="max-h-[80vh] overflow-hidden bg-[#2D2A2A]">
             <DialogHeader className="relative">
               <DialogTitle className="text-2xl font-bold mb-4">
@@ -92,7 +101,7 @@ export default function Achievements() {
                 />
               </DialogClose>
             </DialogHeader>
-            <div className="overflow-y-auto pr-2 h-full scrollbar-thin scrollbar-thumb-[#40CFB7] scrollbar-track-transparent hover:scrollbar-thumb-[#35b09c]">
+            <div className="overflow-y-auto pr-2 h-full scrollbar-thin scrollbar-thumb-[#40CFB7] scrollbar-track-transparent hover:scrollbar-thumb-[#35b09c] red">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {achievements.map((achievement) => (
                   <div
