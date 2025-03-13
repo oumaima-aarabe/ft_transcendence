@@ -58,7 +58,7 @@ export default function GamePage() {
 
   return (
     <div className="w-full h-screen overflow-hidden flex items-center justify-center">
-      <div className="w-full max-w-6xl px-4 relative">
+      <div className="w-full max-w-6xl px-4">
         {/* Game area that will contain the background when playing */}
         <div ref={gameAreaRef} className="relative">
           {/* Background for playing state - positioned relative to this container */}

@@ -23,6 +23,10 @@ class User(AbstractUser):
     is_anonymized = models.BooleanField(default=False)
     # tfa = models.JSONField(_("TFA"), encoder=, decoder=)
     
+    # 2FA fields
+    is_2fa_enabled = models.BooleanField(default=False)
+    tfa_secret = models.CharField(max_length=255, blank=True, null=True)
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 

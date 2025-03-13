@@ -18,7 +18,7 @@ import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { LoginFormProps } from "../auth/page";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, Dispatch, SetStateAction } from "react";
 import { fetcher } from "@/lib/fetcher";
 import { useRouter } from "@/i18n/routing";
 import endpoints from "@/constants/endpoints";
@@ -28,11 +28,17 @@ export interface FormDataLogin {
   email : string;
   password: string;
 }
+
 interface LoginError {
   error: string;
 }
 
-const LoginForm = ({ setLogin }: LoginFormProps) => {
+interface ExtendedLoginFormProps extends LoginFormProps {
+  setShowTwoFactor: Dispatch<SetStateAction<boolean>>;
+  setUserId: Dispatch<SetStateAction<string>>;
+}
+
+const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormProps) => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState<boolean>(true)
 
@@ -67,7 +73,16 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data)=>{
-      router.push('/dashboard');
+      // Check if 2FA is required
+      if (data.requires2FA) {
+        // Set the user ID for 2FA verification
+        setUserId(data.userId);
+        // Show the 2FA verification component
+        setShowTwoFactor(true);
+      } else {
+        // If 2FA is not required, redirect to dashboard
+        router.push('/dashboard');
+      }
     },
     onError: (error)=>{
       console.log('log in error', error.message)
@@ -192,7 +207,7 @@ const LoginForm = ({ setLogin }: LoginFormProps) => {
             className="w-full h-[54px] bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-shd"
           >
             <span className="text-[#c75b37]">
-              {loginMutation.isPending ? 'logged in...' :'Sign in'}
+              {loginMutation.isPending ? 'Signing in...' :'Sign in'}
             </span>
           </Button>
         </form>

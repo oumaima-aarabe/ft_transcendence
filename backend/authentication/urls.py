@@ -7,6 +7,9 @@ from .views import (
     Login42API,
     RefreshTokenView,
     VerifyTokenView,
+    VerifyTwoFactorView,
+    EnableTwoFactorView,
+    DisableTwoFactorView,
 )
 
 urlpatterns = [
@@ -17,4 +20,7 @@ urlpatterns = [
     path("42/callback", Login42API.as_view(), name='callback'),
     path("token/refresh", RefreshTokenView.as_view(), name='token_refresh'),
     path("token/verify", VerifyTokenView.as_view(), name='token_verify'),
+    path("verify-2fa", VerifyTwoFactorView.as_view(), name='verify_2fa'),
+    path("enable-2fa", EnableTwoFactorView.as_view(), name='enable_2fa'),
+    path("disable-2fa", DisableTwoFactorView.as_view(), name='disable_2fa'),
 ]
