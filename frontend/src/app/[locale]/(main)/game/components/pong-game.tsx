@@ -122,7 +122,7 @@ const PongGame: React.FC<PongGameProps> = ({
       x: BASE_WIDTH / 2,
       y: BASE_HEIGHT / 2,
       dx: difficultySettings[difficulty].ballSpeed,
-      dy: difficultySettings[difficulty].ballSpeed * 0.5,
+      dy: difficultySettings[difficulty].ballSpeed * BASE_HEIGHT / BASE_WIDTH,
       speed: difficultySettings[difficulty].ballSpeed,
       radius: BALL_RADIUS,
     },
@@ -215,7 +215,7 @@ const PongGame: React.FC<PongGameProps> = ({
         x: BASE_WIDTH / 2,
         y: BASE_HEIGHT / 2,
         dx: difficultySettings[difficulty].ballSpeed,
-        dy: difficultySettings[difficulty].ballSpeed * 0.5,
+        dy: difficultySettings[difficulty].ballSpeed * BASE_HEIGHT / BASE_WIDTH,
         speed: difficultySettings[difficulty].ballSpeed,
         radius: BALL_RADIUS,
       },
@@ -248,7 +248,7 @@ const PongGame: React.FC<PongGameProps> = ({
         x: BASE_WIDTH / 2,
         y: BASE_HEIGHT / 2,
         dx: difficultySettings[difficulty].ballSpeed,
-        dy: difficultySettings[difficulty].ballSpeed * 0.5,
+        dy: difficultySettings[difficulty].ballSpeed * BASE_HEIGHT / BASE_WIDTH,
         speed: difficultySettings[difficulty].ballSpeed,
         radius: BALL_RADIUS,
       },
@@ -346,15 +346,19 @@ const PongGame: React.FC<PongGameProps> = ({
     ball.y += ball.dy;
 
     // Ball collision with top and bottom walls
-    if (ball.y - ball.radius <= 0 || ball.y + ball.radius >= BASE_HEIGHT) {
-      ball.dy = -ball.dy;
+    if ( ball.y + ball.radius >= BASE_HEIGHT) {
+      if (ball.dy > 0){ball.dy = -ball.dy;}
+    }
+    if (ball.y - ball.radius <= 0){
+        if (ball.dy < 0 ){ball.dy = -ball.dy;}
     }
 
     // Ball collision with left paddle
     if (
       ball.x - ball.radius <= leftPaddle.x + leftPaddle.width &&
-      ball.y >= leftPaddle.y &&
-      ball.y <= leftPaddle.y + leftPaddle.height &&
+      ball.x - ball.radius > leftPaddle.x &&
+      ball.y - ball.radius <= leftPaddle.y + leftPaddle.height &&
+      ball.y + ball.radius >= leftPaddle.y &&
       ball.dx < 0
     ) {
       // Reverse x direction
@@ -377,8 +381,9 @@ const PongGame: React.FC<PongGameProps> = ({
     // Ball collision with right paddle
     if (
       ball.x + ball.radius >= rightPaddle.x &&
-      ball.y >= rightPaddle.y &&
-      ball.y <= rightPaddle.y + rightPaddle.height &&
+      ball.x + ball.radius < rightPaddle.x + rightPaddle.width &&
+      ball.y - ball.radius <= rightPaddle.y + rightPaddle.height &&
+      ball.y + ball.radius >= rightPaddle.y &&
       ball.dx > 0
     ) {
       // Reverse x direction
@@ -527,7 +532,7 @@ const PongGame: React.FC<PongGameProps> = ({
       leftPaddle.y,
       leftPaddle.width,
       leftPaddle.height,
-      10
+      5
     );
     ctx.fill();
 
@@ -538,7 +543,7 @@ const PongGame: React.FC<PongGameProps> = ({
       rightPaddle.y,
       rightPaddle.width,
       rightPaddle.height,
-      10
+      5
     );
     ctx.fill();
     ctx.restore();
@@ -993,7 +998,7 @@ const PongGame: React.FC<PongGameProps> = ({
 
         {/* Game board */}
         <div
-          className="relative rounded-xl overflow-hidden"
+          className="relative rounded-xl overflow-hidden flex items-center justify-center"
           style={{
             width: `${canvasWidth}px`,
             height: `${canvasHeight}px`,
@@ -1001,8 +1006,8 @@ const PongGame: React.FC<PongGameProps> = ({
               theme === "fire" ? "4px solid #D05F3B" : "4px solid #40CFB7",
             boxShadow:
               theme === "fire"
-                ? "0 0 20px #D05F3B, inset 0 0 10px rgba(208, 95, 59, 0.5)"
-                : "0 0 20px #40CFB7, inset 0 0 10px rgba(64, 207, 183, 0.5)",
+                ? "0 0 100px #D05F3B, inset 0 0 10px rgba(208, 95, 59, 0.5)"
+                : "0 0 100px #40CFB7, inset 0 0 10px rgba(64, 207, 183, 0.5)",
             background: "black",
             margin: "0 auto",
             borderRadius: "30px",
