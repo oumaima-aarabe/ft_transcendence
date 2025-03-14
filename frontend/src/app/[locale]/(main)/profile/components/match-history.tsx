@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,10 @@ import { Icon } from "@iconify/react";
 
 interface MatchResult {
   id: string;
+  player: {
+    username: string;
+    avatar: string;
+  };
   opponent: {
     username: string;
     avatar: string;
@@ -20,13 +23,16 @@ interface MatchResult {
   playerScore: number;
   opponentScore: number;
   date: string;
-  gameMode: "Classic" | "Special";
   result: "win" | "loss";
 }
 
 const matchHistory: MatchResult[] = [
   {
     id: "1",
+    player: {
+      username: "you",
+      avatar: "/assets/images/logo.svg",
+    },
     opponent: {
       username: "player1",
       avatar: "/assets/images/logo.svg",
@@ -34,11 +40,14 @@ const matchHistory: MatchResult[] = [
     playerScore: 10,
     opponentScore: 8,
     date: "2024-03-06",
-    gameMode: "Classic",
     result: "win",
   },
   {
     id: "2",
+    player: {
+      username: "you",
+      avatar: "/assets/images/logo.svg",
+    },
     opponent: {
       username: "player2",
       avatar: "/assets/images/logo.svg",
@@ -46,26 +55,25 @@ const matchHistory: MatchResult[] = [
     playerScore: 7,
     opponentScore: 10,
     date: "2024-03-05",
-    gameMode: "Special",
     result: "loss",
   },
   // Add more matches as needed
 ];
 
 export default function MatchHistory() {
-  const latestMatch = matchHistory[0]; // Get the most recent match
+  const latestMatch = matchHistory[0];
 
   return (
-    <div className="w-full h-full space-y-12">
+    <div className="w-full h-full">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold underline">Match History</h2>
+        <h2 className="text-2xl font-bold">Match History</h2>
         <Dialog>
-          <DialogTrigger className="pt-4 pr-6 text-[#40CFB7] underline text-sm hover:text-[#35b09c]">
+          <DialogTrigger className="text-[#40CFB7] underline text-sm hover:text-[#35b09c]">
             Show all matches
           </DialogTrigger>
           <DialogContent className="max-h-[80vh] overflow-hidden bg-black">
             <DialogHeader className="relative">
-              <DialogTitle className="text-2xl font-bold mb-4 text-white">
+              <DialogTitle className="text-2xl font-bold mb-4 text-white overflow-auto">
                 Full Match History
               </DialogTitle>
               <DialogClose className="absolute right-0 top-0">
@@ -75,90 +83,133 @@ export default function MatchHistory() {
                 />
               </DialogClose>
             </DialogHeader>
-            <div className="overflow-y-auto pr-2 h-full scrollbar-thin scrollbar-thumb-[#40CFB7] scrollbar-track-transparent hover:scrollbar-thumb-[#35b09c]">
-              <div className="space-y-4">
-                {matchHistory.map((match) => (
-                  <div
-                    key={match.id}
-                    className={`flex items-center justify-between p-4 rounded-lg ${
-                      match.result === "win"
-                        ? "bg-green-950/30"
-                        : "bg-red-950/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={match.opponent.avatar} />
-                        <AvatarFallback>
-                          {match.opponent.username[0]}
-                        </AvatarFallback>
-                      </Avatar>
+            <div className="space-y-4">
+              {matchHistory.map((match) => (
+                <div
+                  key={match.id}
+                  className={`p-4 rounded-lg border ${
+                    match.result === "win"
+                      ? "border-[#40CFB7]"
+                      : "border-[#c75b37]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    {/* Player Side */}
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={match.player.avatar}
+                        className="rounded-full object-cover size-16"
+                        alt={match.player.username}
+                      />
                       <div>
-                        <p className="font-semibold text-white">
-                          {match.opponent.username}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {match.gameMode}
-                        </p>
+                        <h3 className="text-lg font-extralight">
+                          {match.player.username}
+                        </h3>
+                        <span
+                          className={
+                            match.result === "win"
+                              ? "text-[#40CFB7] text-xl"
+                              : "text-[#c75b37] text-xl"
+                          }
+                        >
+                          {match.playerScore}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="text-center">
-                      <p className="text-xl font-bold text-white">
-                        {match.playerScore} - {match.opponentScore}
-                      </p>
-                      <p className="text-sm text-gray-400">{match.date}</p>
+                    <div className="flex flex-col items-center mx-4">
+                      <span className="text-gray-400">VS</span>
                     </div>
 
-                    <div
-                      className={`px-3 py-1 rounded-full ${
-                        match.result === "win"
-                          ? "bg-green-500/20 text-green-500"
-                          : "bg-red-500/20 text-red-500"
-                      }`}
-                    >
-                      {match.result.toUpperCase()}
+                    {/* Opponent Side */}
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <h3 className="text-lg font-extralight">
+                          {match.opponent.username}
+                        </h3>
+                        <span
+                          className={
+                            match.result === "loss"
+                              ? "text-[#40CFB7] text-xl"
+                              : "text-[#c75b37] text-xl"
+                          }
+                        >
+                          {match.opponentScore}
+                        </span>
+                      </div>
+                      <img
+                        src={match.opponent.avatar}
+                        className="rounded-full object-cover size-16"
+                        alt={match.opponent.username}
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* the last match */}
+      {/* Latest match*/}
       <div
-        className={`flex items-center justify-between p-4 rounded-full ${
-          latestMatch.result === "win" ? "bg-green-950/30" : "bg-red-950/30"
+        className={`p-4 rounded-lg border  ${
+          latestMatch.result === "win"
+            ? "border-[#40CFB7]"
+            : "border-[#c75b37]"
         }`}
       >
-        <div className="flex items-center gap-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={latestMatch.opponent.avatar} />
-            <AvatarFallback>{latestMatch.opponent.username[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-semibold">{latestMatch.opponent.username}</p>
-            <p className="text-sm text-gray-400">{latestMatch.gameMode}</p>
+        <div className="flex items-center justify-between p-5">
+          {/* ana */}
+          <div className="flex items-center gap-3">
+            <img
+              src={latestMatch.player.avatar}
+              className="rounded-full object-cover size-16"
+              alt={latestMatch.player.username}
+            />
+            <div>
+              <h3 className="text-lg font-extralight">
+                {latestMatch.player.username}
+              </h3>
+              <span
+                className={
+                  latestMatch.result === "win"
+                    ? "text-[#40CFB7] text-xl"
+                    : "text-[#c75b37] text-xl"
+                }
+              >
+                {latestMatch.playerScore}
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div className="text-center">
-          <p className="text-xl font-bold">
-            {latestMatch.playerScore} - {latestMatch.opponentScore}
-          </p>
-          <p className="text-sm text-gray-400">{latestMatch.date}</p>
-        </div>
+          {/* vs */}
+          <div className="flex flex-col items-center mx-4">
+            <span className="text-gray-400 text-6xl">VS</span>
+          </div>
 
-        <div
-          className={`px-3 py-1 rounded-full ${
-            latestMatch.result === "win"
-              ? "bg-green-500/20 text-green-500"
-              : "bg-red-500/20 text-red-500"
-          }`}
-        >
-          {latestMatch.result.toUpperCase()}
+          {/* li dedi*/}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <h3 className="text-lg font-extralight">
+                {latestMatch.opponent.username}
+              </h3>
+              <span
+                className={
+                  latestMatch.result === "loss"
+                    ? "text-[#40CFB7] text-xl"
+                    : "text-[#c75b37] text-xl"
+                }
+              >
+                {latestMatch.opponentScore}
+              </span>
+            </div>
+            <img
+              src={latestMatch.opponent.avatar}
+              className="rounded-full object-cover size-16"
+              alt={latestMatch.opponent.username}
+            />
+          </div>
         </div>
       </div>
     </div>
