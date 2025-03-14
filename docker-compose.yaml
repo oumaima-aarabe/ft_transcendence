@@ -11,15 +11,15 @@ services:
     ports:
       - "8000:8000"
     tty: true
-    environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-    depends_on:
-      db:
-        condition: service_healthy
+    # environment:
+    #   - DB_HOST=${DB_HOST}
+    #   - DB_PORT=${DB_PORT}
+    #   - DB_NAME=${DB_NAME}
+    #   - DB_USER=${DB_USER}
+    #   - DB_PASSWORD=${DB_PASSWORD}
+    # depends_on:
+    #   db:
+        # condition: service_healthy
 
     networks:
       - pongarcadia_network
@@ -36,25 +36,25 @@ services:
     networks:
       - pongarcadia_network
 
-  db:
-    image: postgres:16
-    container_name: postgres
-    env_file:
-      - ./backend/.env
-    environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    tty: true
-    networks:
-      - pongarcadia_network
+  # db:
+  #   image: postgres:16
+  #   container_name: postgres
+  #   env_file:
+  #     - ./backend/.env
+  #   environment:
+  #     - POSTGRES_DB=${DB_NAME}
+  #     - POSTGRES_USER=${DB_USER}
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   tty: true
+  #   networks:
+  #     - pongarcadia_network
 
 
 networks:
@@ -62,5 +62,5 @@ networks:
     driver: bridge
 
 
-volumes:
-  pgdata:
+# volumes:
+#   pgdata:

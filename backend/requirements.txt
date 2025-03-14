@@ -28,3 +28,6 @@ typing_extensions
 
 # Image Processing
 pillow
+
+
+drf-yasg

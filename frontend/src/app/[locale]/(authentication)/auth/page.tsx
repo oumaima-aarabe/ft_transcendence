@@ -32,11 +32,11 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen justify-center flex flex-col items-center space-y-[40px]">
         <Image src="/assets/images/logo.svg" alt="logo" width={265} height={170} priority />
-        {showTwoFactor ? (
+        {/* {showTwoFactor ? (
           <TwoFactorVerification userId={userId} setShowTwoFactor={setShowTwoFactor} />
-        ) : (
-          login ? <LoginForm setLogin={setLogin} setShowTwoFactor={setShowTwoFactor} setUserId={setUserId} /> : <RegisterForm setLogin={setLogin} />
-        )}
+        ) : ( */}
+          {login ? <LoginForm setLogin={setLogin} setShowTwoFactor={setShowTwoFactor} setUserId={setUserId} /> : <RegisterForm setLogin={setLogin} />}
+        {/* )} */}
     </div>
   );
 }
