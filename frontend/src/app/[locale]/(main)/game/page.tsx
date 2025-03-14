@@ -7,6 +7,7 @@ import LocalGameSetup from './components/local-game-setup';
 import PongGame from './components/pong-game';
 import GameBackground from './components/game-background';
 import { GameTheme, GameDifficulty } from './types/game';
+import { useRouter } from 'next/navigation';
 
 // Game flow state type
 type GameFlowState = 'options' | 'setup' | 'playing';
@@ -15,6 +16,7 @@ export default function GamePage() {
   // Flow state management
   const [flowState, setFlowState] = useState<GameFlowState>('options');
   const gameAreaRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   
   // Game configuration
   const [player1Name, setPlayer1Name] = useState<string>('Player 1');
@@ -26,6 +28,9 @@ export default function GamePage() {
   const handleSelectGameMode = (mode: 'local' | 'invite' | 'matchmaking') => {
     if (mode === 'local') {
       setFlowState('setup');
+    } else if (mode === 'matchmaking') {
+      // Navigation is handled in the GameOptions component
+      // The router.push to '/game/remote' is already there
     } else {
       // For now, other modes are not implemented
       alert(`${mode} mode is not implemented yet`);
@@ -58,7 +63,7 @@ export default function GamePage() {
 
   return (
     <div className="w-full h-screen overflow-hidden flex items-center justify-center">
-      <div className="w-full max-w-6xl px-4">
+      <div className="w-full max-w-6xl px-4 relative">
         {/* Game area that will contain the background when playing */}
         <div ref={gameAreaRef} className="relative">
           {/* Background for playing state - positioned relative to this container */}

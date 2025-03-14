@@ -65,3 +65,6 @@ export interface DifficultySettings {
 export interface KeyStates {
   [key: string]: boolean;
 }
+
+
+export type GameMode = "local" | "online" | "tournament";
