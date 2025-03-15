@@ -11,8 +11,8 @@ export const initSocket = () => {
         };
         
         const token = getCookie('accessToken');
-        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/chat/';
-        socket = new WebSocket(`${wsUrl}?token=${token}`);
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+        socket = new WebSocket(`${wsUrl}/ws/chat/?token=${token}`);
 
         socket.onopen = () => {
             console.log('WebSocket connected');
