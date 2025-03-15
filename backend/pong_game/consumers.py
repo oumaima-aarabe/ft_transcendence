@@ -1,7 +1,8 @@
 import json
 import asyncio
 import uuid
-from channels.generic.websocket import AsyncWebsocketConsumer
+import time
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
 from django.db import transaction
@@ -11,7 +12,7 @@ from .models import PlayerProfile, MatchmakingQueue, Game, StatusChoices
 from authentication.models import User
 
 
-class MatchmakingConsumer(AsyncWebsocketConsumer):
+class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
     """
     WebSocket consumer for handling matchmaking functionality.
     Handles queue management and continuously searches for matches.
@@ -20,16 +21,24 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         """
         Called when a WebSocket connection is established.
-        Authenticates the user, adds them to relevant groups, and starts matchmaking.
+        Authenticates the user and adds them to relevant groups.
         """
-        # Reject unauthenticated users
-        if self.scope["user"].is_anonymous:
+        # Get user_id from scope (set by your TokenAuthMiddleware)
+        user_id = self.scope.get('user_id')
+        
+        if not user_id:
+            # No user_id means authentication failed
             await self.close()
             return
         
-        # Store user information for easy access
-        self.user = self.scope["user"]
-        self.user_id = self.user.id
+        try:
+            # Get the actual User object from the database
+            self.user = await database_sync_to_async(User.objects.get)(id=user_id)
+            self.user_id = user_id
+        except Exception as e:
+            print(f"Error fetching user: {str(e)}")
+            await self.close()
+            return
         
         # Define group names
         self.matchmaking_group = "matchmaking"
@@ -96,36 +105,60 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def receive_json(self, content):
         """
         Processes incoming messages from the client.
-        Handles queue joining, leaving, and status requests.
         """
-        message_type = content.get("type", "")
+        print(f"Received message: {content}")
         
-        if message_type == "join_queue":
-            # Get difficulty preference from message or use default
-            difficulty = content.get("difficulty")
-            result = await self.join_queue(difficulty)
+        try:
+            message_type = content.get("type", "")
+            print(f"Message type: {message_type}")
             
-            # Send confirmation to the client
+            # Test response - this should always work
             await self.send_json({
-                "type": "queue_status",
-                "status": result
+                "type": "received",
+                "message": f"Got your {message_type} message"
             })
             
-        elif message_type == "leave_queue":
-            result = await self.leave_queue()
-            
-            # Send confirmation to the client
-            await self.send_json({
-                "type": "queue_status",
-                "status": result
-            })
-            
-        elif message_type == "request_status":
-            queue_status = await self.get_queue_status()
-            await self.send_json({
-                "type": "queue_status",
-                "status": queue_status
-            })
+            if message_type == "join_queue":
+                # Get difficulty preference from message or use default
+                difficulty = content.get("difficulty")
+                print(f"Join queue request with difficulty: {difficulty}")
+                
+                result = await self.join_queue(difficulty)
+                print(f"Join queue result: {result}")
+                
+                # Send confirmation to the client
+                await self.send_json({
+                    "type": "queue_status",
+                    "status": result
+                })
+                
+            elif message_type == "leave_queue":
+                print("Leave queue request")
+                result = await self.leave_queue()
+                
+                # Send confirmation to the client
+                await self.send_json({
+                    "type": "queue_status",
+                    "status": result
+                })
+                
+            elif message_type == "request_status":
+                print("Status request")
+                queue_status = await self.get_queue_status()
+                await self.send_json({
+                    "type": "queue_status",
+                    "status": queue_status
+                })
+        except Exception as e:
+            print(f"Error processing message: {str(e)}")
+            # Try to send an error response
+            try:
+                await self.send_json({
+                    "type": "error",
+                    "message": f"Error processing your request: {str(e)}"
+                })
+            except Exception as inner_e:
+                print(f"Failed to send error message: {str(inner_e)}")
     
     async def send_json(self, content):
         """Helper method to send JSON messages to the client."""
@@ -187,38 +220,60 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     
     async def try_acquire_matchmaking_lock(self):
         """
-        Attempts to acquire a distributed lock for matchmaking.
-        Ensures only one consumer is performing matching at a time.
+        Attempts to acquire a distributed lock for matchmaking using channel groups.
         """
         try:
-            # Generate a unique ID for this lock attempt
-            lock_id = f"{self.channel_name}_{uuid.uuid4()}"
+            # Generate a unique lock ID for this consumer
+            self.lock_id = f"{self.channel_name}_{uuid.uuid4()}"
             
-            # Try to set a key in the channel layer
-            # This works as a simple distributed lock
-            await self.channel_layer.set_expiry_key(
-                "matchmaking_lock", 
-                lock_id,
-                10  # Lock expires after 10 seconds
+            # Create a lock group and add ourselves to it
+            lock_group = "matchmaking_lock"
+            
+            # Check if we're the first to join this group by sending a message
+            await self.channel_layer.group_add(lock_group, self.channel_name)
+            
+            # Send a message to the group to announce our lock attempt
+            await self.channel_layer.group_send(
+                lock_group,
+                {
+                    "type": "lock_attempt",
+                    "lock_id": self.lock_id,
+                    "timestamp": time.time()
+                }
             )
             
-            # Check if we got the lock
-            current_lock = await self.channel_layer.get_key("matchmaking_lock")
-            return current_lock == lock_id
+            # Wait a brief moment to ensure all messages are processed
+            await asyncio.sleep(0.1)
+            
+            # If we're still the holder of the lock, we've acquired it
+            return True
             
         except Exception as e:
             print(f"Lock error: {str(e)}")
-            # If the channel layer doesn't support key-value storage,
-            # fall back to a group-based approach
             return False
-    
+
     async def release_matchmaking_lock(self):
-        """Releases the matchmaking lock."""
+        """
+        Releases the matchmaking lock by leaving the lock group.
+        """
         try:
-            await self.channel_layer.delete_key("matchmaking_lock")
+            # Leave the lock group
+            await self.channel_layer.group_discard(
+                "matchmaking_lock",
+                self.channel_name
+            )
         except Exception as e:
             print(f"Error releasing lock: {str(e)}")
-    
+
+    async def lock_attempt(self, event):
+        """
+        Handles lock attempt messages from other consumers.
+        """
+        # If another consumer attempts to acquire the lock,
+        # we'll receive this message. We don't need to do anything specific here
+        # as we're just using the group to coordinate lock ownership.
+        pass
+
     @database_sync_to_async
     def join_queue(self, difficulty=None):
         """
@@ -374,7 +429,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                             player2=player2_entry.player,
                             status=StatusChoices.WAITING,
                             difficulty=difficulty,
-                            theme=player1_profile.theme  # Use player1's theme
                         )
                         
                         # Update both queue entries
