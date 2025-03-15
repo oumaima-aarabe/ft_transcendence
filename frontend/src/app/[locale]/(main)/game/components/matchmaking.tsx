@@ -1,4 +1,3 @@
-// matchmaking.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -7,6 +6,13 @@ import GamePreferencesModal from './game-preferences-modal';
 import { GameTheme, GameDifficulty } from '../types/game';
 import Link from 'next/link';
 import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
+import { UseUser } from "@/api/get-user";
+import { 
+  initMatchmakingSocket, 
+  getMatchmakingSocket, 
+  disconnectMatchmakingSocket,
+  sendMatchmakingMessage 
+} from '@/lib/matchmakingWebsocket';
 
 interface MatchmakingProps {
   userId: string;
@@ -20,12 +26,15 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
   const [searchTime, setSearchTime] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const socketRef = useRef<WebSocket | null>(null);
+  const [connectionState, setConnectionState] = useState('disconnected');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Game preferences
   const [gameTheme, setGameTheme] = useState<GameTheme>('water');
   const [gameDifficulty, setGameDifficulty] = useState<GameDifficulty>('medium');
+
+  // Get user data
+  const { data: userData, isLoading } = UseUser();
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
@@ -34,103 +43,193 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Set up WebSocket connection and message handlers
   useEffect(() => {
-    // Connect to WebSocket when component mounts
-    socketRef.current = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/pong/${userId}/`);
+    if (isLoading || !userData) return;
 
-    socketRef.current.onopen = () => {
-      console.log('WebSocket connection established');
-    };
-
-    socketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('WebSocket message:', data);
-
-      switch (data.type) {
-        case 'connection_established':
-          setMessage('Connected to game server');
-          break;
-          
-        case 'matchmaking_joined':
-          setStatus('searching');
-          setMessage('Searching for opponent...');
-          // Start the timer
-          if (timerRef.current) clearInterval(timerRef.current);
-          setSearchTime(0);
-          timerRef.current = setInterval(() => {
-            setSearchTime(prev => prev + 1);
-          }, 1000);
-          break;
-          
-        case 'game_created':
-          setStatus('connecting');
-          setMessage('Opponent found! Connecting to game...');
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          
-          // Determine if the current user is player 1 or 2
-          const playerNumber = data.players.player1.id === userId ? 1 : 2;
-          const opponent = playerNumber === 1 ? data.players.player2 : data.players.player1;
-          
-          // Notify parent component about game creation
-          onGameFound(data.game_id, playerNumber, opponent);
-          break;
+    console.log('Setting up matchmaking connection for user:', userData.username);
+    
+    // Initialize WebSocket connection
+    const socket = initMatchmakingSocket();
+    
+    if (!socket) {
+      console.error('Failed to initialize matchmaking socket');
+      setMessage('Connection error. Please try again.');
+      return;
+    }
+    
+    // Set up message handler
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Received matchmaking message:', data);
+        
+        switch (data.type) {
+          case 'connection_established':
+            setConnectionState('connected');
+            setMessage('Connected to matchmaking server');
+            break;
+            
+          case 'queue_status':
+            if (data.status.status === 'in_queue') {
+              setStatus('searching');
+              setMessage(`Searching for opponent... (Position: ${data.status.position || 1})`);
+              
+              // Start the timer if not already running
+              if (!timerRef.current) {
+                setSearchTime(0);
+                timerRef.current = setInterval(() => {
+                  setSearchTime(prev => prev + 1);
+                }, 1000);
+              }
+            } else if (data.status.status === 'left_queue') {
+              setStatus('idle');
+              setMessage('Ready to find an opponent?');
+              setIsAnimating(false);
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+                setSearchTime(0);
+              }
+            }
+            break;
+            
+          case 'match_found':
+            setStatus('connecting');
+            setMessage('Opponent found! Connecting to game...');
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            
+            // Extract game ID and opponent info
+            const gameId = data.game_id;
+            const opponentUsername = data.opponent;
+            const opponentAvatar = data.opponent_avatar || '';
+            
+            // Create opponent data structure
+            const opponent = {
+              username: opponentUsername,
+              avatar: opponentAvatar
+            };
+            
+            // Notify parent component about game creation
+            onGameFound(gameId, 1, opponent); // Default to player 1 for now
+            break;
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
       }
     };
-
-    socketRef.current.onclose = () => {
-      console.log('WebSocket connection closed');
-      setMessage('Connection closed');
+    
+    // Set up connection handlers
+    const handleOpen = () => {
+      console.log('Matchmaking WebSocket connection established');
+      setConnectionState('connected');
+    };
+    
+    const handleClose = (event: CloseEvent) => {
+      console.log('Matchmaking WebSocket connection closed', event);
+      setConnectionState('disconnected');
       setStatus('idle');
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
+      
+      // Attempt to reconnect after a delay
+      setTimeout(() => {
+        console.log('Attempting to reconnect to matchmaking...');
+        initMatchmakingSocket();
+      }, 3000);
     };
-
+    
+    const handleError = (error: Event) => {
+      console.error('Matchmaking WebSocket error:', error);
+      setConnectionState('error');
+      setMessage('Connection error. Please try again.');
+    };
+    
+    // Attach event handlers
+    socket.addEventListener('message', handleMessage);
+    socket.addEventListener('open', handleOpen);
+    socket.addEventListener('close', handleClose);
+    socket.addEventListener('error', handleError);
+    
+    // If socket is already open, set state accordingly
+    if (socket.readyState === WebSocket.OPEN) {
+      setConnectionState('connected');
+    }
+    
     // Clean up on unmount
     return () => {
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.close();
-      }
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
+      
+      // Remove event listeners
+      socket.removeEventListener('message', handleMessage);
+      socket.removeEventListener('open', handleOpen);
+      socket.removeEventListener('close', handleClose);
+      socket.removeEventListener('error', handleError);
+      
+      // Close the connection
+      disconnectMatchmakingSocket();
     };
-  }, [userId, onGameFound]);
+  }, [isLoading, userData, onGameFound]);
 
   const startMatchmaking = () => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        type: 'join_matchmaking',
-        preferences: {
-          theme: gameTheme,
-          difficulty: gameDifficulty
+    const socket = getMatchmakingSocket();
+    
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.log('WebSocket not ready, current state:', socket?.readyState);
+      setMessage('Connection not ready. Attempting to reconnect...');
+      
+      // Try to reconnect
+      initMatchmakingSocket();
+      
+      // Wait a moment and check again
+      setTimeout(() => {
+        const reconnectedSocket = getMatchmakingSocket();
+        if (reconnectedSocket && reconnectedSocket.readyState === WebSocket.OPEN) {
+          console.log('Connection reestablished, sending join request');
+          sendMatchmakingMessage('join_queue', { difficulty: gameDifficulty });
+          setIsAnimating(true);
+          setStatus('searching');
+        } else {
+          setMessage('Unable to connect. Please try again later.');
         }
-      }));
-      setIsAnimating(true);
-    } else {
-      setMessage('Connection error. Please try again.');
+      }, 1000);
+      
+      return;
     }
+    
+    // Socket is ready, send the message
+    console.log('Sending join_queue message with difficulty:', gameDifficulty);
+    sendMatchmakingMessage('join_queue', { difficulty: gameDifficulty });
+    setIsAnimating(true);
+    setStatus('searching');
   };
 
   const cancelMatchmaking = () => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        type: 'leave_matchmaking'
-      }));
+    const socket = getMatchmakingSocket();
+    
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.log('WebSocket not ready for cancellation');
       setStatus('idle');
       setMessage('Ready to find an opponent?');
-      setIsAnimating(false);
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
+        setSearchTime(0);
       }
-      setSearchTime(0);
+      return;
     }
+    
+    // Socket is ready, send cancellation message
+    console.log('Sending leave_queue message');
+    sendMatchmakingMessage('leave_queue');
   };
   
   const handlePreferencesUpdate = (theme: GameTheme, difficulty: GameDifficulty) => {
@@ -139,8 +238,17 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     setPreferencesOpen(false);
   };
 
-  
 
+  // Show loading state while fetching user data
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto flex items-center justify-center h-64">
+        <div className="w-16 h-16 rounded-full border-t-4 border-b-4 border-[#40CFB7] animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Rest of your component remains the same...
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-black bg-opacity-60 backdrop-blur-sm rounded-xl overflow-hidden relative">
