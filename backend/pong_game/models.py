@@ -274,8 +274,7 @@ class Game(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    
-    theme = models.CharField(max_length=10, choices=THEME_CHOICES, default='fire')
+
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
     status = models.CharField(max_length=15, choices=GAME_STATUS_CHOICES, default=StatusChoices.WAITING)
     
