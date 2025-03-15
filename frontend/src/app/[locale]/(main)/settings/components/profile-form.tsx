@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function ProfileForm({ formData, setFormData }: { formData: any, setFormData: any }) {
+export default function ProfileForm({ formData, setFormData, formDataToPush, setFormDataToPush }: { formData: any, setFormData: any, formDataToPush: any, setFormDataToPush: any }) {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const settingsT = useTranslations('settings');
@@ -18,7 +18,7 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
     const statusOptions: Option[] = [
         { value: 'online', label: statusT('online'), src: '/assets/icons/online-icon.svg' },
         { value: 'invisible', label: statusT('invisible'), src: '/assets/icons/invisible-icon.svg' },
-        { value: 'busy', label: statusT('busy'), src: '/assets/icons/lune-icon.svg' },
+        { value: 'donotdisturb', label: statusT('donotdisturb'), src: '/assets/icons/lune-icon.svg' },
     ];
 
     useEffect(() => {
@@ -27,10 +27,12 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
 
     useEffect(() => {
         setFormData({ ...formData, status: selectedValue });
+        setFormDataToPush({ ...formDataToPush, status: selectedValue });
     }, [selectedValue]);
 
     const saveForm = () => {
-        if (!formData.username.includes("_")) {
+        // Only check for underscore if username field has been modified
+        if (formDataToPush?.username?.length > 0 && !formDataToPush?.username?.includes("_")) {
             toast({
                 title: settingsT('username.error.underscore.title'),
                 description: settingsT('username.error.underscore.description'),
@@ -38,7 +40,12 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
             return;
         }
 
-        sendRequest("patch", "/users/update/", formData)
+        // remove empty fields
+        const filteredFormDataToPush = Object.fromEntries(
+            Object.entries(formDataToPush).filter(([_, value]) => value !== "")
+        );
+
+        sendRequest("patch", "/users/update/", filteredFormDataToPush)
         .then(async (res: any) => {
             toast({
                 title: t('success.title'),
@@ -46,6 +53,14 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
             });
             // Invalidate and refetch the user query
             await queryClient.invalidateQueries({ queryKey: ['me'] });
+            setFormDataToPush({
+                first_name: "",
+                last_name: "",
+                username: "",
+                status: "",
+                avatar: "",
+                cover: "",
+            });
         })
         .catch((err: any) => {
             toast({
@@ -66,7 +81,9 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
                         id="firstName"
                         className="w-full h-11 pl-10 pr-3 py-2 bg-[#2D2A2A]/30 border border-white/20 focus:outline-none rounded-xl text-white text-sm"
                         placeholder={formData?.first_name}
-                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        onChange={(e) => {
+                            setFormDataToPush({ ...formDataToPush, first_name: e.target.value });
+                        }}
                     />
                     <div className="absolute top-1/2 left-3 transform -translate-y-1/2">
                         <img src="/assets/icons/icon-user.svg" alt="User Icon" className="h-5 w-5" />
@@ -83,7 +100,9 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
                         id="lastName"
                         className="w-full h-11 pl-10 pr-3 py-2 bg-[#2D2A2A]/30 border border-white/20 focus:outline-none rounded-xl text-white text-sm"
                         placeholder={formData?.last_name}
-                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                        onChange={(e) => {
+                            setFormDataToPush({ ...formDataToPush, last_name: e.target.value });
+                        }}
                     />
                     <div className="absolute top-1/2 left-3 transform -translate-y-1/2">
                         <img src="/assets/icons/icon-user.svg" alt="User Icon" className="h-5 w-5" />
@@ -100,7 +119,9 @@ export default function ProfileForm({ formData, setFormData }: { formData: any, 
                         id="username"
                         className="w-full h-11 pl-10 pr-3 py-2 bg-[#2D2A2A]/30 border border-white/20 focus:outline-none rounded-xl text-white text-sm"
                         placeholder={formData?.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        onChange={(e) => {
+                            setFormDataToPush({ ...formDataToPush, username: e.target.value });
+                        }}
                     />
                     <div className="absolute top-1/2 left-3 transform -translate-y-1/2">
                         <img src="/assets/icons/icon-@.svg" alt="At Icon" className="h-5 w-5" />

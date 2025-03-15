@@ -20,6 +20,15 @@ export default function ProfileView() {
     cover: defaultCover,
   });
 
+  const [formDataToPush, setFormDataToPush] = useState({
+    first_name: "",
+    last_name: "",
+    username: "",
+    status: "",
+    avatar: "",
+    cover: "",
+  });
+
   useEffect(() => {
     setFormData({
       first_name: myUserData?.first_name ?? "",
@@ -44,11 +53,10 @@ export default function ProfileView() {
 
     sendRequest("post", "/users/upload-image/", form)
       .then((res) => {
-        console.log(res.data);
         if (type === "cover") {
-          setFormData({ ...formData, cover: res.data.url });
+          setFormDataToPush({ ...formDataToPush, cover: res.data.url });
         } else {
-          setFormData({ ...formData, avatar: res.data.url });
+          setFormDataToPush({ ...formDataToPush, avatar: res.data.url });
         }
       })
       .catch((err) => {
@@ -84,7 +92,7 @@ export default function ProfileView() {
       />
       <div className="relative w-full h-[250px]">
         <img
-          src={formData.cover}
+          src={formDataToPush.cover || formData.cover}
           className="w-full h-full object-cover"
           style={{
             maskImage: "linear-gradient(to top, transparent, black 50%, black)",
@@ -101,7 +109,7 @@ export default function ProfileView() {
         />
 
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-36 h-36 rounded-full overflow-hidden">
-          <img src={formData.avatar} className="w-full h-full object-cover" />
+          <img src={formDataToPush.avatar || formData.avatar} className="w-full h-full object-cover" />
           <div className="bg-gradient-to-b from-transparent via-black/50 to-black/100 absolute inset-0 top-1/2" />
           <img
             id="avatar-edit"
@@ -112,7 +120,7 @@ export default function ProfileView() {
           />
         </div>
       </div>
-      <ProfileForm formData={formData} setFormData={setFormData} />
+      <ProfileForm formData={formData} setFormData={setFormData} formDataToPush={formDataToPush} setFormDataToPush={setFormDataToPush} />
     </div>
   );
 }

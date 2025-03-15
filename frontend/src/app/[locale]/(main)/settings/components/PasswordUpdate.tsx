@@ -27,7 +27,6 @@ const PasswordUpdate = () => {
             });
         })
         .catch((err) => {
-            console.log(err);
             if (err.response.data.code === "old_incorrect") {
                 toast({
                     title: t('error.incorrect_old.title'),

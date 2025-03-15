@@ -181,11 +181,11 @@
       "placeholder": "Search for players, friends and more"
     },
     "status": {
-      "online": "online",
-      "offline": "offline",
-      "away": "away",
-      "busy": "do not disturb",
-      "invisible": "invisible"
+      "online": "Online",
+      "offline": "Offline",
+      "away": "Away",
+      "donotdisturb": "Do not disturb",
+      "invisible": "Invisible"
     }
   },
   "Tournaments": {
