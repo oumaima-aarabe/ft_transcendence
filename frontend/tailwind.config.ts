@@ -38,6 +38,7 @@ const config: Config = {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
   			'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
 			'global-background': "url('/assets/images/background.jpg')",
+			'cover': "url('/assets/images/cover_img.png')",
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

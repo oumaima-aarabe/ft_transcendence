@@ -366,7 +366,7 @@ class Login42API(APIView):
             user.status = "online"
             user.save()
 
-            url = os.getenv('FRONTEND_URL') + '/en/dashboard'
+            url = os.getenv('FRONTEND_URL') + '/en/profile/me'
             response = redirect(url)
             cookie_settings = {
                 "httponly": False,

@@ -19,53 +19,53 @@ const protectedRoutes = [
 ];
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const accessToken = request.cookies.get("accessToken");
+  // const { pathname } = request.nextUrl;
+  // const accessToken = request.cookies.get("accessToken");
 
-  // Get locale from URL (will be in the format /en/path, /fr/path, etc.)
-  const pathnameSegments = pathname.split("/");
-  const locale =
-    (pathnameSegments[1] as (typeof routing.locales)[number]) ||
-    routing.defaultLocale;
+  // // Get locale from URL (will be in the format /en/path, /fr/path, etc.)
+  // const pathnameSegments = pathname.split("/");
+  // const locale =
+  //   (pathnameSegments[1] as (typeof routing.locales)[number]) ||
+  //   routing.defaultLocale;
 
-  // Handle root path redirect
-  if (pathname === "/") {
-    if (accessToken) {
-      try {
-        const tokenData = JSON.parse(atob(accessToken.split(".")[1]));
-        const isTokenValid = tokenData.exp * 1000 > Date.now();
-        if (isTokenValid) {
-          return NextResponse.redirect(
-            new URL(`/${locale}/dashboard`, request.url)
-          );
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
-  }
+  // // Handle root path redirect
+  // if (pathname === "/") {
+  //   if (accessToken) {
+  //     try {
+  //       const tokenData = JSON.parse(atob(accessToken.split(".")[1]));
+  //       const isTokenValid = tokenData.exp * 1000 > Date.now();
+  //       if (isTokenValid) {
+  //         return NextResponse.redirect(
+  //           new URL(`/${locale}/dashboard`, request.url)
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   }
+  //   return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
+  // }
 
-  // Allow access to public routes without authentication
-  if (publicRoutes.some((route) => pathname.endsWith(route))) {
-    // If user is already authenticated, redirect to their dashboard
-    if (accessToken) {
-      return NextResponse.redirect(
-        new URL(`/${locale}/dashboard`, request.url)
-      );
-    }
-    return intlMiddleware(request);
-  }
+  // // Allow access to public routes without authentication
+  // if (publicRoutes.some((route) => pathname.endsWith(route))) {
+  //   // If user is already authenticated, redirect to their dashboard
+  //   if (accessToken) {
+  //     return NextResponse.redirect(
+  //       new URL(`/${locale}/dashboard`, request.url)
+  //     );
+  //   }
+  //   return intlMiddleware(request);
+  // }
 
-  // For protected routes, check if user is authenticated
-  if (protectedRoutes.some((route) => pathname.endsWith(route))) {
-    if (!accessToken) {
-      return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
-    }
-  }
+  // // For protected routes, check if user is authenticated
+  // if (protectedRoutes.some((route) => pathname.endsWith(route))) {
+  //   if (!accessToken) {
+  //     return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
+  //   }
+  // }
 
-  // For all other routes, use the next-intl middleware
-  return intlMiddleware(request);
+  // // For all other routes, use the next-intl middleware
+  // return intlMiddleware(request);
 }
 
 export const config = {

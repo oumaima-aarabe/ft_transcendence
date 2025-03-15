@@ -80,8 +80,8 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
         // Show the 2FA verification component
         setShowTwoFactor(true);
       } else {
-        // If 2FA is not required, redirect to dashboard
-        router.push('/dashboard');
+        // If 2FA is not required, redirect to my profile
+        router.push('/profile/me');
       }
     },
     onError: (error)=>{

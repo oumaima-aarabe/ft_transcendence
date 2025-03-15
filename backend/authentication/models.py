@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
 class User(AbstractUser):
     STATUS_CHOICES = [
         ('online', 'Online'),
@@ -21,6 +22,7 @@ class User(AbstractUser):
     avatar = models.URLField(default="https://iili.io/2D8ByIj.png", null=True, blank=True)
     cover = models.URLField(default="https://iili.io/2bE295P.png", null=True, blank=True)
     is_anonymized = models.BooleanField(default=False)
+    is_2fa_enabled = models.BooleanField(default=False)
     # tfa = models.JSONField(_("TFA"), encoder=, decoder=)
     
     # 2FA fields
