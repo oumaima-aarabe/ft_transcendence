@@ -57,7 +57,7 @@ const TwoFactorVerification = ({ userId, setShowTwoFactor }: TwoFactorVerificati
     mutationFn: (values: z.infer<typeof formSchema>) => verify2FACode(values.code),
     onSuccess: (data) => {
       // On successful verification, redirect to dashboard
-      router.push("/dashboard");
+      router.push("/profile/me");
     },
     onError: (error: Error) => {
       setError(error.message);
