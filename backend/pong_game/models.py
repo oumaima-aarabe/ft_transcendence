@@ -255,10 +255,6 @@ class MatchmakingQueue(models.Model):
 
 
 class Game(models.Model):
-    THEME_CHOICES = [
-        ('fire', 'Fire'),
-        ('water', 'Water'),
-    ]
     
     DIFFICULTY_CHOICES = [
         ('easy', 'Easy'),
