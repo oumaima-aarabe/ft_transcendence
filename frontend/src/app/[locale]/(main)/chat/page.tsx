@@ -30,7 +30,7 @@ export default function ChatApp() {
     try {
       // First check if we've blocked them
       const outgoingBlockResponse = await sendRequest("GET", "/friends/blocked/");
-      const blockedByUs = outgoingBlockResponse.data.data.some(
+      const blockedByUs = outgoingBlockResponse.data.some(
         (blockedUser: any) => blockedUser.friend_id === selectedUserId
       );
       

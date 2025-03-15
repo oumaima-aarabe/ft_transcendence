@@ -34,7 +34,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
       try {
         // Check if we've blocked them
         const outgoingBlockResponse = await sendRequest("GET", "/friends/blocked/");
-        const blockedByUs = outgoingBlockResponse.data.data.some(
+        const blockedByUs = outgoingBlockResponse.data.some(
           (blockedUser: any) => blockedUser.friend_id === user.id
         );
         
@@ -59,7 +59,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
     try {
       setBlockState(BlockState.PENDING);
       if (blockState === BlockState.BLOCKED_BY_ME) {
-        await sendRequest("POST", "/friends/friends/unblock/", {
+        await sendRequest("POST", "/friends/unblock/", {
           target_user_id: user.id
         });
         
@@ -67,7 +67,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
         
         setBlockState(BlockState.UNBLOCKED);
       } else {
-        await sendRequest("POST", "/friends/friends/block/", {
+        await sendRequest("POST", "/friends/block/", {
           target_user_id: user.id
         });
         
