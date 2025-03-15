@@ -14,7 +14,7 @@ application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": AuthMiddlewareStack(
         URLRouter(
-            websocket_urlpatterns,
+            websocket_urlpatterns + 
             pong_game.routing.websocket_urlpatterns
         )
     ),
