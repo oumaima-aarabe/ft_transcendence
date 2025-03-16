@@ -103,7 +103,7 @@ export const useNotifications = () => {
   // Mark notification as read
   const markAsRead = useCallback(async (id: string) => {
     try {
-      await sendRequest('post', `${endpoints.markNotificationRead}/${id}/`);
+      await sendRequest('post', `${endpoints.markNotificationRead}${id}/`);
       
       setNotifications((prev) =>
         prev.map((notification) =>
