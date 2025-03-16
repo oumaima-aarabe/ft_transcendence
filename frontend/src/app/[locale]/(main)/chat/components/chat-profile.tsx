@@ -60,7 +60,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
       setBlockState(BlockState.PENDING);
       if (blockState === BlockState.BLOCKED_BY_ME) {
         await sendRequest("POST", "/friends/unblock/", {
-          target_user_id: user.id
+          username: user.username
         });
         
         sendWebSocketMessage("update_conversations", {});
@@ -68,7 +68,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
         setBlockState(BlockState.UNBLOCKED);
       } else {
         await sendRequest("POST", "/friends/block/", {
-          target_user_id: user.id
+          username: user.username
         });
         
         sendWebSocketMessage("update_conversations", {});

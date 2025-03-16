@@ -5,7 +5,8 @@ from django.db.models import Q
 from .models import Friend
 from authentication.models import User
 from django.shortcuts import get_object_or_404
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class BaseFriendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -218,9 +219,25 @@ class BlockView(BaseFriendView):
                 Q(sender=target_user, recipient=current_user)
             ).delete()
         except Friend.DoesNotExist:
-            print('')
+            return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        channel_layer = get_channel_layer()
         friendship = Friend.objects.create(sender=current_user, recipient=target_user, state='blocked')
         friend = self.serialize_friend(friendship)
+
+        # Send WebSocket notification to the blocked user
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{target_user.username}",
+            {
+                "type": "block_status_update",
+                "event": "block_status_update",
+                "status": "blocked",
+                "blocker": {
+                    "id": current_user.id,
+                    "username": current_user.username,
+                }
+            }
+        )
         return Response(friend, status=status.HTTP_200_OK)
 
 
@@ -236,6 +253,21 @@ class UnblockView(BaseFriendView):
             ).delete()
             friendship = Friend.objects.create(sender=current_user, recipient=target_user, state="none")
             friend = self.serialize_friend(friendship)
+
+            # Send WebSocket notification to the blocked user
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{target_user.username}",
+                {
+                    "type": "block_status_update",
+                    "event": "block_status_update",
+                    "status": "unblocked",
+                    "blocker": {
+                        "id": current_user.id,
+                        "username": current_user.username,
+                    }
+                }
+            )
             return Response(friend, status=status.HTTP_200_OK)
         except Friend.DoesNotExist:
             return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -255,6 +287,4 @@ class CheckBlockedByView(APIView):
             state='blocked'
         ).exists()
         
-        return Response({
-            'is_blocked': is_blocked
-        }, status=status.HTTP_200_OK)
+        return Response({'is_blocked': is_blocked}, status=status.HTTP_200_OK)
