@@ -180,3 +180,83 @@ class LeaderboardView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
+class GameStateView(APIView):
+    """API endpoint to get the current state of a game"""
+    
+    def get(self, request, game_id):
+        """Get the current state of a running game"""
+        try:
+            game = get_object_or_404(Game, id=game_id)
+            
+            # Only allow the players of the game to view it
+            if request.user != game.player1 and request.user != game.player2:
+                return Response({"error": "You are not a participant in this game"}, 
+                               status=status.HTTP_403_FORBIDDEN)
+            
+            # Check if game is active in memory (imported from consumers)
+            from .consumers import active_games
+            
+            if game_id not in active_games:
+                return Response({"error": "Game is not currently active"}, 
+                               status=status.HTTP_404_NOT_FOUND)
+            
+            # Return a simplified version of the game state
+            game_state = active_games[game_id]
+            simplified_state = {
+                "ball_position": [game_state["ball"]["x"], game_state["ball"]["y"]],
+                "left_paddle_position": game_state["left_paddle"]["y"],
+                "right_paddle_position": game_state["right_paddle"]["y"],
+                "scores": {
+                    "left": game_state["left_paddle"]["score"],
+                    "right": game_state["right_paddle"]["score"]
+                },
+                "match_wins": game_state["match_wins"],
+                "current_match": game_state["current_match"],
+                "status": game_state["game_status"]
+            }
+            
+            return Response(simplified_state)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class ActiveGamesView(APIView):
+    """API endpoint to list active games"""
+    
+    def get(self, request):
+        """List all active games the user is participating in"""
+        try:
+            # Import active games from consumers
+            from .consumers import active_games
+            
+            # Filter games where user is a participant
+            user_games = []
+            for game_id, game_state in active_games.items():
+                if (str(game_state["players"]["player1"]["id"]) == str(request.user.id) or
+                    str(game_state["players"]["player2"]["id"]) == str(request.user.id)):
+                    
+                    # Get database game object for additional info
+                    try:
+                        game = Game.objects.get(id=game_id)
+                        
+                        # Create a summary of the game
+                        game_summary = {
+                            "id": game_id,
+                            "opponent": {
+                                "username": game.player2.username if request.user.id == game.player1_id else game.player1.username,
+                                "avatar": game.player2.avatar if request.user.id == game.player1_id else game.player1.avatar
+                            },
+                            "status": game_state["game_status"],
+                            "current_match": game_state["current_match"],
+                            "match_wins": game_state["match_wins"],
+                            "theme": game_state["theme"],
+                            "difficulty": game_state["difficulty"],
+                            "created_at": game.created_at
+                        }
+                        user_games.append(game_summary)
+                    except Game.DoesNotExist:
+                        # Skip if game doesn't exist in database
+                        pass
+            
+            return Response(user_games)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
