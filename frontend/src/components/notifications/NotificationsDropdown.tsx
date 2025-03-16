@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Bell } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Bell, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,8 +17,21 @@ import { useTranslations } from 'next-intl';
 import { formatDistanceToNow } from 'date-fns';
 
 export function NotificationsDropdown() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification } = useNotificationsContext();
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    markAsRead, 
+    markAllAsRead, 
+    clearNotification,
+    refreshNotifications 
+  } = useNotificationsContext();
   const t = useTranslations('notifications');
+  
+  // Refresh notifications when the dropdown is opened
+  const handleDropdownOpen = () => {
+    refreshNotifications();
+  };
   
   const handleNotificationClick = (id: string) => {
     markAsRead(id);
@@ -31,6 +44,7 @@ export function NotificationsDropdown() {
           variant="ghost"
           size="icon"
           className="relative text-white hover:bg-white/10 rounded-full"
+          onClick={handleDropdownOpen}
         >
           <Bell
             size={22}
@@ -60,7 +74,14 @@ export function NotificationsDropdown() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
-          {notifications.length === 0 ? (
+          {loading ? (
+            <div className="py-4 text-center">
+              <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+              <p className="text-sm text-muted-foreground mt-2">
+                Loading notification...
+              </p>
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="py-4 text-center text-muted-foreground">
               {t('no_notifications')}
             </div>
@@ -75,7 +96,7 @@ export function NotificationsDropdown() {
               >
                 <div className="flex justify-between w-full">
                   <span className="font-medium">
-                    {t(`types.${notification.type}`, { defaultValue: notification.type })}
+                    {notification.title || t(`types.${notification.type}`, { defaultValue: notification.type })}
                   </span>
                   <Button
                     variant="ghost"

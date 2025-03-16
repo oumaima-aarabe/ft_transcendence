@@ -7,10 +7,12 @@ type NotificationsContextType = {
   notifications: Notification[];
   unreadCount: number;
   connected: boolean;
+  loading: boolean;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearNotification: (id: string) => void;
   clearAllNotifications: () => void;
+  refreshNotifications: () => void;
 };
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);

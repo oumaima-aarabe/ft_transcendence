@@ -30,17 +30,21 @@
     }
   },
   "notifications": {
-    "title": "Notifications",
+    "title": "Notifications", 
     "mark_all_read": "Mark all as read",
-    "no_notifications": "No notifications yet",
+    "no_notifications": "No notifications",
+    "loading": "Loading notifications...",
     "dismiss": "Dismiss",
     "types": {
+      "system": "System",
       "friend_request": "Friend Request",
       "friend_request_accepted": "Friend Request Accepted",
       "block": "User Blocked",
       "unblock": "User Unblocked",
-      "game_invitation": "Game Invitation",
-      "tournament_invitation": "Tournament Invitation"
+      "game_invite": "Game Invitation",
+      "tournament_invitation": "Tournament Invitation",
+      "message": "New Message",
+      "achievement": "Achievement"
     }
   },
   "settings": {

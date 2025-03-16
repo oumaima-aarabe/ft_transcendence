@@ -2,6 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from authentication.models import User
+from .models import Notification
 
 class NotificationsConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -44,9 +45,33 @@ class NotificationsConsumer(AsyncWebsocketConsumer):
         # We don't expect to receive messages from the client
         pass
     
+    @database_sync_to_async
+    def save_notification(self, notification_data):
+        sender_id = notification_data.get('sender_id')
+        sender = None
+        if sender_id:
+            try:
+                sender = User.objects.get(id=sender_id)
+            except User.DoesNotExist:
+                pass
+                
+        notification = Notification.objects.create(
+            recipient=self.user,
+            sender=sender,
+            notification_type=notification_data.get('type', 'system'),
+            title=notification_data.get('title', ''),
+            message=notification_data.get('message', ''),
+            data=notification_data.get('data')
+        )
+        return notification
+    
     async def notification(self, event):
+        # Save notification to database
+        notification_data = event['notification']
+        await self.save_notification(notification_data)
+        
         # Send notification to WebSocket
         await self.send(text_data=json.dumps({
             'type': 'notification',
-            'notification': event['notification']
+            'notification': notification_data
         }))
