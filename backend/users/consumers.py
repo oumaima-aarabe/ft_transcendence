@@ -68,7 +68,11 @@ class NotificationsConsumer(AsyncWebsocketConsumer):
     async def notification(self, event):
         # Save notification to database
         notification_data = event['notification']
-        await self.save_notification(notification_data)
+        notification = await self.save_notification(notification_data)
+        
+        # Add the notification ID and created_at to the notification data
+        notification_data['id'] = notification.id
+        notification_data['created_at'] = notification.created_at.isoformat()
         
         # Send notification to WebSocket
         await self.send(text_data=json.dumps({
