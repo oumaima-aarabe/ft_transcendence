@@ -29,6 +29,24 @@
       "sign_in_link": "Se connecter !"
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Marquer toutes comme lues",
+    "no_notifications": "Aucune notification",
+    "loading": "Chargement des notifications...",
+    "dismiss": "Ignorer",
+    "types": {
+      "system": "Système",
+      "friend_request": "Demande d'amitié",
+      "friend_request_accepted": "Demande d'amitié acceptée",
+      "block": "Utilisateur bloqué",
+      "unblock": "Utilisateur débloqué",
+      "game_invite": "Invitation de jeu",
+      "tournament_invitation": "Invitation de tournoi",
+      "message": "Nouveau message",
+      "achievement": "Achèvement"
+    }
+  },
   "settings": {
     "title": "Paramètres",
     "tabs": {

@@ -78,7 +78,7 @@ export function NotificationsDropdown() {
             <div className="py-4 text-center">
               <Loader2 className="h-5 w-5 animate-spin mx-auto" />
               <p className="text-sm text-muted-foreground mt-2">
-                Loading notification...
+                {t('loading')}
               </p>
             </div>
           ) : notifications.length === 0 ? (
