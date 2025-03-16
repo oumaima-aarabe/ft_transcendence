@@ -71,3 +71,26 @@ class MatchmakingQueueSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'difficulty_preference', 
                   'status', 'joined_at']
         read_only_fields = ['joined_at', 'status']
+
+class GameStateSerializer(serializers.Serializer):
+    """Serializer for the real-time game state"""
+    ball = serializers.DictField()
+    left_paddle = serializers.DictField()
+    right_paddle = serializers.DictField()
+    match_wins = serializers.DictField()
+    current_match = serializers.IntegerField()
+    game_status = serializers.CharField()
+    winner = serializers.CharField(allow_null=True)
+    
+    # These fields are not sent to clients but help with validation
+    game_id = serializers.CharField(write_only=True)
+    players = serializers.DictField(write_only=True)
+    difficulty = serializers.CharField(write_only=True)
+    theme = serializers.CharField(write_only=True)
+    settings = serializers.DictField(write_only=True)
+    last_update_time = serializers.FloatField(write_only=True)
+    loop_running = serializers.BooleanField(write_only=True, required=False)
+
+class PaddleMoveSerializer(serializers.Serializer):
+    """Serializer for paddle movement messages"""
+    position = serializers.FloatField(min_value=0, max_value=400)
