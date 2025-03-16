@@ -2,17 +2,8 @@ let socket: WebSocket | null = null;
 
 export const initSocket = () => {
     if (!socket || socket.readyState === WebSocket.CLOSED) {
-        // Get access token from cookie
-        const getCookie = (name: string) => {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop()?.split(';').shift();
-            return null;
-        };
-        
-        const token = getCookie('accessToken');
         const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/chat/';
-        socket = new WebSocket(`${wsUrl}?token=${token}`);
+        socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
             console.log('WebSocket connected');
