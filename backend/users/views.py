@@ -17,7 +17,6 @@ from rest_framework.parsers import MultiPartParser, FormParser
 @api_view(["GET"])
 def get_user_data(request, user_id):
     try:
-        print(user_id)
         user = request.user if user_id == "me" else User.objects.get(username=user_id)
         return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
@@ -37,8 +36,6 @@ def update_user_data(request):
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def all_users(request):
-    print('here')
-
     users = User.objects.all()
     return Response(UserSerializer(users, many=True).data)
 

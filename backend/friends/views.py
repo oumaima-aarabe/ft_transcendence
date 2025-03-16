@@ -7,6 +7,7 @@ from authentication.models import User
 from django.shortcuts import get_object_or_404
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from users.utils import send_notification
 
 class BaseFriendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -152,10 +153,44 @@ class SendFriendRequestView(BaseFriendView):
             friendship.state = 'pending'
             friendship.save()
             friend = self.serialize_friend(friendship)
+            
+            # Send notification to the recipient
+            send_notification(
+                username=target_user.username,
+                notification_type='friend_request',
+                message=f"{current_user.username} sent you a friend request",
+                data={
+                    "user": {
+                        "id": current_user.id,
+                        "username": current_user.username,
+                        "first_name": current_user.first_name,
+                        "last_name": current_user.last_name,
+                        "avatar": current_user.avatar
+                    }
+                }
+            )
+            
             return Response(friend, status=status.HTTP_201_CREATED)
         except Friend.DoesNotExist:
             friendship = Friend.objects.create(sender=current_user, recipient=target_user, state='pending')
             friend = self.serialize_friend(friendship)
+            
+            # Send notification to the recipient
+            send_notification(
+                username=target_user.username,
+                notification_type='friend_request',
+                message=f"{current_user.username} sent you a friend request",
+                data={
+                    "user": {
+                        "id": current_user.id,
+                        "username": current_user.username,
+                        "first_name": current_user.first_name,
+                        "last_name": current_user.last_name,
+                        "avatar": current_user.avatar
+                    }
+                }
+            )
+            
             return Response(friend, status=status.HTTP_201_CREATED)
 
 
@@ -169,6 +204,23 @@ class ConfirmFriendRequestView(BaseFriendView):
         friend_request.state = 'accepted'
         friend_request.save()
         friend = self.serialize_friend(friendship=friend_request)
+        
+        # Send notification to the user who sent the friend request
+        send_notification(
+            username=target_user.username,
+            notification_type='friend_request_accepted',
+            message=f"{current_user.username} accepted your friend request",
+            data={
+                "user": {
+                    "id": current_user.id,
+                    "username": current_user.username,
+                    "first_name": current_user.first_name,
+                    "last_name": current_user.last_name,
+                    "avatar": current_user.avatar
+                }
+            }
+        )
+        
         return Response(friend, status=status.HTTP_200_OK)
 
 
@@ -238,6 +290,20 @@ class BlockView(BaseFriendView):
                 }
             }
         )
+        
+        # Send notification using the new notification system
+        send_notification(
+            username=target_user.username,
+            notification_type='block',
+            message=f"{current_user.username} has blocked you",
+            data={
+                "blocker": {
+                    "id": current_user.id,
+                    "username": current_user.username,
+                }
+            }
+        )
+        
         return Response(friend, status=status.HTTP_200_OK)
 
 
@@ -268,6 +334,20 @@ class UnblockView(BaseFriendView):
                     }
                 }
             )
+            
+            # Send notification using the new notification system
+            send_notification(
+                username=target_user.username,
+                notification_type='unblock',
+                message=f"{current_user.username} has unblocked you",
+                data={
+                    "blocker": {
+                        "id": current_user.id,
+                        "username": current_user.username,
+                    }
+                }
+            )
+            
             return Response(friend, status=status.HTTP_200_OK)
         except Friend.DoesNotExist:
             return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)

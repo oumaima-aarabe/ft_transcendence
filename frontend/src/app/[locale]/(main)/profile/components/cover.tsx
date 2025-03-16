@@ -70,7 +70,6 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
   
     const fetchStatus = async () => {
       const status = await getFriendShipStatus(user.username);
-      console.log('status: ', status)
       if (status) {
         setFriendShip(status);
       } else {

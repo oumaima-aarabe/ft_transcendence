@@ -29,6 +29,20 @@
       "sign_in_link": "Sign in!"
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all as read",
+    "no_notifications": "No notifications yet",
+    "dismiss": "Dismiss",
+    "types": {
+      "friend_request": "Friend Request",
+      "friend_request_accepted": "Friend Request Accepted",
+      "block": "User Blocked",
+      "unblock": "User Unblocked",
+      "game_invitation": "Game Invitation",
+      "tournament_invitation": "Tournament Invitation"
+    }
+  },
   "settings": {
     "title": "Settings",
     "tabs": {
