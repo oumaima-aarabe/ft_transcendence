@@ -1,265 +1,556 @@
-import random
 import time
+import random
+import math
+from django.utils import timezone
+from .models import Game, Match, PlayerProfile
+from channels.db import database_sync_to_async
 
-class PongGameLogic:
-    """Handles the core game physics and logic"""
+# Game constants
+POINTS_TO_WIN_MATCH = 5
+MATCHES_TO_WIN_GAME = 3
+BASE_WIDTH = 800
+BASE_HEIGHT = 500
+PADDLE_WIDTH = 18
+PADDLE_HEIGHT = 100
+BALL_RADIUS = 10
+
+# Difficulty settings
+DIFFICULTY_SETTINGS = {
+    "easy": {"ball_speed": 3, "increment_multiplier": 0.02, "max_ball_speed": 6},
+    "medium": {"ball_speed": 5, "increment_multiplier": 0.05, "max_ball_speed": 8},
+    "hard": {"ball_speed": 7, "increment_multiplier": 0.1, "max_ball_speed": 11}
+}
+
+# In-memory storage for active games
+active_games = {}
+
+def create_game_state(game_id, game_data):
+    """
+    Creates a new game state in memory.
     
-    # Constants matching frontend
-    BASE_WIDTH = 800
-    BASE_HEIGHT = 500
-    PADDLE_WIDTH = 18
-    PADDLE_HEIGHT = 100
-    BALL_RADIUS = 10
-    POINTS_TO_WIN_MATCH = 5
-    MATCHES_TO_WIN_GAME = 3
+    Args:
+        game_id: The ID of the game
+        game_data: Game information from database (theme, difficulty, players)
     
-    # Difficulty settings
-    DIFFICULTY_SETTINGS = {
-        'easy': {
-            'ball_speed': 3,
-            'increment_multiplier': 0.02,
-            'max_ball_speed': 6,
-        },
-        'medium': {
-            'ball_speed': 5,
-            'increment_multiplier': 0.05,
-            'max_ball_speed': 8,
-        },
-        'hard': {
-            'ball_speed': 7,
-            'increment_multiplier': 0.1,
-            'max_ball_speed': 11,
-        }
-    }
+    Returns:
+        The newly created game state dictionary
+    """
+    settings = DIFFICULTY_SETTINGS[game_data['difficulty']]
     
-    def __init__(self, difficulty='medium'):
-        # Initialize game state in memory
-        self.difficulty = difficulty
-        settings = self.DIFFICULTY_SETTINGS[difficulty]
-        
-        # Initialize ball
-        self.ball = {
-            'x': self.BASE_WIDTH / 2,
-            'y': self.BASE_HEIGHT / 2,
+    return {
+        'game_id': game_id,
+        'ball': {
+            'x': BASE_WIDTH / 2,
+            'y': BASE_HEIGHT / 2,
             'dx': settings['ball_speed'],
-            'dy': settings['ball_speed'] * 8/5,
+            'dy': settings['ball_speed'] * BASE_HEIGHT / BASE_WIDTH,
             'speed': settings['ball_speed'],
-            'radius': self.BALL_RADIUS
-        }
-        
-        # Initialize paddles
-        self.left_paddle = {
+            'radius': BALL_RADIUS
+        },
+        'left_paddle': {
             'x': 20,
-            'y': self.BASE_HEIGHT / 2 - self.PADDLE_HEIGHT / 2,
-            'width': self.PADDLE_WIDTH,
-            'height': self.PADDLE_HEIGHT,
+            'y': BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+            'width': PADDLE_WIDTH,
+            'height': PADDLE_HEIGHT,
             'speed': 8,
             'score': 0
-        }
-        
-        self.right_paddle = {
-            'x': self.BASE_WIDTH - 20 - self.PADDLE_WIDTH,
-            'y': self.BASE_HEIGHT / 2 - self.PADDLE_HEIGHT / 2,
-            'width': self.PADDLE_WIDTH,
-            'height': self.PADDLE_HEIGHT,
+        },
+        'right_paddle': {
+            'x': BASE_WIDTH - 20 - PADDLE_WIDTH,
+            'y': BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+            'width': PADDLE_WIDTH,
+            'height': PADDLE_HEIGHT,
             'speed': 8,
             'score': 0
-        }
-        
-        # Game state
-        self.game_status = 'menu'  # menu, playing, paused, matchOver, gameOver
-        self.match_winner = None
-        self.last_update_time = time.time()
+        },
+        'match_wins': {
+            'player1': 0,
+            'player2': 0
+        },
+        'current_match': 1,
+        'game_status': 'waiting',
+        'winner': None,
+        'players': {
+            'player1': {
+                'id': game_data['player1_id'],
+                'connected': False
+            },
+            'player2': {
+                'id': game_data['player2_id'],
+                'connected': False
+            }
+        },
+        'difficulty': game_data['difficulty'],
+        'settings': settings,
+        'last_update_time': time.time(),
+        'loop_running': False
+    }
+
+def update_paddle_position(game_id, player_num, position):
+    """
+    Updates a paddle position.
     
-    def get_state(self):
-        """Return the current game state as a dictionary"""
-        return {
-            'ball': self.ball,
-            'left_paddle': self.left_paddle,
-            'right_paddle': self.right_paddle,
-            'game_status': self.game_status,
-            'match_winner': self.match_winner
-        }
+    Args:
+        game_id: The ID of the game
+        player_num: Which player (1 or 2)
+        position: New Y position of the paddle
+    """
+    if game_id not in active_games:
+        return False
     
-    def update(self):
-        """Update game state based on physics and return any events"""
-        events = []
-        
-        # Skip update if game is not in playing state
-        if self.game_status != 'playing':
-            return events
-        
-        # Calculate elapsed time since last update
-        current_time = time.time()
-        delta_time = current_time - self.last_update_time
-        self.last_update_time = current_time
-        
-        # Extract necessary data
-        ball = self.ball
-        left_paddle = self.left_paddle
-        right_paddle = self.right_paddle
-        settings = self.DIFFICULTY_SETTINGS[self.difficulty]
-        
-        # Update ball position
-        ball['x'] += ball['dx']
-        ball['y'] += ball['dy']
-        
-        # Ball collision with top and bottom walls
-        if ball['y'] - ball['radius'] <= 0 or ball['y'] + ball['radius'] >= self.BASE_HEIGHT:
+    # Validate position bounds
+    if position < 0:
+        position = 0
+    elif position > BASE_HEIGHT - PADDLE_HEIGHT:
+        position = BASE_HEIGHT - PADDLE_HEIGHT
+    
+    # Update the appropriate paddle
+    paddle_key = 'left_paddle' if player_num == 1 else 'right_paddle'
+    active_games[game_id][paddle_key]['y'] = position
+    
+    return True
+
+def update_game_physics(game_id, delta_time):
+    """
+    Updates the game physics based on elapsed time.
+    
+    Args:
+        game_id: The ID of the game
+        delta_time: Time elapsed since last update in seconds
+    
+    Returns:
+        Boolean indicating if a score happened during the update
+    """
+    if game_id not in active_games:
+        return False
+    
+    game_state = active_games[game_id]
+    ball = game_state['ball']
+    left_paddle = game_state['left_paddle']
+    right_paddle = game_state['right_paddle']
+    settings = game_state['settings']
+    
+    # Adjust for frame rate consistency
+    time_factor = delta_time * 60  # Target 60 FPS
+    
+    # Move the ball
+    ball['x'] += ball['dx'] * time_factor
+    ball['y'] += ball['dy'] * time_factor
+    
+    # Handle wall collisions
+    if ball['y'] + ball['radius'] >= BASE_HEIGHT:
+        if ball['dy'] > 0:
             ball['dy'] = -ball['dy']
-        
-        # Ball collision with left paddle
-        if (
-            ball['x'] - ball['radius'] <= left_paddle['x'] + left_paddle['width'] and
-            ball['y'] >= left_paddle['y'] and
-            ball['y'] <= left_paddle['y'] + left_paddle['height'] and
-            ball['dx'] < 0
-        ):
-            # Reverse x direction
-            ball['dx'] = -ball['dx']
-            
-            # Adjust angle based on where ball hits paddle
-            hit_position = (ball['y'] - (left_paddle['y'] + left_paddle['height'] / 2)) / (left_paddle['height'] / 2)
-            ball['dy'] = hit_position * ball['speed']
-            
-            # Increase speed slightly
-            ball['speed'] = min(
-                settings['max_ball_speed'],
-                ball['speed'] * (1 + settings['increment_multiplier'])
-            )
-            ball['dx'] = ball['speed'] if ball['dx'] > 0 else -ball['speed']
-            
-            # Add paddle hit event
-            events.append({
-                'type': 'paddle_hit',
-                'paddle': 'left',
-                'position': hit_position
-            })
-        
-        # Ball collision with right paddle
-        if (
-            ball['x'] + ball['radius'] >= right_paddle['x'] and
-            ball['y'] >= right_paddle['y'] and
-            ball['y'] <= right_paddle['y'] + right_paddle['height'] and
-            ball['dx'] > 0
-        ):
-            # Reverse x direction
-            ball['dx'] = -ball['dx']
-            
-            # Adjust angle based on where ball hits paddle
-            hit_position = (ball['y'] - (right_paddle['y'] + right_paddle['height'] / 2)) / (right_paddle['height'] / 2)
-            ball['dy'] = hit_position * ball['speed']
-            
-            # Increase speed slightly
-            ball['speed'] = min(
-                settings['max_ball_speed'],
-                ball['speed'] * (1 + settings['increment_multiplier'])
-            )
-            ball['dx'] = ball['speed'] if ball['dx'] > 0 else -ball['speed']
-            
-            # Add paddle hit event
-            events.append({
-                'type': 'paddle_hit',
-                'paddle': 'right',
-                'position': hit_position
-            })
-        
-        # Score points when ball passes a paddle
-        if ball['x'] + ball['radius'] < 0:
-            # Right player scores
-            right_paddle['score'] += 1
-            
-            # Reset ball
-            self._reset_ball(1)
-            
-            # Add score event
-            events.append({
-                'type': 'score',
-                'player': 'player2',
-                'score': right_paddle['score']
-            })
-        elif ball['x'] - ball['radius'] > self.BASE_WIDTH:
-            # Left player scores
-            left_paddle['score'] += 1
-            
-            # Reset ball
-            self._reset_ball(-1)
-            
-            # Add score event
-            events.append({
-                'type': 'score',
-                'player': 'player1',
-                'score': left_paddle['score']
-            })
-        
-        # Check for match win condition
-        if left_paddle['score'] >= self.POINTS_TO_WIN_MATCH:
-            self.game_status = 'matchOver'
-            self.match_winner = 'player1'
-            
-            events.append({
-                'type': 'match_over',
-                'winner': 'player1'
-            })
-        elif right_paddle['score'] >= self.POINTS_TO_WIN_MATCH:
-            self.game_status = 'matchOver'
-            self.match_winner = 'player2'
-            
-            events.append({
-                'type': 'match_over',
-                'winner': 'player2'
-            })
-        
-        return events
     
-    def _reset_ball(self, direction):
-        """Reset ball position and speed after scoring"""
-        settings = self.DIFFICULTY_SETTINGS[self.difficulty]
-        
-        self.ball['x'] = self.BASE_WIDTH / 2
-        self.ball['y'] = self.BASE_HEIGHT / 2
-        self.ball['speed'] = settings['ball_speed']
-        self.ball['dx'] = direction * settings['ball_speed']
-        self.ball['dy'] = ((random.random() * 2 - 1) * settings['ball_speed']) / 2
+    if ball['y'] - ball['radius'] <= 0:
+        if ball['dy'] < 0:
+            ball['dy'] = -ball['dy']
     
-    def move_paddle(self, player, position_y):
-        """Move paddle to a specific y position"""
-        if player == 'player1':
-            self.left_paddle['y'] = max(0, min(self.BASE_HEIGHT - self.PADDLE_HEIGHT, position_y))
+    # Left paddle collision
+    if (ball['x'] - ball['radius'] <= left_paddle['x'] + left_paddle['width'] and
+        ball['x'] - ball['radius'] > left_paddle['x'] and
+        ball['y'] - ball['radius'] <= left_paddle['y'] + left_paddle['height'] and
+        ball['y'] + ball['radius'] >= left_paddle['y'] and
+        ball['dx'] < 0):
+        
+        # Reverse X direction
+        ball['dx'] = -ball['dx']
+        
+        # Adjust angle based on hit position
+        hit_position = (ball['y'] - (left_paddle['y'] + left_paddle['height'] / 2)) / (left_paddle['height'] / 2)
+        ball['dy'] = hit_position * ball['speed']
+        
+        # Increase speed slightly
+        ball['speed'] = min(
+            settings['max_ball_speed'],
+            ball['speed'] * (1 + settings['increment_multiplier'])
+        )
+        ball['dx'] = ball['speed'] if ball['dx'] > 0 else -ball['speed']
+    
+    # Right paddle collision
+    if (ball['x'] + ball['radius'] >= right_paddle['x'] and
+        ball['x'] + ball['radius'] < right_paddle['x'] + right_paddle['width'] and
+        ball['y'] - ball['radius'] <= right_paddle['y'] + right_paddle['height'] and
+        ball['y'] + ball['radius'] >= right_paddle['y'] and
+        ball['dx'] > 0):
+        
+        # Reverse X direction
+        ball['dx'] = -ball['dx']
+        
+        # Adjust angle based on hit position
+        hit_position = (ball['y'] - (right_paddle['y'] + right_paddle['height'] / 2)) / (right_paddle['height'] / 2)
+        ball['dy'] = hit_position * ball['speed']
+        
+        # Increase speed slightly
+        ball['speed'] = min(
+            settings['max_ball_speed'],
+            ball['speed'] * (1 + settings['increment_multiplier'])
+        )
+        ball['dx'] = ball['speed'] if ball['dx'] > 0 else -ball['speed']
+    
+    # Check for scoring
+    score_happened = False
+    
+    # Scoring logic
+    if ball['x'] + ball['radius'] < 0:
+        # Right player scores
+        right_paddle['score'] += 1
+        reset_ball(game_id, 1)
+        score_happened = True
+    
+    elif ball['x'] - ball['radius'] > BASE_WIDTH:
+        # Left player scores
+        left_paddle['score'] += 1
+        reset_ball(game_id, -1)
+        score_happened = True
+    
+    # Return whether scoring happened
+    return score_happened
+
+def reset_ball(game_id, direction):
+    """
+    Resets the ball after scoring.
+    
+    Args:
+        game_id: The ID of the game
+        direction: Direction to send the ball (1 for right, -1 for left)
+    """
+    if game_id not in active_games:
+        return
+    
+    game_state = active_games[game_id]
+    settings = game_state['settings']
+    
+    game_state['ball']['x'] = BASE_WIDTH / 2
+    game_state['ball']['y'] = BASE_HEIGHT / 2
+    game_state['ball']['speed'] = settings['ball_speed']
+    game_state['ball']['dx'] = direction * settings['ball_speed']
+    
+    # Add some randomness to y direction
+    game_state['ball']['dy'] = ((random.random() * 2 - 1) * settings['ball_speed']) / 2
+
+def check_match_end(game_id):
+    """
+    Checks if a match has ended based on scores.
+    
+    Args:
+        game_id: The ID of the game
+    
+    Returns:
+        True if match ended, False otherwise
+    """
+    if game_id not in active_games:
+        return False
+    
+    game_state = active_games[game_id]
+    left_score = game_state['left_paddle']['score']
+    right_score = game_state['right_paddle']['score']
+    
+    match_ended = False
+    
+    # First to POINTS_TO_WIN_MATCH points wins match
+    if left_score >= POINTS_TO_WIN_MATCH:
+        # Player 1 wins match
+        game_state['match_wins']['player1'] += 1
+        game_state['winner'] = 'player1'
+        match_ended = True
+        
+        # Check if game is over
+        if game_state['match_wins']['player1'] >= MATCHES_TO_WIN_GAME:
+            game_state['game_status'] = 'gameOver'
         else:
-            self.right_paddle['y'] = max(0, min(self.BASE_HEIGHT - self.PADDLE_HEIGHT, position_y))
+            game_state['game_status'] = 'matchOver'
     
-    def start_game(self):
-        """Start the game"""
-        self.game_status = 'playing'
-    
-    def pause_game(self):
-        """Pause the game"""
-        if self.game_status == 'playing':
-            self.game_status = 'paused'
-    
-    def resume_game(self):
-        """Resume the game"""
-        if self.game_status == 'paused':
-            self.game_status = 'playing'
-    
-    def reset_for_new_match(self):
-        """Reset the game for a new match"""
-        settings = self.DIFFICULTY_SETTINGS[self.difficulty]
+    elif right_score >= POINTS_TO_WIN_MATCH:
+        # Player 2 wins match
+        game_state['match_wins']['player2'] += 1
+        game_state['winner'] = 'player2'
+        match_ended = True
         
-        # Reset ball
-        self.ball['x'] = self.BASE_WIDTH / 2
-        self.ball['y'] = self.BASE_HEIGHT / 2
-        self.ball['dx'] = settings['ball_speed']
-        self.ball['dy'] = settings['ball_speed'] * 0.5
-        self.ball['speed'] = settings['ball_speed']
+        # Check if game is over
+        if game_state['match_wins']['player2'] >= MATCHES_TO_WIN_GAME:
+            game_state['game_status'] = 'gameOver'
+        else:
+            game_state['game_status'] = 'matchOver'
+    
+    return match_ended
+
+def reset_for_new_match(game_id):
+    """
+    Resets the game state for a new match.
+    
+    Args:
+        game_id: The ID of the game
+    """
+    if game_id not in active_games:
+        return
+    
+    game_state = active_games[game_id]
+    settings = game_state['settings']
+    
+    # Reset ball
+    game_state['ball']['x'] = BASE_WIDTH / 2
+    game_state['ball']['y'] = BASE_HEIGHT / 2
+    game_state['ball']['dx'] = settings['ball_speed']
+    game_state['ball']['dy'] = settings['ball_speed'] * BASE_HEIGHT / BASE_WIDTH
+    game_state['ball']['speed'] = settings['ball_speed']
+    
+    # Reset paddles
+    game_state['left_paddle']['y'] = BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2
+    game_state['left_paddle']['score'] = 0
+    game_state['right_paddle']['y'] = BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2
+    game_state['right_paddle']['score'] = 0
+    
+    # Update match counter
+    game_state['current_match'] += 1
+    
+    # Reset status
+    game_state['game_status'] = 'menu'
+    game_state['winner'] = None
+
+def reset_game(game_id):
+    """
+    Completely resets the game state.
+    
+    Args:
+        game_id: The ID of the game
+    """
+    if game_id not in active_games:
+        return
+    
+    game_state = active_games[game_id]
+    settings = game_state['settings']
+    
+    # Reset everything
+    game_state['ball']['x'] = BASE_WIDTH / 2
+    game_state['ball']['y'] = BASE_HEIGHT / 2
+    game_state['ball']['dx'] = settings['ball_speed']
+    game_state['ball']['dy'] = settings['ball_speed'] * BASE_HEIGHT / BASE_WIDTH
+    game_state['ball']['speed'] = settings['ball_speed']
+    
+    game_state['left_paddle']['y'] = BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2
+    game_state['left_paddle']['score'] = 0
+    game_state['right_paddle']['y'] = BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2
+    game_state['right_paddle']['score'] = 0
+    
+    game_state['match_wins']['player1'] = 0
+    game_state['match_wins']['player2'] = 0
+    
+    game_state['current_match'] = 1
+    game_state['game_status'] = 'menu'
+    game_state['winner'] = None
+
+def set_player_connection(game_id, player_num, connected):
+    """
+    Updates a player's connection status.
+    
+    Args:
+        game_id: The ID of the game
+        player_num: Which player (1 or 2)
+        connected: Boolean connection status
+    
+    Returns:
+        Dictionary with game status info
+    """
+    if game_id not in active_games:
+        return None
+    
+    player_key = f'player{player_num}'
+    active_games[game_id]['players'][player_key]['connected'] = connected
+    
+    # Check if game status needs updating
+    status_changed = False
+    old_status = active_games[game_id]['game_status']
+    
+    # If both players are connected and game is waiting, change to menu
+    if (active_games[game_id]['players']['player1']['connected'] and
+        active_games[game_id]['players']['player2']['connected'] and
+        active_games[game_id]['game_status'] == 'waiting'):
         
-        # Reset paddles
-        self.left_paddle['y'] = self.BASE_HEIGHT / 2 - self.PADDLE_HEIGHT / 2
-        self.right_paddle['y'] = self.BASE_HEIGHT / 2 - self.PADDLE_HEIGHT / 2
-        self.left_paddle['score'] = 0
-        self.right_paddle['score'] = 0
+        active_games[game_id]['game_status'] = 'menu'
+        status_changed = True
+    
+    # If a player disconnects while game is playing, pause the game
+    elif (not connected and
+          active_games[game_id]['game_status'] == 'playing'):
         
-        # Reset game status
-        self.game_status = 'menu'
-        self.match_winner = None
+        active_games[game_id]['game_status'] = 'paused'
+        status_changed = True
+    
+    return {
+        'status_changed': status_changed,
+        'old_status': old_status,
+        'new_status': active_games[game_id]['game_status'],
+        'both_connected': (active_games[game_id]['players']['player1']['connected'] and
+                          active_games[game_id]['players']['player2']['connected']),
+        'any_connected': (active_games[game_id]['players']['player1']['connected'] or
+                         active_games[game_id]['players']['player2']['connected'])
+    }
+
+def set_game_status(game_id, new_status):
+    """
+    Sets the game status.
+    
+    Args:
+        game_id: The ID of the game
+        new_status: New status value
+    
+    Returns:
+        True if status was changed, False otherwise
+    """
+    if game_id not in active_games:
+        return False
+    
+    if new_status not in ['waiting', 'menu', 'playing', 'paused', 'matchOver', 'gameOver']:
+        return False
+    
+    # If changing to playing, update the timestamp
+    if new_status == 'playing':
+        active_games[game_id]['last_update_time'] = time.time()
+    
+    # Update the status
+    active_games[game_id]['game_status'] = new_status
+    
+    return True
+
+def is_any_player_connected(game_id):
+    """
+    Checks if any player is connected to the game.
+    
+    Args:
+        game_id: The ID of the game
+    
+    Returns:
+        Boolean indicating if any player is connected
+    """
+    if game_id not in active_games:
+        return False
+    
+    return (active_games[game_id]['players']['player1']['connected'] or
+            active_games[game_id]['players']['player2']['connected'])
+
+def are_both_players_connected(game_id):
+    """
+    Checks if both players are connected to the game.
+    
+    Args:
+        game_id: The ID of the game
+    
+    Returns:
+        Boolean indicating if both players are connected
+    """
+    if game_id not in active_games:
+        return False
+    
+    return (active_games[game_id]['players']['player1']['connected'] and
+            active_games[game_id]['players']['player2']['connected'])
+
+@database_sync_to_async
+def save_game_results(game_id):
+    """
+    Saves the final game results to the database.
+    
+    Args:
+        game_id: The ID of the game
+    
+    Returns:
+        Boolean indicating success
+    """
+    try:
+        if game_id not in active_games:
+            return False
+            
+        game = Game.objects.get(id=game_id)
+        game_state = active_games[game_id]
+        
+        # Only save if game is over
+        if game_state['game_status'] not in ['gameOver', 'matchOver']:
+            return False
+        
+        # Update game status
+        game.status = 'completed'
+        
+        # Set winner if game ended
+        if game_state['game_status'] == 'gameOver':
+            if game_state['match_wins']['player1'] > game_state['match_wins']['player2']:
+                game.winner = game.player1
+            else:
+                game.winner = game.player2
+        
+        # Update match scores
+        game.final_score_player1 = game_state['match_wins']['player1']
+        game.final_score_player2 = game_state['match_wins']['player2']
+        
+        # Set completion time
+        game.completed_at = timezone.now()
+        
+        # Save game
+        game.save()
+        
+        # Update player profiles
+        update_player_profiles(game_id)
+        
+        return True
+    except Exception as e:
+        print(f"Error saving game results: {str(e)}")
+        return False
+
+@database_sync_to_async
+def update_player_profiles(game_id):
+    """
+    Updates player statistics based on game results.
+    
+    Args:
+        game_id: The ID of the game
+    """
+    try:
+        if game_id not in active_games:
+            return
+            
+        game = Game.objects.get(id=game_id)
+        game_state = active_games[game_id]
+        
+        # Only update if game is completed
+        if game_state['game_status'] != 'gameOver':
+            return
+        
+        # Get profiles
+        p1_profile, _ = PlayerProfile.objects.get_or_create(player=game.player1)
+        p2_profile, _ = PlayerProfile.objects.get_or_create(player=game.player2)
+        
+        # Update match counts
+        p1_profile.matches_played += 1
+        p2_profile.matches_played += 1
+        
+        # Update wins/losses
+        if game_state['match_wins']['player1'] > game_state['match_wins']['player2']:
+            p1_profile.matches_won += 1
+            p2_profile.matches_lost += 1
+            
+            # Update achievements for player 1
+            if not p1_profile.first_win:
+                p1_profile.first_win = True
+                
+            # Pure win (no matches lost)
+            if game_state['match_wins']['player2'] == 0:
+                p1_profile.pure_win = True
+                
+            # Triple win is handled elsewhere (need to track consecutive wins)
+        else:
+            p2_profile.matches_won += 1
+            p1_profile.matches_lost += 1
+            
+            # Update achievements for player 2
+            if not p2_profile.first_win:
+                p2_profile.first_win = True
+                
+            # Pure win (no matches lost)
+            if game_state['match_wins']['player1'] == 0:
+                p2_profile.pure_win = True
+        
+        # Save profiles
+        p1_profile.save()
+        p2_profile.save()
+        
+    except Exception as e:
+        print(f"Error updating player profiles: {str(e)}")
