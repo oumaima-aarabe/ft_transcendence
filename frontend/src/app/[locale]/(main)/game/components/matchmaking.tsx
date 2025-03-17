@@ -16,7 +16,7 @@ import {
 
 interface MatchmakingProps {
   userId: string;
-  onGameFound: (gameId: string, playerNumber: number, opponentData: any) => void;
+  onGameFound: (gameId: string, player1: string, player2:string, gameUrl:string) => void;
   onBack: () => void;
 }
 
@@ -94,28 +94,38 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             }
             break;
             
+            // Inside your handleMessage function in matchmaking.tsx, update the 'match_found' case:
+
           case 'match_found':
-            setStatus('connecting');
-            setMessage('Opponent found! Connecting to game...');
-            if (timerRef.current) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
-            
-            // Extract game ID and opponent info
-            const gameId = data.game_id;
-            const opponentUsername = data.opponent;
-            const opponentAvatar = data.opponent_avatar || '';
-            
-            // Create opponent data structure
-            const opponent = {
-              username: opponentUsername,
-              avatar: opponentAvatar
-            };
-            
-            // Notify parent component about game creation
-            onGameFound(gameId, 1, opponent); // Default to player 1 for now
-            break;
+              console.log('Match found event received! Game ID:', data.game_id);
+              
+              setStatus('connecting');
+              setMessage('Opponent found! Connecting to game...');
+              
+              // Important: DON'T call disconnectMatchmakingSocket() here!
+              // Let the cleanup function handle it
+              
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
+              
+              // Extract game ID and opponent info
+              const gameId = data.game_id;
+              const player1 = data.player1;
+              const player2 = data.player2;
+              const gameUrl = data.game_url;
+              
+              // Create opponent data structure
+              
+              // Add a delay before navigation to make sure both clients are ready
+              setTimeout(() => {
+                console.log('Transitioning to game after delay, Game ID:', gameId);
+                // Notify parent component about game creation
+                onGameFound(gameId, player1, player2 , gameUrl);
+              }, 1000); // 1 second delay
+              
+              break;
         }
       } catch (error) {
         console.error('Error parsing message:', error);
@@ -137,11 +147,11 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
         timerRef.current = null;
       }
       
-      // Attempt to reconnect after a delay
-      setTimeout(() => {
-        console.log('Attempting to reconnect to matchmaking...');
-        initMatchmakingSocket();
-      }, 3000);
+      // Attempt to reconnect after a delay, why ?
+      // setTimeout(() => {
+      //   console.log('Attempting to reconnect to matchmaking...');
+      //   initMatchmakingSocket();
+      // }, 3000);
     };
     
     const handleError = (error: Event) => {
@@ -163,18 +173,16 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     
     // Clean up on unmount
     return () => {
+      console.log('Matchmaking component unmounting, cleaning up resources');
+      
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
       
-      // Remove event listeners
-      socket.removeEventListener('message', handleMessage);
-      socket.removeEventListener('open', handleOpen);
-      socket.removeEventListener('close', handleClose);
-      socket.removeEventListener('error', handleError);
-      
-      // Close the connection
+      // Important: Only disconnect if component is unmounting
+      // This prevents premature disconnection when match is found
+      console.log('Disconnecting matchmaking socket during cleanup');
       disconnectMatchmakingSocket();
     };
   }, [isLoading, userData, onGameFound]);

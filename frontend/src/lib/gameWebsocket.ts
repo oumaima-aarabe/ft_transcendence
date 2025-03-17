@@ -13,6 +13,7 @@ export default class GameConnection {
   private maxReconnectAttempts = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private messageQueue: {type: string, data: any}[] = [];
+  private gameLoopInterval: NodeJS.Timeout | null = null;
   
   // Callback functions
   private onGameState: GameStateCallback;
@@ -40,15 +41,16 @@ export default class GameConnection {
   }
 
   connect() {
-    // Close existing connection if any
-    if (this.socket) {
-      this.socket.close();
+    // Only connect if not already connected
+    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
+      console.log("Socket already connecting or connected");
+      return;
     }
 
     // Create WebSocket URL with game ID and authentication token
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = process.env.NEXT_PUBLIC_WS_URL || window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/game/${this.gameId}/?token=${this.token}`;
+    // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = process.env.NEXT_PUBLIC_WS_URL ||'ws://localhost:8000';
+    const wsUrl = `${host}/ws/game/${this.gameId}/?token=${this.token}`;
     
     console.log('Connecting to game server:', wsUrl);
     
@@ -74,18 +76,22 @@ export default class GameConnection {
     
     // Process any queued messages
     this.processQueuedMessages();
+    
+    // Start the game loop for sending paddle positions
+    this.startGameLoop();
   }
 
   private handleMessage(event: MessageEvent) {
     try {
       const message = JSON.parse(event.data);
-      console.log('Received game message:', message.type);
+      // console.log('Received game message:', message.type);
       
       switch (message.type) {
         case 'connection_established':
           // Set player number when connection is established
-          if (message.player_number) {
+          if (message.player_number !== undefined) {
             this.playerNumber = message.player_number;
+            console.log(`Server assigned player number: ${this.playerNumber}`);
             this.onPlayerNumber(message.player_number);
           }
           break;
@@ -118,6 +124,9 @@ export default class GameConnection {
     this.onConnectionChange(false);
     this.socket = null;
     
+    // Stop game loop
+    this.stopGameLoop();
+    
     // Attempt to reconnect unless explicitly closed by user
     if (event.code !== 1000 && event.code !== 1001) {
       this.scheduleReconnection();
@@ -137,6 +146,10 @@ export default class GameConnection {
       const delay = baseDelay + jitter;
       
       console.log(`Attempting to reconnect in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})`);
+      
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+      }
       
       this.reconnectTimeout = setTimeout(() => {
         this.connect();
@@ -158,6 +171,43 @@ export default class GameConnection {
       }
     }
   }
+
+  // Current paddle position state
+  private currentPaddleY: number | null = null;
+  private paddleMoveQueued = false;
+
+  // Send paddle movement to server - but only send when there's an actual change
+  sendPaddleMove(position: number) {
+    // Only queue if position has changed
+    if (position !== this.currentPaddleY) {
+      this.currentPaddleY = position;
+      this.paddleMoveQueued = true;
+    }
+  }
+
+  // Game loop to throttle paddle movement messages
+  private startGameLoop() {
+    if (this.gameLoopInterval) {
+      clearInterval(this.gameLoopInterval);
+    }
+    
+    // Send paddle position updates at a maximum of 30 per second
+    this.gameLoopInterval = setInterval(() => {
+      if (this.paddleMoveQueued && this.currentPaddleY !== null) {
+        const sent = this.sendMessage('paddle_move', { position: this.currentPaddleY });
+        if (sent) {
+          this.paddleMoveQueued = false;
+        }
+      }
+    }, 33); // ~30fps
+  }
+  
+  private stopGameLoop() {
+    if (this.gameLoopInterval) {
+      clearInterval(this.gameLoopInterval);
+      this.gameLoopInterval = null;
+    }
+  }
   
   private sendMessage(type: string, data: any = {}) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -165,19 +215,15 @@ export default class GameConnection {
         type,
         ...data
       };
-      this.socket.send(JSON.stringify(message));
-      return true;
+      try {
+        this.socket.send(JSON.stringify(message));
+        return true;
+      } catch (error) {
+        console.error('Error sending message:', error);
+        return false;
+      }
     }
     return false;
-  }
-
-  // Send paddle movement to server
-  sendPaddleMove(position: number) {
-    const sent = this.sendMessage('paddle_move', { position });
-    if (!sent) {
-      // Queue message if connection not ready
-      this.messageQueue.push({ type: 'paddle_move', data: { position } });
-    }
   }
 
   // Send game control messages
@@ -210,13 +256,19 @@ export default class GameConnection {
   }
 
   disconnect() {
+    this.stopGameLoop();
+    
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
     
     if (this.socket) {
-      this.socket.close(1000, "Disconnected by user");
+      try {
+        this.socket.close(1000, "Disconnected by user");
+      } catch (error) {
+        console.error('Error closing socket:', error);
+      }
       this.socket = null;
     }
   }

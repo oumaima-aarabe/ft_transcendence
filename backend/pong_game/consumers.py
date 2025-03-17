@@ -186,21 +186,22 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                             {
                                 "type": "match_found",
                                 "game_id": match['game_id'],
-                                "opponent": match['player2_username'],
+                                "player1": match['player1_username'],
+                                "player2": match['player2_username'],
                                 "opponent_avatar": match['player2_avatar']
                             }
                         )
-                        
-                        # Notify player 2
                         await self.channel_layer.group_send(
                             f"user_{match['player2_id']}",
                             {
                                 "type": "match_found",
                                 "game_id": match['game_id'],
-                                "opponent": match['player1_username'],
+                                "player1": match['player1_username'],
+                                "player2": match['player2_username'],
                                 "opponent_avatar": match['player1_avatar']
                             }
                         )
+        
                     
                     if matches:
                         print(f"Created {len(matches)} matches")
@@ -476,7 +477,8 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             "type": "match_found",
             "game_id": event["game_id"],
-            "opponent": event["opponent"],
+            "player1": event["player1"],
+            "player2": event["player2"],
             "opponent_avatar": event.get("opponent_avatar", ""),
             "game_url": f"/game/{event['game_id']}/"
         })
