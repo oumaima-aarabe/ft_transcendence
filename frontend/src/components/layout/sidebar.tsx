@@ -7,7 +7,7 @@ import { sendRequest } from "@/lib/axios";
 import endpoints from "@/constants/endpoints";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/profile/me" },
   { icon: Trophy, label: "Tournaments", href: "/tournaments" },
   { icon: "/assets/icons/icon-pong.svg", label: "Game", href: "/game" },
   { icon: MessageCircle, label: "Chat", href: "/chat" },

@@ -1,8 +1,8 @@
-daphne:
-	daphne backend.asgi:application -b 0.0.0.0 -p 8000
-
 run:
 	python3 manage.py runserver
+
+daphne:
+	daphne backend.asgi:application -b 0.0.0.0 -p 8000
 
 migrate:
 	python3 manage.py makemigrations && python3 manage.py migrate
@@ -13,9 +13,6 @@ prod:
 fullmigrate : clean
 	python3 manage.py makemigrations users authentication friends chat
 	python3 manage.py migrate
-
-admin:
-	echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@mail.com', 'admin') if not User.objects.filter(username='admin').exists() else None" | python3 manage.py shell
 
 clean:
 	find . -path "*/__pycache__/*" -delete

@@ -21,17 +21,14 @@ def create_conversation(request):
         )
     
     try:
-        # Get the participant
         participant = User.objects.get(id=participant_id)
         
-        # Don't allow conversation with self
         if participant.id == request.user.id:
             return Response(
                 {"error": "Cannot create conversation with yourself"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if conversation already exists
         existing_conversation = Conversation.objects.filter(
             participants=request.user
         ).filter(
@@ -41,7 +38,6 @@ def create_conversation(request):
         if existing_conversation:
             return Response({"id": existing_conversation.id})
         
-        # Create new conversation
         conversation = Conversation.objects.create()
         conversation.participants.add(request.user, participant)
         
@@ -171,12 +167,8 @@ def search_users(request):
         Q(last_name__icontains=query)
     ).exclude(
         id=request.user.id  # Exclude the current user
-    # ).exclude(
-    #     blocked_by=request.user  # Exclude users who blocked the current user
-    # ).exclude(
-    #     blocked_users=request.user  # Exclude users blocked by the current user
-    )[:10]  # Limit to 10 results
-    
+    )[:10]
+
     users_data = [{
         'id': user.id,
         'username': user.username,
@@ -240,7 +232,7 @@ def MessageList(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check conversation access
+        #Check conversation access
         conversation = Conversation.objects.filter(
             id=conversation_id,
             participants=request.user

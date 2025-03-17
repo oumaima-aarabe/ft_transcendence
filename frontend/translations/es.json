@@ -29,6 +29,24 @@
       "sign_in_link": "¡Inicia sesión!"
     }
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "mark_all_read": "Marcar todas como leídas",
+    "no_notifications": "No hay notificaciones",
+    "loading": "Cargando notificaciones...",
+    "dismiss": "Descartar",
+    "types": {
+      "system": "Sistema",
+      "friend_request": "Solicitud de amistad",
+      "friend_request_accepted": "Solicitud de amistad aceptada",
+      "block": "Usuario bloqueado",
+      "unblock": "Usuario desbloqueado",
+      "game_invite": "Invitación de juego",
+      "tournament_invitation": "Invitación de torneo",
+      "message": "Nuevo mensaje",
+      "achievement": "Logro"
+    }
+  },
   "settings": {
     "title": "Ajustes",
     "tabs": {
@@ -88,14 +106,25 @@
     },
     "game": {
       "connectivity": {
-        "title": "Conectividad predeterminada",
+        "title": "Conectividad",
         "online": "En línea",
         "local": "Local"
+      },
+      "difficulty": {
+        "title": "Dificultad del juego",
+        "easy": "Fácil",
+        "medium": "Medio",
+        "hard": "Difícil"
       },
       "theme": {
         "title": "Tema del tablero",
         "fire": "Tema Fuego",
         "water": "Tema Agua"
+      },
+      "alias": {
+        "title": "Alias del torneo",
+        "placeholder": "Alias predeterminado",
+        "save": "Guardar"
       }
     },
     "language": {
@@ -132,7 +161,10 @@
     "loading": "Cargando chat...",
     "messages": {
       "send_placeholder": "Escribe tu mensaje...",
-      "failed_fetch": "Error al cargar los mensajes"
+      "failed_fetch": "Error al cargar los mensajes",
+      "blocked_by_other": "Has sido bloqueado por este usuario 😔",
+      "blocked_by_me": "Has bloqueado a este usuario",
+      "placeholder": "Escribe tu mensaje..."
     },
     "profile": {
       "title": "Perfil de chat",
@@ -144,27 +176,93 @@
       "view_profile": "Ver perfil",
       "challenge": "Desafiar",
       "delete_chat": "Eliminar chat",
-      "friend_status": "Eres amigo de esta persona"
+      "deleting": "Eliminando...",
+      "friend_status": "Eres amigo de esta persona",
+      "unblock": "Desbloquear usuario",
+      "blocked_by_other": "Eres bloqueado",
+      "loading": "Cargando..."
     },
     "list": {
       "title": "Conversaciones",
-      "search": "Buscar usuarios o conversaciones",
+      "search": "Busca usuarios para chatear",
       "search_results": "Resultados de búsqueda",
       "click_to_start": "Haz clic para iniciar la conversación",
       "no_messages": "Aún no hay mensajes",
-      "start_chat": "Iniciar nueva conversación"
+      "start_chat": "Iniciar nueva conversación",
+      "no_users_or_conversations": "No hay usuarios o conversaciones",
+      "no_conversations": "Aún no hay conversaciones",
+      "failed_to_start_conversation": "Error al iniciar la conversación. Por favor, inténtalo de nuevo."
     }
   },
   "header": {
     "search": {
-      "placeholder": "Buscar personas, torneos y más"
+      "placeholder": "Buscar jugadores, amigos y más"
     },
     "status": {
-      "online": "en línea",
-      "offline": "desconectado",
-      "away": "ausente",
-      "busy": "no molestar",
-      "invisible": "invisible"
+      "online": "En línea",
+      "offline": "Desconectado",
+      "away": "Ausente",
+      "donotdisturb": "No molestar",
+      "invisible": "Invisible"
     }
+  },
+  "Tournaments": {
+    "title": "Torneos",
+    "join": "Unirse a un torneo",
+    "create": "Crear un torneo",
+    "joinDescription": "Unirse a un torneo y competir contra otros jugadores",
+    "createDescription": "Crear un torneo y invitar a otros jugadores",
+    "select": "Seleccionar"
+  },
+  "Game": {
+    "title": "Modo de juego",
+    "local": "Juego local",
+    "invite": "Invitar a un amigo",
+    "matchmaking": "Matchmaking",
+    "localDescription": "Jugar contra un amigo en el mismo dispositivo",
+    "inviteDescription": "Enviar una invitación para jugar a distancia",
+    "matchmakingDescription": "Encontrar oponentes y competir en línea",
+    "select": "Seleccionar",
+    "gameSetup": "Configuración del juego",
+    "player1": "Jugador 1",
+    "player2": "Jugador 2",
+    "selectTheme": "Seleccionar tema",
+    "fireTheme": "Tema Fuego",
+    "fireThemeDescription": "Glow naranja cálida",
+    "waterTheme": "Tema Agua",
+    "waterThemeDescription": "Efecto azul teintado",
+    "selectDifficulty": "Seleccionar dificultad",
+    "easy": "Fácil",
+    "medium": "Medio",
+    "hard": "Difícil",
+    "startGame": "Iniciar juego",
+    "back": "Volver"
+  },
+  "localGame": {
+    "points": "Puntos",
+    "match": "Partida",
+    "of": "de",
+    "clickOrPressAnyKeyToStart": "Haz clic o presiona cualquier tecla para empezar",
+    "wSKeys": "W/S keys",
+    "arrowUpDownKeys": "Teclas de flecha",
+    "pressSpaceToPause": "Presiona espacio para pausar",
+    "paused": "En pausa",
+    "pressSpaceToContinue": "Presiona espacio para continuar",
+    "winsMatch": "Gana la partida",
+    "matchScore": "Puntuación de la partida",
+    "clickToContinueToNextMatch": "Haz clic para continuar a la siguiente partida",
+    "finalScore": "Puntuación final",
+    "clickToPlayAgain": "Haz clic para jugar de nuevo",
+    "pongArcadia": "PONG ARCADIA",
+    "firstToWin": "Primero a ganar",
+    "matchesWinsGame": "matches gana la partida!",
+    "winsGame": "Gana la partida",
+    "won": "ganado",
+    "matchWon": "partida ganada",
+    "matchesWon": "partidas ganadas",
+    "firstTo": "Primero a",
+    "backToSetup": "Volver a la configuración",
+    "resumeGame": "Reanudar juego",
+    "pauseGame": "Pausar juego"
   }
 }

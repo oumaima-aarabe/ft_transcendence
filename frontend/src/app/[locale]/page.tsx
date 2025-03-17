@@ -16,7 +16,8 @@ export default function LandingPage() {
           src="/assets/images/logo.svg" 
           alt="logo" 
           width={265} 
-          height={170} />
+          height={170}
+          priority />
       </div>
 
       <h1 className="text-4xl text-white font-bold mb-4 drop-shadow-md">

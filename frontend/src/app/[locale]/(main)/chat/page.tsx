@@ -9,6 +9,13 @@ import { initSocket, getSocket, sendWebSocketMessage } from "@/lib/websocket";
 import { sendRequest } from "@/lib/axios";
 import { UseUser } from "@/api/get-user";
 
+export enum BlockState {
+  BLOCKED_BY_ME = "blocked_by_me",
+  BLOCKED_BY_OTHER = "blocked_by_other",
+  UNBLOCKED = "unblocked",
+  PENDING = "pending"
+}
+
 export default function ChatApp() {
   const [showProfile, setShowProfile] = useState(true);
   const [chats, setChats] = useState<Conversation[]>([]);
@@ -17,10 +24,36 @@ export default function ChatApp() {
   const { data: myUserData } = UseUser()
   const selectedChatRef = useRef<Conversation | null>(null);
 
+  const [blockState, setBlockState] = useState<BlockState>(BlockState.PENDING);
+
+  const checkIfBlockedBySelectedUser = async (selectedUserId: string) => {
+    try {
+      // First check if we've blocked them
+      const outgoingBlockResponse = await sendRequest("GET", "/friends/blocked/");
+      const blockedByUs = outgoingBlockResponse.data.some(
+        (blockedUser: any) => blockedUser.friend_id === selectedUserId
+      );
+      
+      if (blockedByUs) {
+        setBlockState(BlockState.BLOCKED_BY_ME);
+        return;
+      }
+      
+      // Then check if they've blocked us
+      const incomingBlockResponse = await sendRequest("GET", `/friends/check-blocked-by/${selectedUserId}/`);
+      const blockedByThem = incomingBlockResponse.data.is_blocked;
+      
+      setBlockState(blockedByThem ? BlockState.BLOCKED_BY_OTHER : BlockState.UNBLOCKED);
+    } catch (error) {
+      console.error("Error checking block status:", error);
+      setBlockState(BlockState.UNBLOCKED); // Default to unblocked on error
+    }
+  };
+
   const loadConversations = async () => {
     try {
       const response = await sendRequest("GET", "/chat/conversations/");
-      if (Array.isArray(response.data)) { // Ensure response is an array
+      if (Array.isArray(response.data)) {
         setChats(response.data);
         return response.data;
       }
@@ -40,7 +73,7 @@ export default function ChatApp() {
   }, [myUserData]);
 
   const setupSocketListeners = useCallback((socket: WebSocket) => {
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       const data = JSON.parse(event.data);
       
       switch (data.event) {
@@ -58,6 +91,16 @@ export default function ChatApp() {
           });
           break;
 
+        case "block_status_update":
+          const { blocker } = data;
+          // If the blocker is the user we're currently chatting with, update the block state
+          if (selectedChatRef.current && selectedChatRef.current.other_participant.id === blocker.id) {
+            await checkIfBlockedBySelectedUser(blocker.id);
+          }
+                    
+          loadConversations();
+          break;
+
         case "chat_message":
           const newMessage: Message = {
             id: Date.now().toString(),
@@ -71,7 +114,7 @@ export default function ChatApp() {
           // Update messages only if the conversation is the selected one
           if (selectedChatRef.current && data.conversation.conversation_id === selectedChatRef.current.id) {
             setMessages(prev => [...prev, newMessage]);
-            // Mark message as seen immediately if this is the active chat
+            // if this is the active chat, mark the message as seen
             sendWebSocketMessage("mark_seen", {
               conversation_id: data.conversation.conversation_id,
             });
@@ -164,10 +207,11 @@ export default function ChatApp() {
     setMessages([]);
 
     try {
+      await checkIfBlockedBySelectedUser(selected.other_participant.id);
+
       const response = await sendRequest("GET", `/chat/messages/?conversation_id=${chatId}`);
       setMessages(response.data.messages);
       
-      // Mark messages as seen via websocket
       sendWebSocketMessage("mark_seen", {
         conversation_id: chatId,
       });
@@ -192,7 +236,6 @@ export default function ChatApp() {
     // Clear selected chat and messages
     selectedChatRef.current = null;
     setMessages([]);
-    // Refresh conversations list
     loadConversations();
   };
 
@@ -224,12 +267,15 @@ export default function ChatApp() {
               onSendMessage={handleSendMessage}
               onToggleProfile={() => setShowProfile(!showProfile)}
               showProfile={showProfile}
+              blockState={blockState}
             />
             {showProfile && (
               <ChatProfile 
                 user={selectedChatRef.current.other_participant} 
                 conversationId={selectedChatRef.current.id}
                 onConversationDeleted={handleConversationDeleted}
+                blockState={blockState}
+                setBlockState={setBlockState}
               />
             )}
           </>

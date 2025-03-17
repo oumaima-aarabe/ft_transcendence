@@ -38,10 +38,14 @@ class TokenAuthMiddleware(BaseMiddleware):
         close_old_connections()
 
         try:
-            # Get token from query string
-            query_string = scope.get('query_string', b'').decode()
-            query_params = parse_qs(query_string)
-            token = query_params.get('token', [None])[0]
+            # Extract token from cookie header
+            token = None
+            for name, value in scope.get('headers', []):
+                if name == b'cookie':
+                    cookie_str = value.decode()
+                    cookies = {k.strip(): v for k, v in [cookie.split('=', 1) for cookie in cookie_str.split(';')]}
+                    token = cookies.get('accessToken')
+                    break
 
             if token:
                 # Verify the token

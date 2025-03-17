@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('Profile');
-  const t = useTranslations();
+  const t = useTranslations('settings');
 
   return (
     <div className="relative h-full w-full max-w-[2000px] mx-auto">
@@ -19,23 +19,23 @@ export default function Settings() {
           <div className="flex gap-0.1 p-3 w-full h-full bg-[#2D2A2A]/10 backdrop-blur-sm rounded-[30px]">
             <div className="flex flex-col w-full items-center">
               <div className="flex flex-col w-full py-10 items-center text-4xl text-white font-normal">
-                <h1>{t('settings.title')}</h1>
+                <h1>{t('title')}</h1>
               </div>
               <div className="w-3/4 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent rounded-full mb-10" />
               {/* button */}
               <button onClick={() => setActiveTab('Profile')} className={`relative flex w-full text-white font-normal bg-[#2D2A2A]/30 border border-white/10 rounded-xl my-2 ${activeTab === 'Profile' ? "bg-[#A86F43]/30" : ""}`}>
                 <UserPen className="w-7 h-7 mt-2 ml-1 mb-2" />
-                <div className='absolute top-0 translate-y-[50%] flex justify-center items-center w-full'> {t('settings.tabs.profile')} </div>
+                <div className='absolute top-0 translate-y-[50%] flex justify-center items-center w-full'> {t('tabs.profile')} </div>
               </button>
               {/* button */}
               <button onClick={() => setActiveTab('Account')} className={`relative flex w-full text-white font-normal bg-[#2D2A2A]/30 border border-white/10 rounded-xl my-2 ${activeTab === 'Account' ? "bg-[#A86F43]/30" : ""}`}>
                 <Shield className="w-7 h-7 mt-2 ml-1 mb-2" />
-                <div className='absolute top-0 translate-y-[50%] flex justify-center items-center w-full'> {t('settings.tabs.account')} </div>
+                <div className='absolute top-0 translate-y-[50%] flex justify-center items-center w-full'> {t('tabs.account')} </div>
               </button>
               {/* button */}
               <button onClick={() => setActiveTab('Game')} className={`relative flex w-full text-white font-normal bg-[#2D2A2A]/30 border border-white/10 rounded-xl my-2 ${activeTab === 'Game' ? "bg-[#A86F43]/30" : ""}`}>
                 <img src='/assets/icons/white-pong-64.svg' className="w-8 h-8 mt-2 ml-1 mb-2" />
-                <div className='absolute top-0 translate-y-[50%] flex justify-center items-center w-full'> {t('settings.tabs.game')} </div>
+                <div className='absolute top-0 translate-y-[50%] flex justify-center items-center w-full'> {t('tabs.game')} </div>
               </button>
             </div>
           </div>

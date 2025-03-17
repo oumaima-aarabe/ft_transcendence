@@ -29,6 +29,24 @@
       "sign_in_link": "Sign in!"
     }
   },
+  "notifications": {
+    "title": "Notifications", 
+    "mark_all_read": "Mark all as read",
+    "no_notifications": "No notifications",
+    "loading": "Loading notifications...",
+    "dismiss": "Dismiss",
+    "types": {
+      "system": "System",
+      "friend_request": "Friend Request",
+      "friend_request_accepted": "Friend Request Accepted",
+      "block": "User Blocked",
+      "unblock": "User Unblocked",
+      "game_invite": "Game Invitation",
+      "tournament_invitation": "Tournament Invitation",
+      "message": "New Message",
+      "achievement": "Achievement"
+    }
+  },
   "settings": {
     "title": "Settings",
     "tabs": {
@@ -88,14 +106,25 @@
     },
     "game": {
       "connectivity": {
-        "title": "Default connectivity",
+        "title": "Connectivity",
         "online": "Online",
         "local": "Local"
+      },
+      "difficulty": {
+        "title": "Game difficulty",
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
       },
       "theme": {
         "title": "Board theme",
         "fire": "Fire Theme",
         "water": "Water Theme"
+      },
+      "alias": {
+        "title": "Tournament alias",
+        "placeholder": "Default alias",
+        "save": "Save"
       }
     },
     "language": {
@@ -132,7 +161,10 @@
     "loading": "Loading chat...",
     "messages": {
       "send_placeholder": "Type your message...",
-      "failed_fetch": "Failed to fetch messages"
+      "failed_fetch": "Failed to fetch messages",
+      "blocked_by_other": "You have been blocked by this user 😔",
+      "blocked_by_me": "You have blocked this user",
+      "placeholder": "Type your message..."
     },
     "profile": {
       "title": "Chat Profile",
@@ -144,27 +176,92 @@
       "view_profile": "View profile",
       "challenge": "Challenge",
       "delete_chat": "Delete chat",
-      "friend_status": "You are friends with this person"
+      "deleting": "Deleting...",
+      "friend_status": "You are friends with this person",
+      "unblock": "Unblock User",
+      "blocked_by_other": "You are blocked",
+      "loading": "Loading..."
     },
     "list": {
       "title": "Conversations",
-      "search": "Search users or conversations",
+      "search": "Search users to chat with",
       "search_results": "Search Results",
       "click_to_start": "Click to start conversation",
       "no_messages": "No messages yet",
-      "start_chat": "Start a new chat"
+      "start_chat": "Start a new chat",
+      "no_users_or_conversations": "No users or conversations found",
+      "no_conversations": "No conversations yet",
+      "failed_to_start_conversation": "Failed to start conversation. Please try again."
     }
   },
   "header": {
     "search": {
-      "placeholder": "Search for people, tournaments and more"
+      "placeholder": "Search for players, friends and more"
     },
     "status": {
-      "online": "online",
-      "offline": "offline",
-      "away": "away",
-      "busy": "do not disturb",
-      "invisible": "invisible"
+      "online": "Online",
+      "offline": "Offline",
+      "away": "Away",
+      "donotdisturb": "Do not disturb",
+      "invisible": "Invisible"
     }
+  },
+  "Tournaments": {
+    "title": "Tournaments",
+    "join": "Join a Tournament",
+    "create": "Create a Tournament",
+    "joinDescription": "Join a tournament and compete against other players",
+    "createDescription": "Create a tournament and invite other players",
+    "select": "Select"
+  },
+  "Game": {
+    "title": "Game Mode",
+    "local": "Local Game",
+    "invite": "Invite a Friend",
+    "matchmaking": "Matchmaking",
+    "localDescription": "Play against a friend on the same device",
+    "inviteDescription": "Send an invitation to play remotely",
+    "matchmakingDescription": "Find opponents and compete online",
+    "select": "Select",
+    "gameSetup": "Game Setup",
+    "player1": "Player 1",
+    "player2": "Player 2",
+    "selectTheme": "Select Theme",
+    "fireTheme": "Fire Theme",
+    "fireThemeDescription": "Hot orange glow",
+    "waterTheme": "Water Theme",
+    "waterThemeDescription": "Cool teal effect",
+    "selectDifficulty": "Select Difficulty",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "back": "Back"
+  },
+  "localGame": {
+    "points": "Points",
+    "match": "Match",
+    "of": "of",
+    "clickOrPressAnyKeyToStart": "Click or press any key to start",
+    "wSKeys": "W/S keys",
+    "arrowUpDownKeys": "Arrow Up/Down keys",
+    "pressSpaceToPause": "Press Space to pause",
+    "paused": "Paused",
+    "pressSpaceToContinue": "Press Space to continue",
+    "winsMatch": "Wins Match",
+    "matchScore": "Match Score",
+    "clickToContinueToNextMatch": "Click to continue to next match",
+    "finalScore": "Final Score",
+    "clickToPlayAgain": "Click to play again",
+    "pongArcadia": "PONG ARCADIA",
+    "firstToWin": "First to win",
+    "matchesWinsGame": "matches wins the game!",
+    "winsGame": "Wins Game",
+    "won": "won",
+    "matchWon": "match won",
+    "matchesWon": "matches won",
+    "firstTo": "First to",
+    "backToSetup": "Back to Setup",
+    "resumeGame": "Resume Game",
+    "pauseGame": "Pause Game"
   }
 }

@@ -7,7 +7,6 @@ export function UseUser() {
   const getUser = async () => {
     try {
       const response = await fetcher.get<User>("/api/users/profile/me");
-      console.log(response.data);
       return response.data;
     } catch (error) {
       console.log(error);

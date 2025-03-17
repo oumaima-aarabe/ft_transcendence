@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
-import { UserProvider } from "@/contexts/UserContext";
+
 export default function MainLayout({
   children,
 }: {
