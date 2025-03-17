@@ -30,7 +30,7 @@ const achievements: Achievement[] = [
     id: "2",
     title: "Perfect Game",
     description: "Win a game with score 3-0",
-    icon: "⭐",
+    icon: "⭐",                                             
     unlocked: false,
   },
   {

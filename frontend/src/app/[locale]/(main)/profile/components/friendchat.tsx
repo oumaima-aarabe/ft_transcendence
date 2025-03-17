@@ -3,7 +3,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import React from "react";
 import { Friend } from "@/types/friends";
-import { UseFriend } from "@/api/get-friends";
 import { useRouter } from "@/i18n/routing";
 
 const friends = [
@@ -31,43 +30,9 @@ const friends = [
     username: "kaboussi3",
     avatar: "/assets/images/logo.svg",
   },
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "ussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },
 ];
 
-const FriendItem = ({ item }: { item: Friend }) => (
-  <div className="relative flex items-center rounded-full bg-black">
-    <img src={item.avatar} className="rounded-full object-cover size-20" />
-    <div className="ml-4">
-      <div>
-        <h1 className="text-lg font-extralight">{item.username}</h1>
-      </div>
-      <div className="flex flex-row space-x-1">
-        <h2>{item.first_name}</h2>
-        <h3>{item.last_name}</h3>
-      </div>
-    </div>
-    <Icon
-      icon="token:chat"
-      width="50"
-      height="50"
-      className="absolute right-5 top-1/2 transform -translate-y-1/2 text-white"
-    />
-  </div>
-);
-
 export default function Friendchat() {
-  // const {data: friends} = UseFriend()
   const router = useRouter();
 
   if (!friends || friends?.length === 0) {
@@ -108,6 +73,7 @@ export default function Friendchat() {
             <img
               src={item.avatar}
               className="rounded-full object-cover size-14"
+              alt={`${item.username}'s avatar`}
             />
             <div className="ml-4">
               <div>
