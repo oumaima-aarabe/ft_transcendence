@@ -48,6 +48,7 @@ interface PongGameProps {
   onBackToSetup: () => void;
   player1Avatar?: string;
   player2Avatar?: string;
+  onGameComplete?: (player1Score: number, player2Score: number) => void;
 }
 
 // Fixed game dimensions (base dimensions)
@@ -113,6 +114,7 @@ const PongGame: React.FC<PongGameProps> = ({
   onBackToSetup,
   player1Avatar = "https://iili.io/2D8ByIj.png",
   player2Avatar = "https://iili.io/2D8ByIj.png",
+  onGameComplete,
 }) => {
   const t = useTranslations('localGame');
   // Canvas reference
@@ -245,6 +247,14 @@ const PongGame: React.FC<PongGameProps> = ({
 
   // Handle full game restart
   const handleRestartGame = () => {
+    // If there's a game complete callback, call it with final scores
+    if (onGameComplete && gameStateRef.current.gameStatus === "gameOver") {
+      onGameComplete(
+        gameStateRef.current.matchWins.player1,
+        gameStateRef.current.matchWins.player2
+      );
+    }
+
     gameStateRef.current = {
       ball: {
         x: BASE_WIDTH / 2,
@@ -1000,7 +1010,9 @@ const PongGame: React.FC<PongGameProps> = ({
             width: `${canvasWidth}px`,
             height: `${canvasHeight}px`,
             border:
-              theme === "fire" ? "4px solid #D05F3B" : "4px solid #40CFB7",
+              theme === "fire"
+                ? "4px solid #D05F3B"
+                : "4px solid #40CFB7",
             boxShadow:
               theme === "fire"
                 ? "0 0 20px #D05F3B, inset 0 0 10px rgba(208, 95, 59, 0.5)"
