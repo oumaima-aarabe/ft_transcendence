@@ -301,6 +301,7 @@
     "firstTo": "Premier à",
     "backToSetup": "Retour à la configuration",
     "resumeGame": "Reprendre le jeu",
-    "pauseGame": "Mettre en pause le jeu"
+    "pauseGame": "Mettre en pause le jeu",
+    "backToTournament": "Retour au tournoi"
   }
 }

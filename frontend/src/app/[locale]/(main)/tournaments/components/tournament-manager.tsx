@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslations } from 'next-intl';
 import { TournamentPlayer, TournamentMatch, TournamentState, GameDifficulty, GameTheme } from '../types/tournament';
 import TournamentBracket from './tournament-bracket';
-import PongGame from '../../game/components/pong-game';
+import PongGame from '@/app/[locale]/(main)/game/components/pong-game';
 
 interface TournamentManagerProps {
   players: TournamentPlayer[];
@@ -153,6 +153,7 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
   
   // Handle back to tournament view
   const handleBackToTournament = () => {
+    // Reset active match to null to return to tournament bracket view
     setActiveMatchId(null);
   };
   
@@ -215,20 +216,16 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
     // Show the current match game
     return (
       <div className="w-full">
-        <div className="flex justify-between items-center mb-4">
-          <Button
-            onClick={handleBackToTournament}
-            variant="outline"
-            className="border-gray-700 hover:text-white hover:bg-gray-800"
-          >
-            {t('backToTournament')}
-          </Button>
-          
-          <h2 className="text-xl font-bold text-white">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-bold mb-2 font-orbitron" style={{
+            color: currentMatch.player1.color === 'fire' ? "#D05F3B" : "#40CFB7",
+            textShadow: "0 0 10px " + (currentMatch.player1.color === 'fire' ? "#D05F3B" : "#40CFB7"),
+          }}>
             {currentMatch.round === 1 ? t('semifinalMatch') : t('finalMatch')}
           </h2>
-          
-          <div className="w-24"></div> {/* Empty div for spacing */}
+          <p className="text-gray-300">
+            {currentMatch.player1.name} vs {currentMatch.player2.name}
+          </p>
         </div>
         
         <PongGame 
@@ -248,11 +245,11 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
   // Tournament view (bracket)
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-6">
         <Button
           onClick={onExit}
           variant="outline"
-          className="border-gray-700 text-white"
+          className="border-gray-700 text-white hover:bg-gray-800"
         >
           {t('exitTournament')}
         </Button>
@@ -279,23 +276,25 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
         
         {!tournament.isComplete && !activeMatchId && (
           <div className="text-center mt-8 mb-4">
-            <p className="text-gray-400 mb-4">
+            <p className="text-gray-300 mb-4 text-lg">
               {t('selectMatchToPlay')}
             </p>
             
-            {tournament.matches.filter(m => !m.isComplete).map(match => (
-              <Button
-                key={match.id}
-                onClick={() => handleSelectMatch(match.id)}
-                className={`mx-2 ${
-                  match.player1.color === 'fire' 
-                    ? 'bg-[#D05F3B] hover:bg-[#c04f2b]' 
-                    : 'bg-[#40CFB7] hover:bg-[#35b7a2]'
-                } text-white`}
-              >
-                {match.round === 1 ? t('playSemifinal') : t('playFinal')} {match.id}
-              </Button>
-            ))}
+            <div className="flex flex-wrap justify-center gap-4">
+              {tournament.matches.filter(m => !m.isComplete).map(match => (
+                <Button
+                  key={match.id}
+                  onClick={() => handleSelectMatch(match.id)}
+                  className={`px-6 py-2 text-base ${
+                    match.player1.color === 'fire' 
+                      ? 'bg-[#D05F3B] hover:bg-[#c04f2b]' 
+                      : 'bg-[#40CFB7] hover:bg-[#35b7a2]'
+                  } text-white shadow-lg transition-transform hover:scale-105`}
+                >
+                  {match.round === 1 ? t('playSemifinal') : t('playFinal')} {match.id}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
       </div>

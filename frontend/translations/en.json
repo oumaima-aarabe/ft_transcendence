@@ -301,6 +301,7 @@
     "firstTo": "First to",
     "backToSetup": "Back to Setup",
     "resumeGame": "Resume Game",
-    "pauseGame": "Pause Game"
+    "pauseGame": "Pause Game",
+    "backToTournament": "Back to Tournament"
   }
 }
