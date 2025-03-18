@@ -257,7 +257,7 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
         requestIdRef.current = null;
       }
     };
-  }, [gameId, player1Name, player2Name, gameStatus]); // Include gameStatus for correct message updates
+  }, [gameId, player1Name, player2Name]); // Include gameStatus for correct message updates //bring me here
   
   // Handle responsive scaling
   useEffect(() => {
