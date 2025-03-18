@@ -154,6 +154,7 @@ export const useNotifications = () => {
     unreadCount,
     connected,
     loading,
+    socket,
     markAsRead,
     markAllAsRead,
     clearNotification,

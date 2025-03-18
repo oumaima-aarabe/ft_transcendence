@@ -13,6 +13,7 @@ type NotificationsContextType = {
   clearNotification: (id: string) => void;
   clearAllNotifications: () => void;
   refreshNotifications: () => void;
+  socket: WebSocket | null;
 };
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
