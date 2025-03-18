@@ -249,7 +249,7 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
         <Button
           onClick={onExit}
           variant="outline"
-          className="border-gray-700 text-white hover:bg-gray-800"
+          className="border-gray-700 hover:text-white hover:bg-gray-800"
         >
           {t('exitTournament')}
         </Button>
