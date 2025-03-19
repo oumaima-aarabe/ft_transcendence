@@ -1,42 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Icon } from '@iconify/react/dist/iconify.js';
 
 const GameComponent: React.FC = () => {
     const t = useTranslations('settings.game');
-    //State for connectivity selection
+
     const [connectivity, setConnectivity] = useState<'online' | 'local'>('online');
-
-    //State for board theme selection
     const [theme, setTheme] = useState<'fire' | 'water'>('fire');
-
-    //State for alias selection
-    const [alias, setAlias] = useState<string>('');
-
-    //State for difficulty selection
     const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+
+    useEffect(() => {
+       const connectivity = localStorage.getItem('connectivity');
+       const theme = localStorage.getItem('theme');
+       const difficulty = localStorage.getItem('difficulty');
+       if (connectivity) {
+        setConnectivity(connectivity as 'online' | 'local');
+       }
+       if (theme) {
+        setTheme(theme as 'fire' | 'water');
+       }
+       if (difficulty) {
+        setDifficulty(difficulty as 'easy' | 'medium' | 'hard');
+       }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('connectivity', connectivity);
+        localStorage.setItem('theme', theme);
+        localStorage.setItem('difficulty', difficulty);
+    }, [connectivity, theme, difficulty]);
 
     return (
         <div className='h-[70vh] w-full flex flex-row items-center gap-44 p-20'>
         <div className="flex flex-col items-start gap-10 text-white">
-            {/* Alias Selection */}
-            <div className="flex flex-col items-start gap-2">
-                <h2 className="text-lg mb-3">{t('alias.title')}</h2>
-                <div className="flex gap-4">
-                    <div className="relative">
-                    <div className="absolute top-[11px] left-3 ">
-                        <img src="/assets/icons/icon-@.svg" alt="At Icon" className="h-4 w-4" />
-                    </div>
-                    <input type="text" placeholder={t('alias.placeholder')}
-                        className=" w-[12rem] py-2 pl-10 bg-[#2D2A2A]/30 border border-white/20 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#D05F3B]/40" />
-                    </div>
-                    <button onClick={() => setAlias(alias)} className="w-[8rem] py-1 bg-[#D05F3B]/90 hover:bg-[#D05F3B]/80 text-white text-sm text-center border-none rounded-xl transition focus:outline-none">
-                        {t('alias.save')}
-                    </button>
-                </div>
-            </div>
-
             {/* Connectivity Selection */}
             <div className="flex flex-col items-start gap-2 mt-4">
                 <h2 className="text-lg mb-3">{t('connectivity.title')}</h2>
