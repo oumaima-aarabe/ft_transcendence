@@ -98,7 +98,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
   };
 
   useEffect(() => {
-    console.log('asasdasd')
+    console.log("asasdasd");
     if (!socket || !user.username || !me) return;
 
     const handleFriendshipUpdate = () => {
@@ -114,31 +114,31 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
       const data = JSON.parse(event.data);
 
       // Handle different types of friendship notifications
-      console.log ('notification event trigred')
-      console.log('data: ', data)
+      console.log("notification event trigred");
+      console.log("data: ", data);
       switch (data.notification.type) {
         case "friend_request":
-            handleFriendshipUpdate();
+          handleFriendshipUpdate();
           break;
 
         case "friend_request_accepted":
-            handleFriendshipUpdate();
+          handleFriendshipUpdate();
           break;
 
         case "block":
-            handleFriendshipUpdate();
+          handleFriendshipUpdate();
           break;
 
         case "unblock":
-            handleFriendshipUpdate();
+          handleFriendshipUpdate();
           break;
 
         case "remove_friend":
-            handleFriendshipUpdate();
+          handleFriendshipUpdate();
           break;
 
         case "cancel_request":
-            handleFriendshipUpdate();
+          handleFriendshipUpdate();
           break;
       }
     };
@@ -148,6 +148,15 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
       socket.onmessage = null;
     };
   }, [socket, user.username, queryClient, me]);
+
+  useEffect(() => {
+    if (
+      friendShip?.state === FriendshipStatus.BLOCKED &&
+      friendShip.sender !== me?.username
+    ) {
+      router.push("/en/profile/me");
+    }
+  }, [friendShip, me?.username, router]);
 
   // if (!user) return null
 
@@ -236,7 +245,6 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
           </Button>
         );
       }
-      router.push("/en/profile/me");
       return null;
     } else {
       return (

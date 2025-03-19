@@ -11,19 +11,41 @@ import MatchHistory from "../components/match-history";
 
 export default function Page() {
   const [owner, setOwner] = useState<boolean>(false);
-
   const { username } = useParams();
-
-  const { data: me } = UseUser();
-  const { data: other } = UseOtherUser(username as string);
+  const { data: me, isLoading: meLoading } = UseUser();
+  const {
+    data: other,
+    isLoading: otherLoading,
+    error,
+  } = UseOtherUser(username as string);
 
   useEffect(() => {
     if (!me || !other) return;
     if (me.username === other.username) setOwner(true);
   }, [me, other]);
 
-  if (!me || !other) {
+  if (meLoading || otherLoading) {
     return <Loading />;
+  }
+
+  if (error || !other) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-center space-y-6 backdrop-blur-sm bg-black/50 p-8 rounded-2xl max-w-lg">
+          <div className="text-[#c75b37] text-8xl font-bold">404</div>
+          <h1 className="text-3xl font-semibold text-white">User Not Found</h1>
+          <p className="text-gray-400">
+            The user you're looking for doesn't exist or has been removed.
+          </p>
+          <button
+            onClick={() => window.history.back()}
+            className="px-6 py-3 bg-[#40CFB7] hover:bg-[#40CFB7]/80 text-white rounded-lg transition-all"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
