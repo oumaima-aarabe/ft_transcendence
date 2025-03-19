@@ -14,6 +14,12 @@ export default class GameConnection {
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private messageQueue: {type: string, data: any}[] = [];
   private gameLoopInterval: NodeJS.Timeout | null = null;
+  private currentPaddleY: number | null = null;
+  private lastSentPaddleY: number | null = null;
+  private paddleMoveQueued = false;
+  private paddleMovementThreshold = 2; // Only send updates if moved by at least 2px
+  private lastSendTime = 0;
+  private minSendInterval = 33; // At most 30 updates per second (33ms)
   
   // Callback functions
   private onGameState: GameStateCallback;
@@ -23,6 +29,7 @@ export default class GameConnection {
   
   // Player information
   private playerNumber: number | null = null;
+
 
   constructor(
     gameId: string, 
@@ -172,15 +179,38 @@ export default class GameConnection {
     }
   }
 
-  // Current paddle position state
-  private currentPaddleY: number | null = null;
-  private paddleMoveQueued = false;
 
   // Send paddle movement to server - but only send when there's an actual change
   sendPaddleMove(position: number) {
     // Only queue if position has changed
-    if (position !== this.currentPaddleY) {
-      this.currentPaddleY = position;
+        // Round position to reduce jitter and unnecessary precision
+    position = Math.round(position);
+
+    
+    if (position === this.currentPaddleY) {
+      return;
+
+    }
+    const now = Date.now();
+    const timeSinceLastSend = now - this.lastSendTime;
+
+    this.currentPaddleY = position;
+
+
+    // Determine if we should queue an update
+    const significantMove = !this.lastSentPaddleY || 
+                          Math.abs(position - this.lastSentPaddleY) >= this.paddleMovementThreshold;
+    
+    const intervalElapsed = timeSinceLastSend >= this.minSendInterval;
+    
+    if (significantMove && intervalElapsed) {
+      // Send immediately if both conditions are met
+      this.sendMessage('paddle_move', { position });
+      this.lastSentPaddleY = position;
+      this.lastSendTime = now;
+      this.paddleMoveQueued = false;
+    } else if (significantMove) {
+      // Queue for sending in next game loop iteration
       this.paddleMoveQueued = true;
     }
   }
@@ -193,15 +223,33 @@ export default class GameConnection {
     
     // Send paddle position updates at a maximum of 30 per second
     this.gameLoopInterval = setInterval(() => {
-      if (this.paddleMoveQueued && this.currentPaddleY !== null) {
+      const now = Date.now();
+      if (this.paddleMoveQueued && this.currentPaddleY !== null && now - this.lastSendTime >= this.minSendInterval) {
         const sent = this.sendMessage('paddle_move', { position: this.currentPaddleY });
         if (sent) {
+          this.lastSentPaddleY = this.currentPaddleY;
+          this.lastSendTime = now;
           this.paddleMoveQueued = false;
         }
       }
-    }, 33); // ~30fps
+    },  this.minSendInterval); // 33ms = 30 updates per second
   }
-  
+  public updatePaddleThreshold(latency: number) {
+    // Dynamically adjust threshold based on latency
+    // Higher latency = higher threshold to reduce message frequency
+    if (latency < 50) {
+      this.paddleMovementThreshold = 1; // Very responsive
+    } else if (latency < 100) {
+      this.paddleMovementThreshold = 2; // Normal
+    } else if (latency < 200) {
+      this.paddleMovementThreshold = 4; // Reduced frequency
+    } else {
+      this.paddleMovementThreshold = 6; // Minimum updates
+    }
+    
+    // Also adjust send interval based on latency
+    this.minSendInterval = Math.max(33, Math.min(100, latency / 3));
+  }
   private stopGameLoop() {
     if (this.gameLoopInterval) {
       clearInterval(this.gameLoopInterval);

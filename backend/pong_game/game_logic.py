@@ -590,3 +590,138 @@ def update_player_profiles(game_id):
         
     except Exception as e:
         print(f"Error updating player profiles: {str(e)}")
+        
+# Add these methods to game_logic.py
+
+def validate_game_state(game_id, player_id, position=None):
+    """
+    Validates game state and player actions to prevent cheating
+    
+    Args:
+        game_id: The ID of the game
+        player_id: The ID of the player making the move
+        position: Optional paddle position if being validated
+    
+    Returns:
+        Tuple of (is_valid, reason)
+    """
+    if game_id not in active_games:
+        return (False, "Game does not exist")
+    
+    game_state = active_games[game_id]
+    
+    # Verify player is part of this game
+    player_num = None
+    if str(player_id) == str(game_state['players']['player1']['id']):
+        player_num = 1
+    elif str(player_id) == str(game_state['players']['player2']['id']):
+        player_num = 2
+    else:
+        return (False, "Player not part of this game")
+    
+    # Verify game is in a valid state for moves
+    if game_state['game_status'] != 'playing':
+        return (False, f"Game is not in playing state (current: {game_state['game_status']})")
+    
+    # If validating a paddle move, check position bounds
+    if position is not None:
+        if not isinstance(position, (int, float)):
+            return (False, "Invalid position type")
+            
+        # Check for legitimate paddle position
+        if position < 0 or position > BASE_HEIGHT - PADDLE_HEIGHT:
+            return (False, "Position out of bounds")
+            
+        # Check for unreasonable paddle movement (anti-cheat)
+        paddle_key = 'left_paddle' if player_num == 1 else 'right_paddle'
+        current_position = game_state[paddle_key]['y']
+        max_move_distance = game_state[paddle_key]['speed'] * 2  # Allow some buffer for latency
+        
+        if abs(position - current_position) > max_move_distance:
+            return (False, "Paddle movement too large")
+    
+    return (True, None)
+
+def update_paddle_position(game_id, player_num, position):
+    """
+    Updates a paddle position with validation.
+    
+    Args:
+        game_id: The ID of the game
+        player_num: Which player (1 or 2)
+        position: New Y position of the paddle
+        
+    Returns:
+        Boolean indicating if update was successful
+    """
+    if game_id not in active_games:
+        return False
+    
+    # Get player ID from player number
+    player_id = None
+    if player_num == 1:
+        player_id = active_games[game_id]['players']['player1']['id']
+    elif player_num == 2:
+        player_id = active_games[game_id]['players']['player2']['id']
+    else:
+        return False
+    
+    # Validate the move
+    valid, reason = validate_game_state(game_id, player_id, position)
+    if not valid:
+        print(f"Invalid paddle move: {reason}")
+        return False
+    
+    # Update the appropriate paddle
+    paddle_key = 'left_paddle' if player_num == 1 else 'right_paddle'
+    active_games[game_id][paddle_key]['y'] = position
+    
+    return True
+
+# Add rate limiting to prevent overloading (in game_consumers.py)
+
+import time
+from collections import defaultdict, deque
+
+class RateLimiter:
+    """Simple rate limiter to prevent websocket spam"""
+    
+    def __init__(self, max_messages=30, window_seconds=1):
+        self.max_messages = max_messages
+        self.window_seconds = window_seconds
+        self.message_counts = defaultdict(lambda: deque())
+    
+    def is_allowed(self, user_id):
+        """Check if user is allowed to send message based on recent history"""
+        now = time.time()
+        
+        # Get the user's message queue
+        queue = self.message_counts[user_id]
+        
+        # Remove messages outside the time window
+        while queue and queue[0] < now - self.window_seconds:
+            queue.popleft()
+        
+        # Check if under the limit
+        if len(queue) < self.max_messages:
+            queue.append(now)
+            return True
+        
+        return False
+
+# Then in the GameConsumer class:
+rate_limiter = RateLimiter()
+
+async def receive_json(self, content):
+    """Handle messages from client with rate limiting"""
+    try:
+        # Apply rate limiting
+        if not rate_limiter.is_allowed(self.user_id):
+            print(f"Rate limit exceeded for user {self.user_id}")
+            return
+        
+        message_type = content.get('type', '')
+        
+        # Rest of the handler...
+    except Exception as e:
+        print(f"Error processing message: {str(e)}")
