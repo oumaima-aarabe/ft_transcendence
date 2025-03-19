@@ -130,34 +130,60 @@ def update_game_physics(game_id, delta_time):
     right_paddle = game_state['right_paddle']
     settings = game_state['settings']
     
-    # Adjust for frame rate consistency
-    time_factor = delta_time * 60  # Target 60 FPS
+    # We now use fixed timestep, no need to adjust for frame rate
+    # as delta_time is already our fixed physics interval
+    
+    # Store previous positions for client-side interpolation
+    ball['prev_x'] = ball['x']
+    ball['prev_y'] = ball['y']
     
     # Move the ball
-    ball['x'] += ball['dx'] * time_factor
-    ball['y'] += ball['dy'] * time_factor
+    ball['x'] += ball['dx'] * delta_time * 60  # Scale by 60 to maintain similar speed
+    ball['y'] += ball['dy'] * delta_time * 60
     
     # Handle wall collisions
     if ball['y'] + ball['radius'] >= BASE_HEIGHT:
         if ball['dy'] > 0:
             ball['dy'] = -ball['dy']
+            # Add slight randomness to prevent looping patterns
+            ball['dy'] += (random.random() - 0.5) * 0.1
     
     if ball['y'] - ball['radius'] <= 0:
         if ball['dy'] < 0:
             ball['dy'] = -ball['dy']
+            # Add slight randomness to prevent looping patterns
+            ball['dy'] += (random.random() - 0.5) * 0.1
+    
+    # Cache calculations for paddle collisions to avoid repeated computation
+    ball_left_edge = ball['x'] - ball['radius']
+    ball_right_edge = ball['x'] + ball['radius']
+    ball_top_edge = ball['y'] - ball['radius']
+    ball_bottom_edge = ball['y'] + ball['radius']
+    
+    left_paddle_right = left_paddle['x'] + left_paddle['width']
+    left_paddle_top = left_paddle['y']
+    left_paddle_bottom = left_paddle['y'] + left_paddle['height']
+    
+    right_paddle_left = right_paddle['x']
+    right_paddle_top = right_paddle['y']
+    right_paddle_bottom = right_paddle['y'] + right_paddle['height']
     
     # Left paddle collision
-    if (ball['x'] - ball['radius'] <= left_paddle['x'] + left_paddle['width'] and
-        ball['x'] - ball['radius'] > left_paddle['x'] and
-        ball['y'] - ball['radius'] <= left_paddle['y'] + left_paddle['height'] and
-        ball['y'] + ball['radius'] >= left_paddle['y'] and
+    if (ball_left_edge <= left_paddle_right and
+        ball_left_edge > left_paddle['x'] and
+        ball_top_edge <= left_paddle_bottom and
+        ball_bottom_edge >= left_paddle_top and
         ball['dx'] < 0):
         
         # Reverse X direction
         ball['dx'] = -ball['dx']
         
         # Adjust angle based on hit position
-        hit_position = (ball['y'] - (left_paddle['y'] + left_paddle['height'] / 2)) / (left_paddle['height'] / 2)
+        hit_position = (ball['y'] - (left_paddle_top + left_paddle['height'] / 2)) / (left_paddle['height'] / 2)
+        
+        # Limit the angle to avoid extreme angles
+        hit_position = max(min(hit_position, 0.8), -0.8)
+        
         ball['dy'] = hit_position * ball['speed']
         
         # Increase speed slightly
@@ -166,19 +192,26 @@ def update_game_physics(game_id, delta_time):
             ball['speed'] * (1 + settings['increment_multiplier'])
         )
         ball['dx'] = ball['speed'] if ball['dx'] > 0 else -ball['speed']
+        
+        # Add a subtle random factor to avoid predictable patterns
+        ball['dy'] += (random.random() - 0.5) * 0.2
     
     # Right paddle collision
-    if (ball['x'] + ball['radius'] >= right_paddle['x'] and
-        ball['x'] + ball['radius'] < right_paddle['x'] + right_paddle['width'] and
-        ball['y'] - ball['radius'] <= right_paddle['y'] + right_paddle['height'] and
-        ball['y'] + ball['radius'] >= right_paddle['y'] and
+    if (ball_right_edge >= right_paddle_left and
+        ball_right_edge < right_paddle_left + right_paddle['width'] and
+        ball_top_edge <= right_paddle_bottom and
+        ball_bottom_edge >= right_paddle_top and
         ball['dx'] > 0):
         
         # Reverse X direction
         ball['dx'] = -ball['dx']
         
         # Adjust angle based on hit position
-        hit_position = (ball['y'] - (right_paddle['y'] + right_paddle['height'] / 2)) / (right_paddle['height'] / 2)
+        hit_position = (ball['y'] - (right_paddle_top + right_paddle['height'] / 2)) / (right_paddle['height'] / 2)
+        
+        # Limit the angle to avoid extreme angles
+        hit_position = max(min(hit_position, 0.8), -0.8)
+        
         ball['dy'] = hit_position * ball['speed']
         
         # Increase speed slightly
@@ -187,6 +220,9 @@ def update_game_physics(game_id, delta_time):
             ball['speed'] * (1 + settings['increment_multiplier'])
         )
         ball['dx'] = ball['speed'] if ball['dx'] > 0 else -ball['speed']
+        
+        # Add a subtle random factor to avoid predictable patterns
+        ball['dy'] += (random.random() - 0.5) * 0.2
     
     # Check for scoring
     score_happened = False
