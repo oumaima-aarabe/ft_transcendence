@@ -36,7 +36,7 @@ const achievements: Achievement[] = [
   {
     id: "3",
     title: "Undefeated Champion",
-    description: "Win 3 games without losing any match",
+    description: "Win 3 games arrow",
     icon: "👑",
     unlocked: false,
   },

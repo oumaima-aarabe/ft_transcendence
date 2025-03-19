@@ -9,6 +9,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from users.utils import send_notification
 
+
 class BaseFriendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -43,7 +44,9 @@ class FriendShipStatus(BaseFriendView):
                 Q(sender=target_user, recipient=current_user)
             )
         except Friend.DoesNotExist:
-            return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
+            friendship = Friend.objects.create(sender=current_user, recipient=target_user, state='none')
+            friend = self.serialize_friend(friendship)
+            return Response(friend, status=status.HTTP_200_OK)
 
         friend = self.serialize_friend(friendship)
 
@@ -56,6 +59,7 @@ class FriendShipStatus(BaseFriendView):
 # lists
 class AcceptedFriendView(BaseFriendView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request):
         current_user = request.user
 
@@ -78,6 +82,7 @@ class AcceptedFriendView(BaseFriendView):
 
 class BlockedFriendView(BaseFriendView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request):
         current_user = request.user
 
@@ -99,6 +104,7 @@ class BlockedFriendView(BaseFriendView):
 
 class IncomingFriendRequestView(BaseFriendView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request):
         current_user = request.user
 
@@ -120,6 +126,7 @@ class IncomingFriendRequestView(BaseFriendView):
 
 class OutgoingFriendRequestView(BaseFriendView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request):
         current_user = request.user
 
@@ -147,7 +154,6 @@ class SendFriendRequestView(BaseFriendView):
         current_user = request.user
         target_user = get_object_or_404(User, username=username)
 
-
         try:
             friendship = Friend.objects.get(sender=current_user, recipient=target_user, state='none')
             friendship.state = 'pending'
@@ -172,26 +178,30 @@ class SendFriendRequestView(BaseFriendView):
             
             return Response(friend, status=status.HTTP_201_CREATED)
         except Friend.DoesNotExist:
-            friendship = Friend.objects.create(sender=current_user, recipient=target_user, state='pending')
-            friend = self.serialize_friend(friendship)
-            
-            # Send notification to the recipient
-            send_notification(
-                username=target_user.username,
-                notification_type='friend_request',
-                message=f"{current_user.username} sent you a friend request",
-                data={
-                    "user": {
-                        "id": current_user.id,
-                        "username": current_user.username,
-                        "first_name": current_user.first_name,
-                        "last_name": current_user.last_name,
-                        "avatar": current_user.avatar
+            try:
+                friendship = Friend.objects.get(sender=target_user, recipient=current_user, state='none').delete()
+                raise Friend.DoesNotExist
+            except Friend.DoesNotExist:
+                friendship = Friend.objects.create(sender=current_user, recipient=target_user, state='pending')
+                friend = self.serialize_friend(friendship)
+
+                # Send notification to the recipient
+                send_notification(
+                    username=target_user.username,
+                    notification_type='friend_request',
+                    message=f"{current_user.username} sent you a friend request",
+                    data={
+                        "user": {
+                            "id": current_user.id,
+                            "username": current_user.username,
+                            "first_name": current_user.first_name,
+                            "last_name": current_user.last_name,
+                            "avatar": current_user.avatar
+                        }
                     }
-                }
-            )
-            
-            return Response(friend, status=status.HTTP_201_CREATED)
+                )
+
+                return Response(friend, status=status.HTTP_201_CREATED)
 
 
 class ConfirmFriendRequestView(BaseFriendView):
@@ -204,7 +214,7 @@ class ConfirmFriendRequestView(BaseFriendView):
         friend_request.state = 'accepted'
         friend_request.save()
         friend = self.serialize_friend(friendship=friend_request)
-        
+
         # Send notification to the user who sent the friend request
         send_notification(
             username=target_user.username,
@@ -231,13 +241,27 @@ class CancelFriendRequestView(BaseFriendView):
         target_user = get_object_or_404(User, username=username)
 
         try:
-            friendship = Friend.objects.filter(
+            Friend.objects.filter(
                 Q(sender=current_user, recipient=target_user, state='pending') |
                 Q(sender=target_user, recipient=current_user, state='pending')
             ).delete()
-            friendship = Friend.objects.create(sender=current_user, recipient=target_user, state="none")
-            friend = self.serialize_friend(friendship)
-            return Response(friend, status=status.HTTP_200_OK)
+            
+            send_notification(
+                username=target_user.username,
+                notification_type='cancel_request',
+                message=f"{current_user.username} cancel your friend request",
+                data={
+                    "user": {
+                        "id": current_user.id,
+                        "username": current_user.username,
+                        "first_name": current_user.first_name,
+                        "last_name": current_user.last_name,
+                        "avatar": current_user.avatar
+                    }
+                }
+            )
+            
+            return Response("canceled", status=status.HTTP_200_OK)
         except Friend.DoesNotExist:
             return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -248,13 +272,27 @@ class RemoveFriendView(BaseFriendView):
         current_user = request.user
         target_user = get_object_or_404(User, username=username)
         try:
-            friendship = Friend.objects.filter(
+            Friend.objects.filter(
                 Q(sender=current_user, recipient=target_user, state='accepted') |
                 Q(sender=target_user, recipient=current_user, state='accepted')
             ).delete()
-            friendship = Friend.objects.create(sender=current_user, recipient=target_user, state="none")
-            friend = self.serialize_friend(friendship)
-            return Response(friend, status=status.HTTP_200_OK)
+            
+            send_notification(
+                username=target_user.username,
+                notification_type='remove_friend',
+                message=f"{current_user.username} remove your friendship",
+                data={
+                    "user": {
+                        "id": current_user.id,
+                        "username": current_user.username,
+                        "first_name": current_user.first_name,
+                        "last_name": current_user.last_name,
+                        "avatar": current_user.avatar
+                    }
+                }
+            )
+            
+            return Response("removed", status=status.HTTP_200_OK)
         except Friend.DoesNotExist:
             return Response({'error': 'relation not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -303,7 +341,6 @@ class BlockView(BaseFriendView):
                 }
             }
         )
-        
         return Response(friend, status=status.HTTP_200_OK)
 
 
