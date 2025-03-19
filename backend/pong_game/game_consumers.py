@@ -151,61 +151,39 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             
             if message_type == 'paddle_move':
                 # Update paddle position
-                position = content.get('position', 0)
-                
-                # Update using game logic module
-                success = game_logic.update_paddle_position(self.game_id, self.player_num, position)
-                
-                if success:
-                    # Broadcast update to both players
-                    await self.channel_layer.group_send(
-                        self.game_group,
-                        {
-                            'type': 'paddle_position',
-                            'player': self.player_num,
-                            'position': position
-                        }
-                    )
+                position = content.get('position', None)
+                if position is not None:
+                    game_logic.update_paddle_position(self.game_id, self.player_num, position)
             
             elif message_type == 'start_game':
-                # Only proceed if game is in menu state
-                if (self.game_id in game_logic.active_games and 
-                    game_logic.active_games[self.game_id]['game_status'] == 'menu'):
-                    
-                    # Start the game
-                    game_logic.set_game_status(self.game_id, 'playing')
-                    
-                    # Start game loop if not running
-                    if not game_logic.active_games[self.game_id].get('loop_running', False):
-                        game_logic.active_games[self.game_id]['loop_running'] = True
-                        asyncio.create_task(self.game_loop())
-                    
-                    # Notify players
-                    await self.channel_layer.group_send(
-                        self.game_group,
-                        {
-                            'type': 'game_status_changed',
-                            'status': 'playing'
-                        }
-                    )
-            
-            elif message_type == 'toggle_pause':
-                # Only players can pause/unpause
+                # Start the game if it's currently in menu state
                 if self.game_id in game_logic.active_games:
                     current_status = game_logic.active_games[self.game_id]['game_status']
-                    
+                    if current_status == 'menu':
+                        # Change status to playing
+                        new_status = game_logic.set_game_status(self.game_id, 'playing')
+                        
+                        # Notify all players about status change
+                        await self.channel_layer.group_send(
+                            self.game_group,
+                            {
+                                'type': 'game_status_changed',
+                                'status': new_status
+                            }
+                        )
+            
+            elif message_type == 'toggle_pause':
+                # Toggle pause state
+                if self.game_id in game_logic.active_games:
+                    current_status = game_logic.active_games[self.game_id]['game_status']
                     if current_status == 'playing':
-                        # Pause the game
-                        game_logic.set_game_status(self.game_id, 'paused')
-                        new_status = 'paused'
+                        new_status = game_logic.set_game_status(self.game_id, 'paused')
                     elif current_status == 'paused':
-                        # Resume the game
-                        game_logic.set_game_status(self.game_id, 'playing')
-                        new_status = 'playing'
+                        new_status = game_logic.set_game_status(self.game_id, 'playing')
                     else:
                         return
                     
-                    # Notify players
+                    # Notify all players about status change
                     await self.channel_layer.group_send(
                         self.game_group,
                         {
@@ -215,38 +193,68 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     )
             
             elif message_type == 'next_match':
-                # Only in matchOver state
-                if (self.game_id in game_logic.active_games and
-                    game_logic.active_games[self.game_id]['game_status'] == 'matchOver'):
-                    
-                    # Reset for next match
-                    game_logic.reset_for_new_match(self.game_id)
-                    
-                    # Notify players
-                    await self.channel_layer.group_send(
-                        self.game_group,
-                        {
-                            'type': 'game_state',
-                            'state': game_logic.active_games[self.game_id]
-                        }
-                    )
+                # Start next match if current match is over
+                if self.game_id in game_logic.active_games:
+                    current_status = game_logic.active_games[self.game_id]['game_status']
+                    if current_status == 'matchOver':
+                        # Reset for new match
+                        game_logic.reset_for_new_match(self.game_id)
+                        
+                        # Notify players of game state
+                        await self.channel_layer.group_send(
+                            self.game_group,
+                            {
+                                'type': 'game_state',
+                                'state': game_logic.active_games[self.game_id]
+                            }
+                        )
+                        
+                        # Set status to playing
+                        new_status = game_logic.set_game_status(self.game_id, 'playing')
+                        
+                        # Notify of status change
+                        await self.channel_layer.group_send(
+                            self.game_group,
+                            {
+                                'type': 'game_status_changed',
+                                'status': new_status
+                            }
+                        )
             
             elif message_type == 'restart_game':
-                # Only in gameOver state
-                if (self.game_id in game_logic.active_games and
-                    game_logic.active_games[self.game_id]['game_status'] == 'gameOver'):
-                    
-                    # Reset entire game
-                    game_logic.reset_game(self.game_id)
-                    
-                    # Notify players
-                    await self.channel_layer.group_send(
-                        self.game_group,
-                        {
-                            'type': 'game_state',
-                            'state': game_logic.active_games[self.game_id]
-                        }
-                    )
+                # Restart the game if it's over
+                if self.game_id in game_logic.active_games:
+                    current_status = game_logic.active_games[self.game_id]['game_status']
+                    if current_status == 'gameOver':
+                        # Reset the game
+                        game_logic.reset_game(self.game_id)
+                        
+                        # Notify players of game state
+                        await self.channel_layer.group_send(
+                            self.game_group,
+                            {
+                                'type': 'game_state',
+                                'state': game_logic.active_games[self.game_id]
+                            }
+                        )
+                        
+                        # Set status to menu
+                        new_status = game_logic.set_game_status(self.game_id, 'menu')
+                        
+                        # Notify of status change
+                        await self.channel_layer.group_send(
+                            self.game_group,
+                            {
+                                'type': 'game_status_changed',
+                                'status': new_status
+                            }
+                        )
+            
+            elif message_type == 'ping':
+                # Respond immediately with pong
+                await self.send_json({
+                    'type': 'pong'
+                })
         
         except Exception as e:
             print(f"Error processing message: {str(e)}")
@@ -254,22 +262,40 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def game_loop(self):
         """Main game loop running on the server"""
         try:
+            last_state_broadcast_time = time.time()
+            state_broadcast_interval = 1/120  # Send game state 120 times per second
+            physics_update_accumulator = 0
+            physics_update_interval = 1/240  # Run physics at 240Hz for smooth calculations
+            
             while self.game_id in game_logic.active_games:
+                # Get current time for this frame
+                current_time = time.time()
+                frame_time = current_time - game_logic.active_games[self.game_id]['last_update_time']
+                game_logic.active_games[self.game_id]['last_update_time'] = current_time
+                
+                # Cap delta time to prevent spiral of death with big lag spikes
+                if frame_time > 0.25:
+                    frame_time = 0.25
+                
                 # Only update if game is playing
                 if game_logic.active_games[self.game_id]['game_status'] == 'playing':
-                    # Calculate time delta
-                    current_time = time.time()
-                    delta_time = current_time - game_logic.active_games[self.game_id]['last_update_time']
-                    game_logic.active_games[self.game_id]['last_update_time'] = current_time
+                    # Accumulate time for physics updates
+                    physics_update_accumulator += frame_time
                     
-                    # Update game physics
-                    score_happened = game_logic.update_game_physics(self.game_id, delta_time)
+                    # Run multiple physics updates if needed to catch up
+                    score_happened = False
+                    while physics_update_accumulator >= physics_update_interval:
+                        # Update game physics with fixed timestep
+                        score_update = game_logic.update_game_physics(self.game_id, physics_update_interval)
+                        if score_update:
+                            score_happened = True
+                        physics_update_accumulator -= physics_update_interval
                     
                     # If a score happened, check if match ended
                     if score_happened:
                         match_ended = game_logic.check_match_end(self.game_id)
                         
-                        # If match ended, notify players of new status
+                        # If match ended, notify players of new status immediately
                         if match_ended:
                             await self.channel_layer.group_send(
                                 self.game_group,
@@ -278,17 +304,27 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     'status': game_logic.active_games[self.game_id]['game_status'],
                                     'winner': game_logic.active_games[self.game_id]['winner']
                                 })
-                        # Broadcast updated state
-                    await self.channel_layer.group_send(
-                        self.game_group,
-                        {
-                            'type': 'game_state',
-                            'state': game_logic.active_games[self.game_id]
-                        }
-                    )
+                    
+                    # Broadcast state at controlled intervals to avoid network congestion
+                    time_since_last_broadcast = current_time - last_state_broadcast_time
+                    if time_since_last_broadcast >= state_broadcast_interval:
+                        # Add prediction data for smooth client-side interpolation
+                        game_state = game_logic.active_games[self.game_id].copy()
+                        game_state['broadcast_time'] = current_time
+                        game_state['physics_interval'] = physics_update_interval
+                        
+                        await self.channel_layer.group_send(
+                            self.game_group,
+                            {
+                                'type': 'game_state',
+                                'state': game_state
+                            }
+                        )
+                        last_state_broadcast_time = current_time
                 
-                # Sleep to maintain consistent frame rate
-                await asyncio.sleep(1/60)  # 60 FPS
+                # Sleep just enough to hit target frame rate without overloading CPU
+                sleep_time = max(0, physics_update_interval - (time.time() - current_time))
+                await asyncio.sleep(sleep_time)
                 
                 # Check if game is over and no players are connected
                 if self.game_id in game_logic.active_games:  # Double-check in case it was deleted

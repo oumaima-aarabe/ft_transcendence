@@ -59,7 +59,7 @@ export default function RemoteGamePage() {
 
   // Handle error state
   if (isError || !user) {
-    router.push('/login');
+    router.push('/auth');
     return null;
   }
 

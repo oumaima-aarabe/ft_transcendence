@@ -9,6 +9,7 @@ import { initSocket, getSocket, sendWebSocketMessage } from "@/lib/websocket";
 import { sendRequest } from "@/lib/axios";
 import { UseUser } from "@/api/get-user";
 
+// move this export to another file
 export enum BlockState {
   BLOCKED_BY_ME = "blocked_by_me",
   BLOCKED_BY_OTHER = "blocked_by_other",
