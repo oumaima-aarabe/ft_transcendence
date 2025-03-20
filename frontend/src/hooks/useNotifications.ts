@@ -73,7 +73,6 @@ export const useNotifications = () => {
         if (data.type === 'notification') {
           const notification = data.notification;
           
-          // console.log ('notification event trigred')
           // Add unique ID and timestamp to notification if not provided
           const newNotification: Notification = {
             id: notification.id?.toString() || Date.now().toString(),

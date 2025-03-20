@@ -35,7 +35,8 @@ export default function Page() {
           <div className="text-[#c75b37] text-8xl font-bold">404</div>
           <h1 className="text-3xl font-semibold text-white">User Not Found</h1>
           <p className="text-gray-400">
-            The user you're looking for doesn't exist or has been removed.
+            The user you&apos;re looking for doesn&apos;t exist or has been
+            removed.
           </p>
           <button
             onClick={() => window.history.back()}

@@ -98,7 +98,6 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
   };
 
   useEffect(() => {
-    console.log("asasdasd");
     if (!socket || !user.username || !me) return;
 
     const handleFriendshipUpdate = () => {
@@ -114,8 +113,6 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
       const data = JSON.parse(event.data);
 
       // Handle different types of friendship notifications
-      console.log("notification event trigred");
-      console.log("data: ", data);
       switch (data.notification.type) {
         case "friend_request":
           handleFriendshipUpdate();
