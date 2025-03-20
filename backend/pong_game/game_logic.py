@@ -107,6 +107,7 @@ def update_paddle_position(game_id, player_num, position):
     # Update the appropriate paddle
     paddle_key = 'left_paddle' if player_num == 1 else 'right_paddle'
     active_games[game_id][paddle_key]['y'] = position
+    # print(f"Updating paddle position: game_id={game_id}, player_num={player_num}, position={position}, type={type(position)}")
     
     return True
 
@@ -140,19 +141,23 @@ def update_game_physics(game_id, delta_time):
     # Move the ball
     ball['x'] += ball['dx'] * delta_time * 60  # Scale by 60 to maintain similar speed
     ball['y'] += ball['dy'] * delta_time * 60
-    
+    collision_happened = False
     # Handle wall collisions
     if ball['y'] + ball['radius'] >= BASE_HEIGHT:
         if ball['dy'] > 0:
             ball['dy'] = -ball['dy']
             # Add slight randomness to prevent looping patterns
             ball['dy'] += (random.random() - 0.5) * 0.1
+        collision_happened = True
+        
     
     if ball['y'] - ball['radius'] <= 0:
         if ball['dy'] < 0:
             ball['dy'] = -ball['dy']
             # Add slight randomness to prevent looping patterns
             ball['dy'] += (random.random() - 0.5) * 0.1
+        collision_happened = True
+        
     
     # Cache calculations for paddle collisions to avoid repeated computation
     ball_left_edge = ball['x'] - ball['radius']
@@ -195,7 +200,7 @@ def update_game_physics(game_id, delta_time):
         
         # Add a subtle random factor to avoid predictable patterns
         ball['dy'] += (random.random() - 0.5) * 0.2
-    
+        collision_happened = True
     # Right paddle collision
     if (ball_right_edge >= right_paddle_left and
         ball_right_edge < right_paddle_left + right_paddle['width'] and
@@ -223,6 +228,7 @@ def update_game_physics(game_id, delta_time):
         
         # Add a subtle random factor to avoid predictable patterns
         ball['dy'] += (random.random() - 0.5) * 0.2
+        collision_happened = False
     
     # Check for scoring
     score_happened = False
@@ -241,8 +247,11 @@ def update_game_physics(game_id, delta_time):
         score_happened = True
     
     # Return whether scoring happened
-    return score_happened
-
+    
+    if score_happened:
+        return 1
+        
+    return 2 if collision_happened else 0
 def reset_ball(game_id, direction):
     """
     Resets the ball after scoring.
@@ -624,6 +633,7 @@ def validate_game_state(game_id, player_id, position=None):
         return (False, f"Game is not in playing state (current: {game_state['game_status']})")
     
     # If validating a paddle move, check position bounds
+    # print(f"Updating paddle position: game_id={game_id}, player_num={player_num}, position={position}, type={type(position)}")
     if position is not None:
         if not isinstance(position, (int, float)):
             return (False, "Invalid position type")
@@ -635,10 +645,10 @@ def validate_game_state(game_id, player_id, position=None):
         # Check for unreasonable paddle movement (anti-cheat)
         paddle_key = 'left_paddle' if player_num == 1 else 'right_paddle'
         current_position = game_state[paddle_key]['y']
-        max_move_distance = game_state[paddle_key]['speed'] * 2  # Allow some buffer for latency
+        # max_move_distance = game_state[paddle_key]['speed'] * 10 # Allow some buffer for latency
         
-        if abs(position - current_position) > max_move_distance:
-            return (False, "Paddle movement too large")
+        # if abs(position - current_position) > max_move_distance:
+        #     return (False, "Paddle movement too large")
     
     return (True, None)
 

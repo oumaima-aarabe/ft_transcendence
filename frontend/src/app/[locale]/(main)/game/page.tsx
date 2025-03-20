@@ -8,6 +8,7 @@ import PongGame from './components/pong-game';
 import GameBackground from './components/game-background';
 import { GameTheme, GameDifficulty } from './types/game';
 import { useRouter } from 'next/navigation';
+import { LocalPongGame } from './components/local-pong-game';
 
 // Game flow state type
 type GameFlowState = 'options' | 'setup' | 'playing';
@@ -115,7 +116,7 @@ export default function GamePage() {
                 transition={{ duration: 0.3 }}
                 className="z-30 relative"
               >
-                <PongGame
+                <LocalPongGame
                   player1Name={player1Name}
                   player2Name={player2Name}
                   theme={gameTheme}

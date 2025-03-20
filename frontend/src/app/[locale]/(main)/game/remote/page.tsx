@@ -8,6 +8,7 @@ import Matchmaking from '../components/matchmaking';
 import RemotePongGame from '../components/remote-pong-game';
 import { UseUser } from "@/api/get-user";
 import { GameTheme, GameDifficulty } from '../types/game';
+import GameBackground from '../components/game-background';
 
 // Game flow state type
 type RemoteGameFlowState = 'loading' | 'error' | 'matchmaking' | 'connecting' | 'playing';
@@ -285,6 +286,12 @@ export default function RemoteGamePage() {
     <div className="w-full h-screen overflow-hidden flex items-center justify-center">
       <div className="w-full max-w-6xl px-4 relative">
         <div className="relative z-10">
+        {flowState === 'playing' && (
+            <GameBackground 
+              isPlaying={flowState === 'playing'} 
+              theme={"fire"}//change recieve from server
+            />
+          )}
           <AnimatePresence mode="wait">
             {renderContent()}
           </AnimatePresence>

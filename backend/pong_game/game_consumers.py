@@ -172,25 +172,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                             }
                         )
             
-            elif message_type == 'toggle_pause':
-                # Toggle pause state
-                if self.game_id in game_logic.active_games:
-                    current_status = game_logic.active_games[self.game_id]['game_status']
-                    if current_status == 'playing':
-                        new_status = game_logic.set_game_status(self.game_id, 'paused')
-                    elif current_status == 'paused':
-                        new_status = game_logic.set_game_status(self.game_id, 'playing')
-                    else:
-                        return
+            # elif message_type == 'toggle_pause':
+            #     # Toggle pause state
+            #     if self.game_id in game_logic.active_games:
+            #         current_status = game_logic.active_games[self.game_id]['game_status']
+            #         if current_status == 'playing':
+            #             new_status = game_logic.set_game_status(self.game_id, 'paused')
+            #         elif current_status == 'paused':
+            #             new_status = game_logic.set_game_status(self.game_id, 'playing')
+            #         else:
+            #             return
                     
-                    # Notify all players about status change
-                    await self.channel_layer.group_send(
-                        self.game_group,
-                        {
-                            'type': 'game_status_changed',
-                            'status': new_status
-                        }
-                    )
+            #         # Notify all players about status change
+            #         await self.channel_layer.group_send(
+            #             self.game_group,
+            #             {
+            #                 'type': 'game_status_changed',
+            #                 'status': new_status
+            #             }
+            #         )
             
             elif message_type == 'next_match':
                 # Start next match if current match is over
@@ -251,7 +251,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         )
             
             elif message_type == 'ping':
-                # Respond immediately with pong
                 await self.send_json({
                     'type': 'pong'
                 })
@@ -309,14 +308,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     
                     # Run multiple physics updates if needed to catch up
                     score_happened = False
+                    collision_happened = False
                     update_count = 0
                     max_updates_per_frame = 5  # Limit updates to prevent CPU spikes
                     
                     while physics_update_accumulator >= physics_update_interval and update_count < max_updates_per_frame:
                         # Update game physics with fixed timestep
                         score_update = game_logic.update_game_physics(self.game_id, physics_update_interval)
-                        if score_update:
+                        if score_update == 1:
                             score_happened = True
+                        elif score_update == 2:
+                            collision_happened = True
                         physics_update_accumulator -= physics_update_interval
                         update_count += 1
                     

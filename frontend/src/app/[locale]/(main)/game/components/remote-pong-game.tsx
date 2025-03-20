@@ -1,55 +1,84 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Trophy, Waves, Flame } from "lucide-react";
-import { GameDifficulty, GameTheme, KeyStates } from "../types/game";
+import { EnhancedGameState, GameDifficulty, GameTheme, KeyStates } from "../types/game";
 import GameConnection from "@/lib/gameWebsocket";
+import { Wifi, WifiOff, AlertTriangle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import RemotePongRenderer from "./remote-pong-renderer";
+import { Button } from "@/components/ui/button";
 
-// Fixed game dimensions (base dimensions)
+// Constants (should match server values)
 const BASE_WIDTH = 800;
 const BASE_HEIGHT = 500;
 const PADDLE_WIDTH = 18;
 const PADDLE_HEIGHT = 100;
 const BALL_RADIUS = 10;
+const PADDLE_SPEED = 8;
 const POINTS_TO_WIN_MATCH = 5;
 const MATCHES_TO_WIN_GAME = 3;
 
-// Theme-specific properties
-const themeProperties = {
-  fire: {
-    color: "#D05F3B",
-    glowColor: "rgba(208, 95, 59, 0.8)",
-    borderRadius: "20px",
-    ballColor: "#D05F3B",
-    paddleColor: "#D05F3B",
-    lineColor: "#D05F3B",
-    shadowBlur: 25,
-    textColor: "#D05F3B",
-    background: "url('/assets/images/fire-game.png')",
-  },
-  water: {
-    color: "#40CFB7",
-    glowColor: "rgba(64, 207, 183, 0.8)",
-    borderRadius: "20px",
-    ballColor: "#40CFB7",
-    paddleColor: "#40CFB7",
-    lineColor: "#40CFB7",
-    shadowBlur: 25,
-    textColor: "#40CFB7",
-    background: "url('/assets/images/water-game.png')",
-  },
-};
+// Connection timeout in milliseconds (10 seconds)
+const CONNECTION_TIMEOUT = 10000;
 
-// Component props
+// Smoothing and prediction settings
+const PADDLE_INTERPOLATION_SPEED = 0.1; // Lower = smoother but slower
+const MAX_PADDLE_DIVERGENCE = 25; // Maximum allowed difference between local and server paddle positions
+const BALL_EXTRAPOLATION_FACTOR = 1.05; // Slightly predict ahead of current trajectory
+const SERVER_UPDATE_BUFFER_SIZE = 3; // Number of server updates to buffer for smoothing
+const MIN_INTERPOLATION_SPEED = 0.05; // Minimum interpolation speed for high latency
+const MAX_INTERPOLATION_SPEED = 0.2; // Maximum interpolation speed for low latency
+
+// Initial game state
+const createInitialGameState = (): EnhancedGameState => ({
+  ball: {
+    x: BASE_WIDTH / 2,
+    y: BASE_HEIGHT / 2,
+    dx: 0,
+    dy: 0,
+    speed: 0,
+    radius: BALL_RADIUS,
+  },
+  leftPaddle: {
+    x: 20,
+    y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+    width: PADDLE_WIDTH,
+    height: PADDLE_HEIGHT,
+    speed: PADDLE_SPEED,
+    score: 0,
+  },
+  rightPaddle: {
+    x: BASE_WIDTH - 20 - PADDLE_WIDTH,
+    y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+    width: PADDLE_WIDTH,
+    height: PADDLE_HEIGHT,
+    speed: PADDLE_SPEED,
+    score: 0,
+  },
+  matchWins: {
+    player1: 0,
+    player2: 0,
+  },
+  currentMatch: 1,
+  gameStatus: "waiting",
+  winner: null,
+});
+
+// Type for server updates buffer
+interface ServerUpdate {
+  state: any;
+  timestamp: number;
+}
+
 interface RemotePongGameProps {
   gameId: string;
   userName: string;
   player1Name: string;
   player2Name: string;
+  player1Avatar?: string;
+  player2Avatar?: string;
   theme: GameTheme;
   difficulty: GameDifficulty;
   onBackToSetup: () => void;
-  player1Avatar?: string;
-  player2Avatar?: string;
+  onConnectionError?: (error: string) => void;
 }
 
 const RemotePongGame: React.FC<RemotePongGameProps> = ({
@@ -57,178 +86,113 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   userName,
   player1Name,
   player2Name,
+  player1Avatar = "https://iili.io/2D8ByIj.png",
+  player2Avatar = "https://iili.io/2D8ByIj.png",
   theme,
   difficulty,
   onBackToSetup,
-  player1Avatar = "https://iili.io/2D8ByIj.png",
-  player2Avatar = "https://iili.io/2D8ByIj.png",
+  onConnectionError,
 }) => {
-  // Canvas and refs
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const gameConnectionRef = useRef<GameConnection | null>(null);
-  const requestIdRef = useRef<number | null>(null);
-  const mountedRef = useRef<boolean>(true);
+  const { toast } = useToast();
   
-  // Game state - split into separate state variables for better reactivity
-  const [gameState, setGameState] = useState<any>(null);
-  const gameStateRef = useRef<any>(null); // Reference for immediate access
-  const [gameStatus, setGameStatus] = useState<"waiting" | "menu" | "playing" | "paused" | "matchOver" | "gameOver">("waiting");
-  const [matchWins, setMatchWins] = useState({ player1: 0, player2: 0 });
-  const [currentMatch, setCurrentMatch] = useState(1);
-  const [playerNumber, setPlayerNumber] = useState<number | null>(null);
-  const [connected, setConnected] = useState<boolean>(false);
+  // Game state reference
+  const gameStateRef = useRef(createInitialGameState());
   
-  // UI state
+  // Track last server update timestamp
+  const lastUpdateTimeRef = useRef<number>(Date.now());
+  
+  // Track disconnection time for timeout handling
+  const disconnectionTimeRef = useRef<number | null>(null);
+  
+  // Store opponent's paddle position for interpolation
+  const opponentPaddleRef = useRef({
+    current: null as number | null,
+    target: null as number | null,
+    lastUpdateTime: 0,
+    velocity: 0 // Track velocity for better prediction
+  });
+  
+  // Buffer for server updates to smooth out inconsistencies
+  const serverUpdatesRef = useRef<ServerUpdate[]>([]);
+  
+  // Store previous ball positions for trails and prediction
+  const previousBallPositionsRef = useRef<{x: number, y: number}[]>([]);
+  
+  // Track server/client clock difference for better synchronization
+  const clockDifferenceRef = useRef<number>(0);
+  
+  // Connection state
+  const [connectionState, setConnectionState] = useState({
+    connected: false,
+    connecting: true,
+    playerNumber: null as number | null,
+    ping: 0,
+    reconnectAttempt: 0,
+  });
+
+  // WebSocket connection ref
+  const connectionRef = useRef<GameConnection | null>(null);
+  
+  // Keyboard state for local paddle control
+  const [keysPressed, setKeysPressed] = useState<KeyStates>({});
+  const keysPressedRef = useRef<KeyStates>({});
+  
+  // Animation for score changes
   const [scoreAnimation, setScoreAnimation] = useState({
     player1: false,
     player2: false,
   });
   
-  // Scaling state for responsive canvas
-  const [scale, setScale] = useState<number>(1);
-  const [canvasWidth, setCanvasWidth] = useState<number>(BASE_WIDTH);
-  const [canvasHeight, setCanvasHeight] = useState<number>(BASE_HEIGHT);
+  // Store server's version of game state for comparison
+  const serverStateRef = useRef(createInitialGameState());
   
-  // Keyboard controls state
-  const [keysPressed, setKeysPressed] = useState<KeyStates>({});
-  const keysPressedRef = useRef<KeyStates>({});
+  // Frame counter for performance tracking
+  const frameCountRef = useRef<number>(0);
+  const lastFpsUpdateRef = useRef<number>(Date.now());
+  const [fps, setFps] = useState<number>(0);
   
-  // Connection status display
-  const [connectionMessage, setConnectionMessage] = useState("Connecting to game server...");
+  // Visual smoothing settings
+  const [visualSmoothingEnabled, setVisualSmoothingEnabled] = useState<boolean>(true);
   
-  // Get the access token from cookies
-  const getAccessToken = () => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; accessToken=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift();
-    return "";
+  // Flag to indicate if we've had a recent score (used to reset prediction)
+  const recentScoreRef = useRef<boolean>(false);
+  
+  // Adaptive interpolation speed based on ping
+  const getInterpolationSpeed = () => {
+    const basePing = connectionState.ping || 50; // Default to 50ms if ping is unknown
+    
+    // Calculate adaptive speed: faster for low ping, slower for high ping
+    // Clamp between min and max values
+    const adaptiveSpeed = Math.max(
+      MIN_INTERPOLATION_SPEED,
+      Math.min(
+        MAX_INTERPOLATION_SPEED,
+        PADDLE_INTERPOLATION_SPEED * (50 / Math.max(10, basePing))
+      )
+    );
+    
+    return adaptiveSpeed;
   };
   
-  // Sync key press state to ref
+  // Sync keys pressed to ref
   useEffect(() => {
     keysPressedRef.current = keysPressed;
   }, [keysPressed]);
+  
+    // Get the access token from cookies
+    const getAccessToken = () => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; accessToken=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return "";
+    };
 
-  // Set up game connection - only once when component mounts
+  // Setup WebSocket connection
   useEffect(() => {
-    if (!gameId) {
-      console.error("RemotePongGame: No gameId provided!");
-      return;
-    }
-
-    console.log(`Attempting to connect to game ${gameId}...`);
+    // Get authentication token
+    const token = getAccessToken() || 'anonymous';
     
-    mountedRef.current = true;
-    
-    const token = getAccessToken();
-    if (!token) {
-      console.error('No access token found');
-      setConnectionMessage("Authentication error. Please log in again.");
-      return;
-    }
-    
-    console.log(`Got token, creating game connection for game ${gameId}`);
-    
-    // Handle game state updates
-    const handleGameState = (state: any) => {
-      if (!mountedRef.current) return;
-      
-      // Validate the incoming state
-      if (!state || typeof state !== 'object') {
-        console.error("Received invalid game state:", state);
-        return;
-      }
-      
-      // Log state changes for debugging
-      const oldStatus = gameStateRef.current?.game_status;
-      const newStatus = state.game_status;
-      
-      if (oldStatus !== newStatus) {
-        console.log(`Game status changing from ${oldStatus} to ${newStatus}`);
-        // Update game status state immediately when it changes
-        setGameStatus(newStatus);
-      }
-      
-      // Update match info
-      if (state.match_wins && state.current_match) {
-        setMatchWins(state.match_wins);
-        setCurrentMatch(state.current_match);
-      }
-      
-      // Track if scores changed for animation
-      if (gameStateRef.current) {
-        if (state.left_paddle && gameStateRef.current.left_paddle && 
-            state.left_paddle.score > gameStateRef.current.left_paddle.score) {
-          setScoreAnimation(prev => ({ ...prev, player1: true }));
-          setTimeout(() => {
-            if (mountedRef.current) {
-              setScoreAnimation(prev => ({ ...prev, player1: false }));
-            }
-          }, 1000);
-        }
-        if (state.right_paddle && gameStateRef.current.right_paddle && 
-            state.right_paddle.score > gameStateRef.current.right_paddle.score) {
-          setScoreAnimation(prev => ({ ...prev, player2: true }));
-          setTimeout(() => {
-            if (mountedRef.current) {
-              setScoreAnimation(prev => ({ ...prev, player2: false }));
-            }
-          }, 1000);
-        }
-      }
-      
-      // Update the state ref first for immediate access
-      gameStateRef.current = state;
-      
-      // Then update the React state
-      setGameState(state);
-    };
-    
-    // Handle game status changes
-    const handleStatusChange = (status: string, reason?: string) => {
-      console.log(`EXPLICIT STATUS CHANGE: Game status changed to ${status}${reason ? `: ${reason}` : ''}`);
-      
-      // Force the status update
-      setGameStatus(status as "waiting" | "menu" | "playing" | "paused" | "matchOver" | "gameOver");
-      
-      // Handle specific status changes
-      if (status === 'menu' && gameStatus === 'waiting') {
-        setConnectionMessage("Both players connected. Click to start the game!");
-      } else if (status === 'playing') {
-        setConnectionMessage("Game in progress");
-      } else if (status === 'paused') {
-        setConnectionMessage("Game paused");
-      } else if (status === 'matchOver') {
-        setConnectionMessage("Match complete! Click to continue.");
-      } else if (status === 'gameOver') {
-        setConnectionMessage("Game over! Click to play again.");
-      }
-    };
-    
-    // Handle connection changes
-    const handleConnectionChange = (isConnected: boolean) => {
-      if (!mountedRef.current) return;
-      
-      setConnected(isConnected);
-      if (isConnected) {
-        setConnectionMessage("Connected to game server");
-      } else {
-        setConnectionMessage("Disconnected from game server. Attempting to reconnect...");
-      }
-    };
-    
-    // Handle player number assignment
-    const handlePlayerNumber = (number: number) => {
-      if (!mountedRef.current) return;
-      
-      console.log(`You are Player ${number} (${number === 1 ? player1Name : player2Name})`);
-      setPlayerNumber(number);
-      setConnectionMessage(`You are Player ${number}: ${number === 1 ? player1Name : player2Name}`);
-    };
-    
-    // Create game connection
-    console.log("Creating new game connection");
+    // Initialize connection
     const gameConnection = new GameConnection(
       gameId,
       token,
@@ -238,823 +202,745 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       handlePlayerNumber
     );
     
-    // Store reference and connect
-    gameConnectionRef.current = gameConnection;
+    connectionRef.current = gameConnection;
     gameConnection.connect();
+    
+    // Connection timeout check
+    const connectionCheckInterval = setInterval(() => {
+      // If disconnected, check timeout
+      if (disconnectionTimeRef.current !== null) {
+        const disconnectionDuration = Date.now() - disconnectionTimeRef.current;
+        
+        // If disconnected for too long, end the game
+        if (disconnectionDuration > CONNECTION_TIMEOUT) {
+          clearInterval(connectionCheckInterval);
+          
+          // Update connection state
+          setConnectionState(prev => ({
+            ...prev,
+            connecting: false,
+          }));
+          
+          // Notify parent component
+          if (onConnectionError) {
+            onConnectionError("Connection timed out. The game has ended.");
+          }
+          
+          // Show toast
+          toast({
+            title: "Connection Lost",
+            description: "Failed to reconnect within the time limit. The game has ended.",
+            variant: "destructive",
+          });
+        }
+      }
+    }, 1000);
+    
+    // Setup FPS counter
+    const fpsInterval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - lastFpsUpdateRef.current;
+      if (elapsed > 1000) { // Update FPS every second
+        setFps(Math.round((frameCountRef.current * 1000) / elapsed));
+        frameCountRef.current = 0;
+        lastFpsUpdateRef.current = now;
+      }
+    }, 1000);
     
     // Cleanup on unmount
     return () => {
-      console.log("Cleaning up game connection");
-      mountedRef.current = false;
+      clearInterval(connectionCheckInterval);
+      clearInterval(fpsInterval);
       
-      if (gameConnectionRef.current) {
-        gameConnectionRef.current.disconnect();
-        gameConnectionRef.current = null;
-      }
-      
-      if (requestIdRef.current) {
-        cancelAnimationFrame(requestIdRef.current);
-        requestIdRef.current = null;
+      if (connectionRef.current) {
+        connectionRef.current.disconnect();
+        connectionRef.current = null;
       }
     };
-  }, [gameId, player1Name, player2Name]); // Include gameStatus for correct message updates //bring me here
+  }, [gameId, toast, onConnectionError]);
   
-  // Handle responsive scaling
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth;
-        // Calculate scale while maintaining aspect ratio
-        const newScale = Math.min(1, containerWidth / BASE_WIDTH);
+  // Handler for game state updates from server
+  const handleGameState = (serverState: any) => {
+    // Reset reconnection state if we're receiving updates
+    disconnectionTimeRef.current = null;
+    
+    // Update server/client clock difference
+    const serverTime = serverState.timestamp || Date.now();
+    clockDifferenceRef.current = Date.now() - serverTime;
+    
+    // Add to server updates buffer
+    serverUpdatesRef.current.push({
+      state: serverState,
+      timestamp: Date.now()
+    });
+    
+    // Keep buffer at desired size
+    if (serverUpdatesRef.current.length > SERVER_UPDATE_BUFFER_SIZE) {
+      serverUpdatesRef.current.shift();
+    }
+    
+    // Process the latest update immediately if this is the first one or after a score
+    if (serverUpdatesRef.current.length === 1 || recentScoreRef.current) {
+      processServerUpdate(serverState);
+      recentScoreRef.current = false;
+    } else {
+      // Otherwise use buffered updates to smooth transitions
+      processBufferedUpdates();
+    }
+    
+    // Update last update timestamp
+    lastUpdateTimeRef.current = Date.now();
+  };
+  
+  // Process all buffered updates to get a smoothed state
+  const processBufferedUpdates = () => {
+    if (serverUpdatesRef.current.length === 0) return;
+    
+    // Get the latest update
+    const latestUpdate = serverUpdatesRef.current[serverUpdatesRef.current.length - 1];
+    
+    // Process it
+    processServerUpdate(latestUpdate.state);
+  };
+  
+  // Process a single server update
+  const processServerUpdate = (serverState: any) => {
+    // Store server state for reference
+    serverStateRef.current = {
+      ball: {
+        x: serverState.ball.x,
+        y: serverState.ball.y,
+        dx: serverState.ball.dx,
+        dy: serverState.ball.dy,
+        speed: serverState.ball.speed,
+        radius: serverState.ball.radius || BALL_RADIUS,
+      },
+      leftPaddle: {
+        x: serverState.left_paddle.x,
+        y: serverState.left_paddle.y,
+        width: serverState.left_paddle.width || PADDLE_WIDTH,
+        height: serverState.left_paddle.height || PADDLE_HEIGHT,
+        speed: serverState.left_paddle.speed || PADDLE_SPEED,
+        score: serverState.left_paddle.score,
+      },
+      rightPaddle: {
+        x: serverState.right_paddle.x,
+        y: serverState.right_paddle.y,
+        width: serverState.right_paddle.width || PADDLE_WIDTH,
+        height: serverState.right_paddle.height || PADDLE_HEIGHT,
+        speed: serverState.right_paddle.speed || PADDLE_SPEED,
+        score: serverState.right_paddle.score,
+      },
+      matchWins: {
+        player1: serverState.match_wins.player1,
+        player2: serverState.match_wins.player2,
+      },
+      currentMatch: serverState.current_match,
+      gameStatus: serverState.game_status,
+      winner: serverState.winner,
+    };
+    
+    // Check for score changes to trigger animations
+    if (gameStateRef.current.leftPaddle.score !== serverState.left_paddle.score) {
+      if (serverState.left_paddle.score > gameStateRef.current.leftPaddle.score) {
+        setScoreAnimation(prev => ({ ...prev, player1: true }));
+        setTimeout(() => setScoreAnimation(prev => ({ ...prev, player1: false })), 1000);
+        recentScoreRef.current = true;
         
-        setScale(newScale);
-        setCanvasWidth(BASE_WIDTH * newScale);
-        setCanvasHeight(BASE_HEIGHT * newScale);
+        // Reset ball prediction after scoring
+        previousBallPositionsRef.current = [];
       }
+    }
+    
+    if (gameStateRef.current.rightPaddle.score !== serverState.right_paddle.score) {
+      if (serverState.right_paddle.score > gameStateRef.current.rightPaddle.score) {
+        setScoreAnimation(prev => ({ ...prev, player2: true }));
+        setTimeout(() => setScoreAnimation(prev => ({ ...prev, player2: false })), 1000);
+        recentScoreRef.current = true;
+        
+        // Reset ball prediction after scoring
+        previousBallPositionsRef.current = [];
+      }
+    }
+    
+    // Determine which paddle you control and which is the opponent's
+    const controlledPaddleKey = connectionState.playerNumber === 1 
+      ? 'leftPaddle' 
+      : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
+      
+    const opponentPaddleKey = connectionState.playerNumber === 1 
+      ? 'rightPaddle' 
+      : (connectionState.playerNumber === 2 ? 'leftPaddle' : null);
+    
+    // Store the current position of your paddle before updating
+    const myCurrentPaddleY = 
+      controlledPaddleKey && gameStateRef.current[controlledPaddleKey] 
+        ? gameStateRef.current[controlledPaddleKey].y 
+        : null;
+    
+    // Get server's version of your paddle position
+    const serverPaddleY = connectionState.playerNumber === 1
+      ? serverState.left_paddle.y
+      : (connectionState.playerNumber === 2 ? serverState.right_paddle.y : null);
+    
+    // Check paddle divergence to decide whether to use local or server position
+    let useLocalPaddleY = true;
+    if (myCurrentPaddleY !== null && serverPaddleY !== null) {
+      // If the difference is too large, snap to server position
+      if (Math.abs(myCurrentPaddleY - serverPaddleY) > MAX_PADDLE_DIVERGENCE) {
+        useLocalPaddleY = false; 
+      }
+    }
+    
+    // Update opponent paddle target for interpolation
+    if (opponentPaddleKey) {
+      const opponentY = connectionState.playerNumber === 1
+        ? serverState.right_paddle.y
+        : serverState.left_paddle.y;
+      
+      // Calculate opponent paddle velocity for better prediction
+      const prevY = opponentPaddleRef.current.target || opponentY;
+      const dy = opponentY - prevY;
+      
+      opponentPaddleRef.current = {
+        current: opponentPaddleRef.current.target || opponentY,
+        target: opponentY,
+        lastUpdateTime: Date.now(),
+        velocity: dy * 60 // Convert to units per second for consistent velocity calculation
+      };
+    }
+    
+    // Store previous ball position for trails and prediction refinement
+    if (gameStateRef.current.ball) {
+      previousBallPositionsRef.current.push({
+        x: gameStateRef.current.ball.x, 
+        y: gameStateRef.current.ball.y
+      });
+      
+      // Keep the history limited to avoid memory issues
+      if (previousBallPositionsRef.current.length > 10) {
+        previousBallPositionsRef.current.shift();
+      }
+    }
+    
+    // Update game state with new ball data and controlled paddle position
+    gameStateRef.current = {
+      ball: {
+        x: serverState.ball.x,
+        y: serverState.ball.y,
+        dx: serverState.ball.dx,
+        dy: serverState.ball.dy,
+        speed: serverState.ball.speed,
+        radius: serverState.ball.radius || BALL_RADIUS,
+      },
+      leftPaddle: {
+        x: serverState.left_paddle.x,
+        // Only preserve your own paddle position if you're player 1
+        y: (connectionState.playerNumber === 1 && myCurrentPaddleY !== null && useLocalPaddleY)
+           ? myCurrentPaddleY  // Keep your own paddle position
+           : serverState.left_paddle.y,  // Use server position for opponent
+        width: serverState.left_paddle.width || PADDLE_WIDTH,
+        height: serverState.left_paddle.height || PADDLE_HEIGHT,
+        speed: serverState.left_paddle.speed || PADDLE_SPEED,
+        score: serverState.left_paddle.score,
+      },
+      rightPaddle: {
+        x: serverState.right_paddle.x,
+        // Only preserve your own paddle position if you're player 2
+        y: (connectionState.playerNumber === 2 && myCurrentPaddleY !== null && useLocalPaddleY)
+           ? myCurrentPaddleY  // Keep your own paddle position
+           : serverState.right_paddle.y,  // Use server position for opponent
+        width: serverState.right_paddle.width || PADDLE_WIDTH,
+        height: serverState.right_paddle.height || PADDLE_HEIGHT,
+        speed: serverState.right_paddle.speed || PADDLE_SPEED,
+        score: serverState.right_paddle.score,
+      },
+      matchWins: {
+        player1: serverState.match_wins.player1,
+        player2: serverState.match_wins.player2,
+      },
+      currentMatch: serverState.current_match,
+      gameStatus: serverState.game_status,
+      winner: serverState.winner,
     };
-    
-    // Initial call
-    handleResize();
-    
-    // Add resize listener
-    window.addEventListener("resize", handleResize);
-    
-    // Cleanup
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  };
   
-  // Handle keyboard input
+  // Handle game status changes from server
+  const handleStatusChange = (status: string, reason?: string) => {
+    if (status === 'gameOver') {
+      toast({
+        title: "Game Over",
+        description: `${gameStateRef.current.winner === 'player1' ? player1Name : player2Name} wins the game!`,
+        variant: "default",
+      });
+    } else if (status === 'matchOver') {
+      toast({
+        title: "Match Over",
+        description: `${gameStateRef.current.winner === 'player1' ? player1Name : player2Name} wins the match!`,
+        variant: "default",
+      });
+    } else if (status === 'paused' && reason) {
+      toast({
+        title: "Game Paused",
+        description: reason,
+        variant: "default",
+      });
+    }
+  };
+  
+  // Handle connection status changes
+  const handleConnectionChange = (connected: boolean) => {
+    setConnectionState(prev => ({ 
+      ...prev, 
+      connected,
+      connecting: connected ? false : true,
+      reconnectAttempt: connected ? 0 : prev.reconnectAttempt + 1
+    }));
+    
+    if (connected) {
+      // Reset disconnection timer
+      disconnectionTimeRef.current = null;
+      
+      toast({
+        title: "Connected",
+        description: "Connected to game server",
+        variant: "default",
+      });
+    } else {
+      // Start disconnection timer
+      disconnectionTimeRef.current = Date.now();
+      
+      toast({
+        title: "Disconnected",
+        description: "Lost connection to game server. Attempting to reconnect...",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle player number assignment
+  const handlePlayerNumber = (playerNumber: number) => {
+    setConnectionState(prev => ({ ...prev, playerNumber }));
+    
+    toast({
+      title: "Player Assignment",
+      description: `You are Player ${playerNumber}`,
+      variant: "default",
+    });
+  };
+  
+  // Update position of our paddle based on key presses
+  const updatePaddlePosition = () => {
+    // Determine which paddle we control
+    const controlledPaddleKey = connectionState.playerNumber === 1 
+      ? 'leftPaddle' 
+      : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
+    
+    if (!controlledPaddleKey || !connectionRef.current?.isConnected()) return;
+    
+    const paddle = gameStateRef.current[controlledPaddleKey];
+    const keys = keysPressedRef.current;
+    
+    let newY = paddle.y;
+    
+    // Handle paddle movement based on player number
+    if (connectionState.playerNumber === 1) {
+      // Player 1: W/S keys
+      if (keys["w"] && paddle.y > 0) {
+        newY = Math.max(0, paddle.y - paddle.speed);
+      }
+      if (keys["s"] && paddle.y + paddle.height < BASE_HEIGHT) {
+        newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
+      }
+    } else if (connectionState.playerNumber === 2) {
+      // Player 2: Arrow keys
+      if (keys["ArrowUp"] && paddle.y > 0) {
+        newY = Math.max(0, paddle.y - paddle.speed);
+      }
+      if (keys["ArrowDown"] && paddle.y + paddle.height < BASE_HEIGHT) {
+        newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
+      }
+    }
+    
+    // Only update if position changed
+    if (newY !== paddle.y) {
+      // Update local state immediately for responsive feel
+      gameStateRef.current[controlledPaddleKey].y = newY;
+      
+      // Send update to server
+      connectionRef.current.sendPaddleMove(newY);
+    }
+  };
+  
+  // Smoothly interpolate opponent's paddle position
+  const updateOpponentPaddle = () => {
+    // Determine which paddle is the opponent's
+    const opponentPaddleKey = connectionState.playerNumber === 1 
+      ? 'rightPaddle' 
+      : (connectionState.playerNumber === 2 ? 'leftPaddle' : null);
+    
+    if (!opponentPaddleKey || !opponentPaddleRef.current.target) return;
+    
+    const elapsed = (Date.now() - opponentPaddleRef.current.lastUpdateTime) / 1000;
+    
+    // Use adaptive interpolation speed based on ping
+    const adaptiveSpeed = getInterpolationSpeed();
+    const progress = Math.min(1, elapsed / adaptiveSpeed);
+    
+    const startY = opponentPaddleRef.current.current;
+    const targetY = opponentPaddleRef.current.target;
+    
+    if (startY !== null && targetY !== null) {
+      // Calculate new interpolated position
+      const newY = startY + (targetY - startY) * progress;
+      
+      // Add velocity prediction for smoother movement
+      const velocityPrediction = opponentPaddleRef.current.velocity * elapsed * 0.5;
+      const predictedY = newY + velocityPrediction;
+      
+      // Clamp to valid range
+      const finalY = Math.max(0, Math.min(BASE_HEIGHT - PADDLE_HEIGHT, predictedY));
+      
+      // Update the opponent's paddle position with interpolated value
+      if (gameStateRef.current[opponentPaddleKey]) {
+        gameStateRef.current[opponentPaddleKey].y = finalY;
+      }
+      
+      // Update current value for next frame
+      if (progress >= 1) {
+        opponentPaddleRef.current.current = targetY;
+      } else {
+        opponentPaddleRef.current.current = newY;
+      }
+    }
+  };
+  
+  // Enhanced ball movement prediction
+  const predictBallMovement = () => {
+    if (gameStateRef.current.gameStatus !== 'playing') return;
+    
+    const timeSinceUpdate = (Date.now() - lastUpdateTimeRef.current) / 1000; // seconds
+    const ball = gameStateRef.current.ball;
+    
+    // Only predict if we have velocity data
+    if (ball.dx === 0 && ball.dy === 0) return;
+    
+    // Use a slightly higher prediction factor for extrapolation
+    const predictedX = ball.x + ball.dx * timeSinceUpdate * 60 * BALL_EXTRAPOLATION_FACTOR;
+    const predictedY = ball.y + ball.dy * timeSinceUpdate * 60 * BALL_EXTRAPOLATION_FACTOR;
+    
+    // Store original positions for collision detection
+    const originalX = ball.x;
+    const originalY = ball.y;
+    
+    // Update ball position
+    ball.x = predictedX;
+    ball.y = predictedY;
+    
+    // Enhanced collision detection
+    handleAdvancedBallCollisions(ball, originalX, originalY);
+  };
+  
+  // Advanced collision detection for the ball
+  const handleAdvancedBallCollisions = (ball: any, originalX: number, originalY: number) => {
+    // Check for wall collisions (top/bottom)
+    if (ball.y + ball.radius >= BASE_HEIGHT) {
+      if (ball.dy > 0) {
+        ball.dy = -ball.dy;
+        // Add slight randomness to prevent looping patterns
+        ball.dy += (Math.random() - 0.5) * 0.2;
+      }
+      // Correct position to avoid sticking to the wall
+      ball.y = BASE_HEIGHT - ball.radius;
+    }
+    
+    if (ball.y - ball.radius <= 0) {
+      if (ball.dy < 0) {
+        ball.dy = -ball.dy;
+        // Add slight randomness to prevent looping patterns
+        ball.dy += (Math.random() - 0.5) * 0.2;
+      }
+      // Correct position to avoid sticking to the wall
+      ball.y = ball.radius;
+    }
+    
+    // We don't predict paddle collisions here - they're handled by the server
+    // But we do prevent the ball from going through paddles visually
+    
+    const leftPaddle = gameStateRef.current.leftPaddle;
+    const rightPaddle = gameStateRef.current.rightPaddle;
+    
+    // Basic visual paddle collision correction (not affecting game logic)
+    // This just prevents the ball from visually passing through a paddle
+    
+    // Left paddle visual collision
+    if (ball.x - ball.radius < leftPaddle.x + leftPaddle.width &&
+        originalX - ball.radius >= leftPaddle.x + leftPaddle.width &&
+        ball.y + ball.radius > leftPaddle.y &&
+        ball.y - ball.radius < leftPaddle.y + leftPaddle.height) {
+      // Just correct the visual position
+      ball.x = leftPaddle.x + leftPaddle.width + ball.radius;
+    }
+    
+    // Right paddle visual collision
+    if (ball.x + ball.radius > rightPaddle.x &&
+        originalX + ball.radius <= rightPaddle.x &&
+        ball.y + ball.radius > rightPaddle.y &&
+        ball.y - ball.radius < rightPaddle.y + rightPaddle.height) {
+      // Just correct the visual position
+      ball.x = rightPaddle.x - ball.radius;
+    }
+    
+    // Detect if the ball has gone off-screen and reset its position
+    // This is just for visual purposes, the actual scoring is handled by the server
+    if (ball.x + ball.radius < 0 || ball.x - ball.radius > BASE_WIDTH) {
+      // Don't reset here - wait for server to send the new position
+      // This prevents visual glitches when scoring
+      
+      // Instead, slow down the prediction for smoother visualization
+      ball.dx *= 0.5;
+      ball.dy *= 0.5;
+    }
+  };
+  
+  // Update game state locally between server updates
+  const updateGameState = () => {
+    // Increment frame counter for FPS calculation
+    frameCountRef.current++;
+    
+    // Only run updates if connected
+    if (!connectionState.connected) return;
+    
+    // Update our paddle based on input
+    updatePaddlePosition();
+    
+    // Update opponent's paddle with interpolation
+    updateOpponentPaddle();
+    
+    // Predict ball movement between server updates
+    if (visualSmoothingEnabled) {
+      predictBallMovement();
+    }
+  };
+  
+  // Get ball trail positions for visual smoothing
+  const getBallTrailPositions = () => {
+    if (!visualSmoothingEnabled || previousBallPositionsRef.current.length === 0) {
+      return [];
+    }
+    
+    // Return the last few positions for the trail effect
+    return previousBallPositionsRef.current.slice(-5);
+  };
+  
+  // Setup keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent default actions for game keys
+      // Prevent default for game keys
       if (["w", "s", "ArrowUp", "ArrowDown", " "].includes(e.key)) {
         e.preventDefault();
       }
       
-      setKeysPressed((prev) => ({ ...prev, [e.key]: true }));
+      setKeysPressed(prev => ({ ...prev, [e.key]: true }));
       
-      // Handle space for pause toggle
-      if (e.key === " " && !e.repeat && gameConnectionRef.current) {
-        console.log("Space pressed, toggling pause...");
-        gameConnectionRef.current.togglePause();
+      // Toggle visual smoothing with 'v' key
+      if (e.key === "v" && !e.repeat) {
+        setVisualSmoothingEnabled(prev => !prev);
+        toast({
+          title: "Visual Smoothing",
+          description: `${!visualSmoothingEnabled ? "Enabled" : "Disabled"}`,
+          variant: "default",
+        });
       }
       
-      // Start game if in menu state
-      if (gameStatus === "menu" && !e.repeat && gameConnectionRef.current) {
-        console.log("Key pressed in menu state, starting game...");
-        gameConnectionRef.current.startGame();
+      // Start game on key press if on menu
+      if (gameStateRef.current.gameStatus === 'menu' && !e.repeat) {
+        connectionRef.current?.startGame();
+      }
+      
+      // Pause/unpause on Space
+      if (e.key === " " && !e.repeat) {
+        connectionRef.current?.togglePause();
       }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
-      setKeysPressed((prev) => ({ ...prev, [e.key]: false }));
+      setKeysPressed(prev => ({ ...prev, [e.key]: false }));
     };
     
-    // Add event listeners
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     
-    // Cleanup
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [gameStatus]);
+  }, [visualSmoothingEnabled, toast]);
   
-  // Handle canvas click
+  // Canvas click handler for game controls
   const handleCanvasClick = () => {
-    if (!gameConnectionRef.current) return;
+    if (!connectionRef.current) return;
     
-    console.log("Canvas clicked. Current gameStatus:", gameStatus);
+    const currentStatus = gameStateRef.current.gameStatus;
     
-    if (gameStatus === "menu") {
-      console.log("Starting game...");
-      gameConnectionRef.current.startGame();
-    } else if (gameStatus === "matchOver") {
-      console.log("Moving to next match...");
-      gameConnectionRef.current.nextMatch();
-    } else if (gameStatus === "gameOver") {
-      console.log("Restarting game...");
-      gameConnectionRef.current.restartGame();
-    } else {
-      console.log("Click registered but no action taken for current state:", gameStatus);
+    if (currentStatus === 'gameOver') {
+      connectionRef.current.restartGame();
+    } else if (currentStatus === 'matchOver') {
+      connectionRef.current.nextMatch();
+    } else if (currentStatus === 'menu') {
+      connectionRef.current.startGame();
     }
   };
   
-  // Process keyboard input for paddle movement
-  useEffect(() => {
-    if (!connected || !gameState || !gameConnectionRef.current || playerNumber === null) {
-      return;
-    }
-    
-    // Only process input when game is actually playing
-    if (gameStatus !== 'playing') {
-      return;
-    }
-    
-    // Start animation loop for paddle movement
-    let lastPaddleY: number | null = null;
-    
-    const processInput = () => {
-      if (!gameState || playerNumber === null) return;
+  // Handle manual reconnect attempt
+  const handleManualReconnect = () => {
+    if (connectionRef.current) {
+      setConnectionState(prev => ({
+        ...prev,
+        connecting: true,
+      }));
       
-      // Determine which keys to use based on player number
-      const upKey = playerNumber === 1 ? 'w' : 'ArrowUp';
-      const downKey = playerNumber === 1 ? 's' : 'ArrowDown';
+      toast({
+        title: "Reconnecting",
+        description: "Attempting to reconnect to the game server...",
+        variant: "default",
+      });
       
-      // Get current paddle position
-      const paddleKey = playerNumber === 1 ? 'left_paddle' : 'right_paddle';
-      let paddleY = gameState[paddleKey].y;
-      const paddleSpeed = gameState[paddleKey].speed;
-      
-      // Process movement
-      let moved = false;
-      
-      if (keysPressedRef.current[upKey] && paddleY > 0) {
-        paddleY = Math.max(0, paddleY - paddleSpeed);
-        moved = true;
-      }
-      
-      if (keysPressedRef.current[downKey] && paddleY + PADDLE_HEIGHT < BASE_HEIGHT) {
-        paddleY = Math.min(BASE_HEIGHT - PADDLE_HEIGHT, paddleY + paddleSpeed);
-        moved = true;
-      }
-    
-      // Only send update if position changed
-      if (moved) {
-        lastPaddleY = paddleY;
-        gameConnectionRef!.current!.sendPaddleMove(paddleY);
-      }
-      
-      requestIdRef.current = requestAnimationFrame(processInput);
-    };
-    
-    // Start processing input
-    requestIdRef.current = requestAnimationFrame(processInput);
-    
-    return () => {
-      if (requestIdRef.current) {
-        cancelAnimationFrame(requestIdRef.current);
-        requestIdRef.current = null;
-      }
-    };
-  }, [connected, playerNumber, gameStatus, gameState]);
-  
-  // Render game on canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    
-    console.log("Canvas render effect triggered. Game status:", gameStatus);
-    
-    // Apply scaling to maintain aspect ratio
-    context.setTransform(scale, 0, 0, scale, 0, 0);
-    
-    // Get theme properties
-    const themeProps = themeProperties[theme];
-    
-    // Render game based on state
-    const renderFrame = () => {
-      // Clear canvas
-      context.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-      
-      // Fill with black background
-      context.fillStyle = "black";
-      context.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-      
-      // If game state exists, render it
-      if (gameState) {
-        // Use our single status source
-        renderGame(context, themeProps);
-      } else {
-        // Draw connecting screen if no game state yet
-        drawConnectingScreen(context, themeProps);
-      }
-      
-      // Request next frame
-      requestIdRef.current = requestAnimationFrame(renderFrame);
-    };
-    
-    // Start rendering (call only once)
-    requestIdRef.current = requestAnimationFrame(renderFrame);
-    
-    // Cleanup
-    return () => {
-      if (requestIdRef.current) {
-        cancelAnimationFrame(requestIdRef.current);
-        requestIdRef.current = null;
-      }
-    };
-  }, [gameState, scale, theme, gameStatus]);
-  
-  // Toggle pause
-  const togglePause = () => {
-    if (gameConnectionRef.current) {
-      gameConnectionRef.current.togglePause();
+      connectionRef.current.connect();
     }
   };
   
-  // Connecting screen when waiting for game state
-  const drawConnectingScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
-    ctx.fill();
-    
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 15;
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('CONNECTING', BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    
-    ctx.font = '24px Arial';
-    ctx.fillText(connectionMessage, BASE_WIDTH / 2, BASE_HEIGHT / 2);
-    
-    // Draw loading animation
-    const time = Date.now() / 1000;
-    const numDots = 3;
-    const dotSize = 10;
-    const spacing = 20;
-    const centerX = BASE_WIDTH / 2;
-    const centerY = BASE_HEIGHT * 0.7;
-    
-    for (let i = 0; i < numDots; i++) {
-      const x = centerX + (i - (numDots - 1) / 2) * spacing;
-      const y = centerY + Math.sin(time * 4 + i) * 10;
-      
-      ctx.beginPath();
-      ctx.arc(x, y, dotSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    ctx.restore();
+  // Toggle visual smoothing
+  const toggleVisualSmoothing = () => {
+    setVisualSmoothingEnabled(prev => !prev);
+    toast({
+      title: "Visual Smoothing",
+      description: `${!visualSmoothingEnabled ? "Enabled" : "Disabled"}`,
+      variant: "default",
+    });
   };
   
-  // Render the game state
-  const renderGame = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    if (!gameState) return;
-    
-    const { ball, left_paddle, right_paddle } = gameState;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-    
-    // Fill background
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-    
-    // Draw table border with glow
-    ctx.save();
-    ctx.strokeStyle = themeProps.color;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH - 4, BASE_HEIGHT - 4, 20);
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.stroke();
-    ctx.restore();
-    
-    // Draw center line
-    ctx.save();
-    ctx.strokeStyle = themeProps.color;
-    ctx.lineWidth = 2;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.setLineDash([15, 15]);
-    ctx.moveTo(BASE_WIDTH / 2, 0);
-    ctx.lineTo(BASE_WIDTH / 2, BASE_HEIGHT);
-    ctx.stroke();
-    ctx.restore();
-    
-    // Draw paddles
-    ctx.save();
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 10;
-    
-    // Left paddle
-    ctx.beginPath();
-    ctx.roundRect(
-      left_paddle.x,
-      left_paddle.y,
-      left_paddle.width,
-      left_paddle.height,
-      5
-    );
-    ctx.fill();
-    
-    // Right paddle
-    ctx.beginPath();
-    ctx.roundRect(
-      right_paddle.x,
-      right_paddle.y,
-      right_paddle.width,
-      right_paddle.height,
-      5
-    );
-    ctx.fill();
-    ctx.restore();
-    
-    // Draw ball
-    if (ball) {
-      ctx.save();
-      ctx.fillStyle = themeProps.color;
-      ctx.shadowColor = themeProps.color;
-      ctx.shadowBlur = 15;
-      ctx.beginPath();
-      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-    
-    // Draw scores
-    ctx.save();
-    ctx.font = "bold 16px Arial";
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 5;
-    ctx.textAlign = "left";
-    ctx.fillText(`Points: ${left_paddle.score}`, 20, BASE_HEIGHT - 20);
-    ctx.textAlign = "right";
-    ctx.fillText(
-      `Points: ${right_paddle.score}`,
-      BASE_WIDTH - 20,
-      BASE_HEIGHT - 20
-    );
-    ctx.restore();
-    
-    // Log game status before drawing overlays
-    console.log("Drawing game with status:", gameStatus);
-    
-    // Draw game status overlays using component state instead of gameState
-    if (gameStatus === "menu") {
-      drawMenuScreen(ctx, themeProps);
-    } else if (gameStatus === "paused") {
-      drawPauseScreen(ctx, themeProps);
-    } else if (gameStatus === "matchOver") {
-      drawMatchOverScreen(ctx, themeProps);
-    } else if (gameStatus === "gameOver") {
-      drawGameOverScreen(ctx, themeProps);
-    } else if (gameStatus === "waiting") {
-      drawWaitingScreen(ctx, themeProps);
-    }
-  };
-  
-  // Draw waiting screen (both players not yet connected)
-  const drawWaitingScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
-    ctx.fill();
-    
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 15;
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('WAITING FOR PLAYERS', BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    
-    ctx.font = '24px Arial';
-    ctx.fillText('Players connecting...', BASE_WIDTH / 2, BASE_HEIGHT / 2);
-    
-    ctx.font = '18px Arial';
-    ctx.fillText(connectionMessage, BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
-    
-    ctx.restore();
-  };
-  
-  // Draw menu screen
-  const drawMenuScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    if (!gameState) return;
-    console.log("Drawing menu screen");
-    
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
-    ctx.fill();
-    
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 15;
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('PONG ARCADIA', BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    
-    ctx.font = 'bold 24px Arial';
-    ctx.fillText(`MATCH ${currentMatch} OF 5`, BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
-    
-    ctx.font = '24px Arial';
-    ctx.fillText('Click or press any key to start', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 10);
-    
-    // Player instructions based on assigned player number
-    ctx.shadowBlur = 5;
-    ctx.font = '18px Arial';
-
-    // Display the correct controls based on player number
-    ctx.fillText(`You (${player1Name == userName ? player1Name : player2Name}): W/S keys`, BASE_WIDTH / 4, BASE_HEIGHT * 0.7);
-    ctx.fillText(`Opponent (${player1Name == userName ? player2Name : player1Name}): Arrow Up/Down`, (BASE_WIDTH / 4) * 3, BASE_HEIGHT * 0.7);
-
-    
-    ctx.fillText('Press Space to pause', BASE_WIDTH / 2, BASE_HEIGHT * 0.8);
-    ctx.restore();
-  };
-  
-  // Draw pause screen
-  const drawPauseScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
-    ctx.fill();
-    
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 15;
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', BASE_WIDTH / 2, BASE_HEIGHT / 2);
-    
-    // Check if both players are connected
-    if (gameState && (!gameState.players.player1.connected || !gameState.players.player2.connected)) {
-      ctx.font = 'bold 24px Arial';
-      ctx.fillText('Waiting for opponent to reconnect...', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 60);
-    } else {
-      ctx.shadowBlur = 5;
-      ctx.font = '20px Arial';
-      ctx.fillText('Press Space to continue', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 50);
-    }
-    
-    ctx.restore();
-  };
-  
-  // Draw match over screen
-  const drawMatchOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    if (!gameState) return;
-    
-    const { winner } = gameState;
-    
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
-    ctx.fill();
-    
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 15;
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    
-    if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    }
-    
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText(`MATCH SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
-    
-    ctx.shadowBlur = 5;
-    ctx.font = '20px Arial';
-    ctx.fillText('Click to continue to next match', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
-    ctx.restore();
-  };
-  
-  // Draw game over screen
-  const drawGameOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    if (!gameState) return;
-    
-    const { winner } = gameState;
-    
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
-    ctx.fill();
-    
-    ctx.fillStyle = themeProps.color;
-    ctx.shadowColor = themeProps.color;
-    ctx.shadowBlur = 15;
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    
-    if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    }
-    
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText(`FINAL SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
-    
-    ctx.shadowBlur = 5;
-    ctx.font = '20px Arial';
-    ctx.fillText('Click to play again', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
-    ctx.restore();
-  };
-  
-  // Render match win streaks with enhanced visuals
-  // Render match win streaks with enhanced visuals
-const renderMatchWinStreaks = (playerNumber: 1 | 2, wins: number) => {
-  const maxWins = MATCHES_TO_WIN_GAME;
-  const streaks = [];
-  const IconComponent = theme === 'fire' ? Flame : Waves;
-
-  for (let i = 0; i < maxWins; i++) {
-    const isActive = i < wins;
-    
-    streaks.push(
-      <div
-        key={`p${playerNumber}-streak-${i}`}
-        className={`relative ${isActive ? "opacity-100" : "opacity-30"}`}
-      >
-        <IconComponent
-          size={24}
-          className={`${
-            isActive
-              ? theme === 'fire' 
-                ? "text-orange-500 drop-shadow-[0_0_5px_rgba(208,95,59,0.8)]" 
-                : "text-teal-400 drop-shadow-[0_0_5px_rgba(64,207,183,0.8)]"
-              : "text-gray-500"
-          }`}
-        />
-      </div>
-    );
-  }
-
-  return <div className="flex space-x-1">{streaks}</div>;
-};
-
-
-// Complete component UI
-return (
-  <div className="w-full flex flex-col items-center justify-center">
-    {/* Connection status banner */}
-    {!connected && (
-      <div className="w-full max-w-[800px] mb-4 p-3 bg-red-500/80 text-white rounded-md text-center">
-        Connection to game server lost. Attempting to reconnect...
-      </div>
-    )}
-    
-    {/* Control buttons */}
-    <div className="mb-6 flex flex-wrap gap-4 justify-center">
-      <Button
-        onClick={onBackToSetup}
-        className={`bg-transparent border-2 shadow-md text-lg px-6 py-2 ${
-          theme === "fire"
-            ? "border-[#D05F3B] text-[#D05F3B] shadow-[0_0_15px_rgba(208,95,59,0.5)]"
-            : "border-[#40CFB7] text-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.5)]"
-        }`}
-      >
-        Back to Setup
-      </Button>
-
-      <Button
-        onClick={togglePause}
-        className={`bg-transparent border-2 shadow-md text-lg px-6 py-2 ${
-          theme === "fire"
-            ? "border-[#D05F3B] text-[#D05F3B] shadow-[0_0_15px_rgba(208,95,59,0.5)]"
-            : "border-[#40CFB7] text-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.5)]"
-        }`}
-        disabled={
-          !gameState || 
-          gameStatus === "menu" ||
-          gameStatus === "matchOver" ||
-          gameStatus === "gameOver" ||
-          gameStatus === "waiting"
-        }
-      >
-        {gameStatus === "paused" ? "Resume Game" : "Pause Game"}
-      </Button>
-    </div>
-
-    {/* Game container */}
-    <div className="relative w-full max-w-[800px]" ref={containerRef}>
-      {/* Score display */}
-      {gameState && (
-        <div
-          className={`mb-3 p-4 rounded-xl flex items-center justify-between ${
-            theme === "fire"
-              ? "bg-black/80 border-[#D05F3B]"
-              : "bg-black/80 border-[#40CFB7]"
-          } border-2`}
-          style={{
-            boxShadow:
-              theme === "fire"
-                ? "0 0 15px rgba(208,95,59,0.6)"
-                : "0 0 15px rgba(64,207,183,0.6)",
-          }}
-        >
-          {/* Player 1 - Left Side */}
-          <div className="flex items-center space-x-3">
-            <div
-              className={`w-14 h-14 rounded-full overflow-hidden border-2 ${
-                theme === "fire" ? "border-[#D05F3B]" : "border-[#40CFB7]"
-              }`}
-            >
-              <img
-                src={player1Avatar}
-                alt={player1Name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span
-                className={`font-bold text-lg ${
-                  theme === "fire" ? "text-orange-200" : "text-teal-200"
-                }`}
+  // Render connection error overlay if needed
+  const renderConnectionOverlay = () => {
+    if (!connectionState.connected && !connectionState.connecting) {
+      return (
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 rounded-xl">
+          <div className="bg-black/90 border border-red-500 p-8 rounded-lg text-center max-w-md">
+            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Connection Lost</h2>
+            <p className="text-gray-300 mb-6">
+              We couldn't reconnect to the game server. The game has been terminated.
+            </p>
+            <div className="flex flex-col space-y-3">
+              <Button
+                onClick={handleManualReconnect}
+                className="bg-red-600 hover:bg-red-700 text-white"
               >
-                {player1Name}
-                {player1Name === userName ? <span className="ml-2 text-xs bg-white/20 rounded px-1 py-0.5">You</span> : null}
-              </span>
-              <div className="flex items-center space-x-2">
-                <span
-                  className={`text-3xl font-bold transition-all duration-300 ${
-                    theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
-                  } ${scoreAnimation.player1 ? "scale-150 animate-pulse" : ""}`}
-                >
-                  {gameState.left_paddle.score}
-                </span>
-                <div className="flex flex-col items-start">
-                  <div className="flex">
-                    {renderMatchWinStreaks(1, matchWins.player1)}
-                  </div>
-                  {matchWins.player1 > 0 && (
-                    <span
-                      className={`text-xs ${
-                        theme === "fire" ? "text-orange-300" : "text-teal-300"
-                      }`}
-                    >
-                      {matchWins.player1}{" "}
-                      {matchWins.player1 === 1 ? "match" : "matches"}{" "}
-                      won
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Center section */}
-          <div className="flex flex-col items-center">
-            <div
-              className={`text-xl font-bold mb-1 ${
-                theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
-              }`}
-            >
-              MATCH {currentMatch}
-            </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-black/50 border border-white/20">
-              <span className="text-white font-bold">VS</span>
-            </div>
-            <div className="mt-1 text-xs text-gray-400">
-              First to {POINTS_TO_WIN_MATCH} points
-            </div>
-          </div>
-
-          {/* Player 2 - Right Side */}
-          <div className="flex items-center space-x-3">
-            <div className="flex flex-col items-end">
-              <span
-                className={`font-bold text-lg ${
-                  theme === "fire" ? "text-orange-200" : "text-teal-200"
-                }`}
+                Try Again
+              </Button>
+              <Button
+                onClick={onBackToSetup}
+                variant="outline"
+                className="border-gray-700 text-gray-300"
               >
-                {player2Name}
-                {player2Name === userName ? <span className="ml-2 text-xs bg-white/20 rounded px-1 py-0.5">You</span> : null}
-              </span>
-              <div className="flex items-center space-x-2">
-                <div className="flex flex-col items-end">
-                  <div className="flex">
-                    {renderMatchWinStreaks(2, matchWins.player2)}
-                  </div>
-                  {matchWins.player2 > 0 && (
-                    <span
-                      className={`text-xs ${
-                        theme === "fire" ? "text-orange-300" : "text-teal-300"
-                      }`}
-                    >
-                      {matchWins.player2}{" "}
-                      {matchWins.player2 === 1 ? "match" : "matches"}{" "}
-                      won
-                    </span>
-                  )}
-                </div>
-                <span
-                  className={`text-3xl font-bold transition-all duration-300 ${
-                    theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
-                  } ${scoreAnimation.player2 ? "scale-150 animate-pulse" : ""}`}
-                >
-                  {gameState.right_paddle.score}
-                </span>
-              </div>
+                Back to Menu
+              </Button>
             </div>
-            <div
-              className={`w-14 h-14 rounded-full overflow-hidden border-2 ${
-                theme === "fire" ? "border-[#D05F3B]" : "border-[#40CFB7]"
-              }`}
+          </div>
+        </div>
+      );
+    }
+    
+    if (!connectionState.connected && connectionState.connecting) {
+      return (
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 rounded-xl">
+          <div className="bg-black/90 border border-yellow-500 p-8 rounded-lg text-center max-w-md">
+            <div className="w-16 h-16 mb-4 mx-auto">
+              <div className="w-full h-full rounded-full border-t-4 border-b-4 border-yellow-500 animate-spin"></div>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Reconnecting...</h2>
+            <p className="text-gray-300 mb-2">
+              Attempting to reconnect to the game server.
+            </p>
+            <p className="text-gray-500 text-sm mb-6">
+              Attempt {connectionState.reconnectAttempt} of 5. 
+              Game will end after {Math.ceil((CONNECTION_TIMEOUT - (disconnectionTimeRef.current ? Date.now() - disconnectionTimeRef.current : 0)) / 1000)} seconds.
+            </p>
+            <Button
+              onClick={onBackToSetup}
+              variant="outline"
+              className="border-gray-700 text-gray-300"
             >
-              <img
-                src={player2Avatar}
-                alt={player2Name}
-                className="w-full h-full object-cover"
-              />
-            </div>
+              Cancel and Return to Menu
+            </Button>
           </div>
         </div>
-      )}
-
-      {/* Game board */}
-      <div
-        className="relative rounded-xl overflow-hidden flex items-center justify-center"
-        style={{
-          width: `${canvasWidth}px`,
-          height: `${canvasHeight}px`,
-          border:
-            theme === "fire" ? "4px solid #D05F3B" : "4px solid #40CFB7",
-          boxShadow:
-            theme === "fire"
-              ? "0 0 30px rgba(208,95,59,0.6)"
-              : "0 0 30px rgba(64,207,183,0.6)",
-          background: "black",
-          margin: "0 auto",
-          borderRadius: "30px",
-        }}
-      >
-        <canvas
-          ref={canvasRef}
-          width={BASE_WIDTH}
-          height={BASE_HEIGHT}
-          onClick={handleCanvasClick}
-          style={{
-            width: `${canvasWidth}px`,
-            height: `${canvasHeight}px`,
-          }}
-        />
+      );
+    }
+    
+    return null;
+  };
+  
+  return (
+    <div className="relative w-full">
+      {/* Connection status indicator */}
+      <div className="mb-2 flex items-center justify-center gap-2">
+        {connectionState.connected ? (
+          <div className="flex items-center gap-2 bg-green-900/50 px-3 py-1 rounded-full text-green-400">
+            <Wifi size={16} />
+            <span>Connected</span>
+            {connectionState.ping > 0 && (
+              <span className="text-xs opacity-75">({connectionState.ping}ms)</span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 bg-red-900/50 px-3 py-1 rounded-full text-red-400 animate-pulse">
+            <WifiOff size={16} />
+            <span>Disconnected</span>
+          </div>
+        )}
+        
+        {connectionState.playerNumber && (
+          <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
+            connectionState.playerNumber === 1 
+              ? 'bg-blue-900/50 text-blue-400' 
+              : 'bg-red-900/50 text-red-400'
+          }`}>
+            <span>Player {connectionState.playerNumber}</span>
+          </div>
+        )}
       </div>
-
-      {/* Connection status */}
-      {gameState && gameState.players && (
-        <div className="mt-3 flex justify-between w-full">
-          <div className="flex items-center">
-            <div className={`w-3 h-3 rounded-full mr-2 ${
-              gameState.players.player1.connected ? "bg-green-500" : "bg-red-500"
-            }`}></div>
-            <span className="text-sm text-gray-300">{player1Name}</span>
-          </div>
-          <div className="flex items-center">
-            <span className="text-sm text-gray-300">{player2Name}</span>
-            <div className={`w-3 h-3 rounded-full ml-2 ${
-              gameState.players.player2.connected ? "bg-green-500" : "bg-red-500"
-            }`}></div>
-          </div>
-        </div>
-      )}
-
-      {/* Game info and controls help */}
-      <div className="mt-4 flex flex-col items-center">
-        <div
-          className={`flex items-center justify-center gap-2 mb-2 ${
-            theme === "fire" ? "text-orange-400" : "text-teal-400"
-          }`}
-        >
-          <Trophy size={16} />
-          <span className="font-medium">
-            First to win {MATCHES_TO_WIN_GAME} matches wins the game!
-          </span>
-        </div>
-
-        {/* Control instructions based on player number */}
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-gray-400 text-sm">
-          <div className="flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">W</kbd>
-            <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">S</kbd>
-            <span className="text-white">- Player 1</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">↑</kbd>
-            <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">↓</kbd>
-            <span>- Player 2</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">Space</kbd>
-            <span>- Pause</span>
-          </div>
-        </div>
+      
+      {/* Game renderer */}
+      <div className="relative">
+        <RemotePongRenderer
+          BASE_WIDTH={BASE_WIDTH}
+          BASE_HEIGHT={BASE_HEIGHT}
+          PADDLE_WIDTH={PADDLE_WIDTH}
+          PADDLE_HEIGHT={PADDLE_HEIGHT}
+          BALL_RADIUS={BALL_RADIUS}
+          PADDLE_SPEED={PADDLE_SPEED}
+          POINTS_TO_WIN_MATCH={POINTS_TO_WIN_MATCH}
+          MATCHES_TO_WIN_GAME={MATCHES_TO_WIN_GAME}
+          gameStateRef={gameStateRef}
+          updateGameState={updateGameState}
+          setKeysPressed={setKeysPressed}
+          scoreAnimation={scoreAnimation}
+          player1Name={player1Name}
+          player2Name={player2Name}
+          theme={theme}
+          difficulty={difficulty}
+          onBackToSetup={onBackToSetup}
+          player1Avatar={player1Avatar}
+          player2Avatar={player2Avatar}
+          onCanvasClick={handleCanvasClick}
+        />
+        
+        {/* Connection overlay */}
+        {renderConnectionOverlay()}
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default RemotePongGame;
