@@ -56,7 +56,7 @@ export default function RemoteGamePage() {
   }, [isLoading, isError, user, router, toast]);
 
   const handleGameFound = (gameId: string, player1: string, player2: string, gameUrl: string) => {
-    console.log("Game found in page component:", gameId, player1, player2, gameUrl);
+    // console.log("Game found in page component:", gameId, player1, player2, gameUrl);
     
     try {
       // Update state to connecting during transition
@@ -73,7 +73,7 @@ export default function RemoteGamePage() {
       // Use a timeout to allow for a visual transition
       setTimeout(() => {
         setFlowState('playing');
-        console.log("Transitioned to playing state");
+        // console.log("Transitioned to playing state");
       }, 500);
     } catch (err) {
       console.error("Error during game transition:", err);
@@ -289,7 +289,7 @@ export default function RemoteGamePage() {
         {flowState === 'playing' && (
             <GameBackground 
               isPlaying={flowState === 'playing'} 
-              theme={"fire"}//change recieve from server
+              theme={"water"}//change recieve from server
             />
           )}
           <AnimatePresence mode="wait">

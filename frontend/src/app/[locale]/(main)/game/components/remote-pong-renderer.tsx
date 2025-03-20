@@ -270,8 +270,9 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
 
   // Drawing game elements with enhanced visuals
   const renderGame = (ctx: CanvasRenderingContext2D, themeProps: any) => {
+    const renderStartTime = Date.now();
+
     if (!gameStateRef.current) return;
-    
     const { ball, leftPaddle, rightPaddle, gameStatus } = gameStateRef.current;
     const { color, glowColor, trailColor } = themeProps;
 
@@ -447,6 +448,14 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
     } else if (gameStatus === "gameOver") {
       drawGameOverScreen(ctx, themeProps);
     }
+
+      const renderEndTime = Date.now();
+      const renderDuration = renderEndTime - renderStartTime;
+      
+      // Log only if rendering is taking unusually long (more than 16ms which is ~60fps)
+      // if (renderDuration > 16) {
+      //   console.log(`Slow render detected: ${renderDuration}ms`);
+      // }
   };
 
   // Screen overlays

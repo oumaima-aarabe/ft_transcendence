@@ -22,7 +22,7 @@ const CONNECTION_TIMEOUT = 10000;
 // Smoothing and prediction settings
 const PADDLE_INTERPOLATION_SPEED = 0.1; // Lower = smoother but slower
 const MAX_PADDLE_DIVERGENCE = 25; // Maximum allowed difference between local and server paddle positions
-const BALL_EXTRAPOLATION_FACTOR = 1.05; // Slightly predict ahead of current trajectory
+// const BALL_EXTRAPOLATION_FACTOR = 1.05; // Slightly predict ahead of current trajectory
 const SERVER_UPDATE_BUFFER_SIZE = 3; // Number of server updates to buffer for smoothing
 const MIN_INTERPOLATION_SPEED = 0.05; // Minimum interpolation speed for high latency
 const MAX_INTERPOLATION_SPEED = 0.2; // Maximum interpolation speed for low latency
@@ -93,8 +93,15 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   onBackToSetup,
   onConnectionError,
 }) => {
+  const INTERPOLATION_ALPHA = 0.3; // Controls smoothness - lower = smoother but less responsive
+  const MAX_PREDICTION_TIME = 0.1; // Maximum time in seconds to predict ahead
   const { toast } = useToast();
   
+  const keyPressTimestampRef = useRef<Record<string, number>>({});
+  const paddleUpdateSentRef = useRef<{time: number, position: number | null}>({
+    time: 0,
+    position: null
+  });
   // Game state reference
   const gameStateRef = useRef(createInitialGameState());
   
@@ -111,6 +118,9 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     lastUpdateTime: 0,
     velocity: 0 // Track velocity for better prediction
   });
+
+  const serverBallStatesRef = useRef<{position: {x: number, y: number}, timestamp: number}[]>([]);
+  const interpolationSpeedRef = useRef<number>(0.3); // Adjust between 0.1-0.5 for smoother or more responsive movement
   
   // Buffer for server updates to smooth out inconsistencies
   const serverUpdatesRef = useRef<ServerUpdate[]>([]);
@@ -261,6 +271,11 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   
   // Handler for game state updates from server
   const handleGameState = (serverState: any) => {
+    // Log timing of server updates
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
+    // console.log(`Server update received. Time since last update: ${timeSinceLastUpdate}ms`);
+    
     // Reset reconnection state if we're receiving updates
     disconnectionTimeRef.current = null;
     
@@ -279,17 +294,37 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       serverUpdatesRef.current.shift();
     }
     
+    // Store the server ball position for interpolation
+    if (serverState.ball) {
+      serverBallStatesRef.current.push({
+        position: {
+          x: serverState.ball.x,
+          y: serverState.ball.y
+        },
+        timestamp: Date.now()
+      });
+      
+      // Keep only the most recent states (last 5)
+      while (serverBallStatesRef.current.length > 5) {
+        serverBallStatesRef.current.shift();
+      }
+    }
+    
     // Process the latest update immediately if this is the first one or after a score
     if (serverUpdatesRef.current.length === 1 || recentScoreRef.current) {
+      const processStartTime = Date.now();
       processServerUpdate(serverState);
+      // console.log(`Server update processing time: ${Date.now() - processStartTime}ms`);
       recentScoreRef.current = false;
     } else {
       // Otherwise use buffered updates to smooth transitions
+      const processStartTime = Date.now();
       processBufferedUpdates();
+      // console.log(`Buffered updates processing time: ${Date.now() - processStartTime}ms`);
     }
     
     // Update last update timestamp
-    lastUpdateTimeRef.current = Date.now();
+    lastUpdateTimeRef.current = now;
   };
   
   // Process all buffered updates to get a smoothed state
@@ -388,7 +423,8 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     if (myCurrentPaddleY !== null && serverPaddleY !== null) {
       // If the difference is too large, snap to server position
       if (Math.abs(myCurrentPaddleY - serverPaddleY) > MAX_PADDLE_DIVERGENCE) {
-        useLocalPaddleY = false; 
+        useLocalPaddleY = false;
+        // console.log(`Large paddle divergence corrected: ${Math.abs(myCurrentPaddleY - serverPaddleY)}`);
       }
     }
     
@@ -528,117 +564,114 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       variant: "default",
     });
   };
-  
+  // const keyPressTimestampRef = useRef<Record<string, number>>({});
   // Update position of our paddle based on key presses
   const updatePaddlePosition = () => {
-    // Determine which paddle we control
-    const controlledPaddleKey = connectionState.playerNumber === 1 
-      ? 'leftPaddle' 
-      : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
-    
-    if (!controlledPaddleKey || !connectionRef.current?.isConnected()) return;
-    
-    const paddle = gameStateRef.current[controlledPaddleKey];
-    const keys = keysPressedRef.current;
-    
-    let newY = paddle.y;
-    
-    // Handle paddle movement based on player number
-    if (connectionState.playerNumber === 1) {
-      // Player 1: W/S keys
-      if (keys["w"] && paddle.y > 0) {
-        newY = Math.max(0, paddle.y - paddle.speed);
-      }
-      if (keys["s"] && paddle.y + paddle.height < BASE_HEIGHT) {
-        newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
-      }
-    } else if (connectionState.playerNumber === 2) {
-      // Player 2: Arrow keys
-      if (keys["ArrowUp"] && paddle.y > 0) {
-        newY = Math.max(0, paddle.y - paddle.speed);
-      }
-      if (keys["ArrowDown"] && paddle.y + paddle.height < BASE_HEIGHT) {
-        newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
-      }
+  // Determine which paddle we control
+  const controlledPaddleKey = connectionState.playerNumber === 1 
+    ? 'leftPaddle' 
+    : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
+  
+  if (!controlledPaddleKey || !connectionRef.current?.isConnected()) return;
+  
+  const paddle = gameStateRef.current[controlledPaddleKey];
+  const keys = keysPressedRef.current;
+  
+  let newY = paddle.y;
+  
+  // Apply a fixed movement amount for consistent speed
+  if (connectionState.playerNumber === 1) {
+    // Player 1: W/S keys
+    if (keys["w"] && paddle.y > 0) {
+      newY = Math.max(0, paddle.y - paddle.speed);
     }
+    if (keys["s"] && paddle.y + paddle.height < BASE_HEIGHT) {
+      newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
+    }
+  } else if (connectionState.playerNumber === 2) {
+    // Player 2: Arrow keys
+    if (keys["ArrowUp"] && paddle.y > 0) {
+      newY = Math.max(0, paddle.y - paddle.speed);
+    }
+    if (keys["ArrowDown"] && paddle.y + paddle.height < BASE_HEIGHT) {
+      newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
+    }
+  }
+  
+  // Only update if position changed
+  if (newY !== paddle.y) {
+    // Update local state immediately for responsive feel
+    gameStateRef.current[controlledPaddleKey].y = newY;
     
-    // Only update if position changed
-    if (newY !== paddle.y) {
-      // Update local state immediately for responsive feel
-      gameStateRef.current[controlledPaddleKey].y = newY;
-      
+    // Throttle server updates - only send every 32ms (about 30Hz)
+    const now = Date.now();
+    const lastSendTime = paddleUpdateSentRef.current?.time || 0;
+    if (now - lastSendTime >= 32) {
       // Send update to server
       connectionRef.current.sendPaddleMove(newY);
-    }
-  };
-  
-  // Smoothly interpolate opponent's paddle position
-  const updateOpponentPaddle = () => {
-    // Determine which paddle is the opponent's
-    const opponentPaddleKey = connectionState.playerNumber === 1 
-      ? 'rightPaddle' 
-      : (connectionState.playerNumber === 2 ? 'leftPaddle' : null);
-    
-    if (!opponentPaddleKey || !opponentPaddleRef.current.target) return;
-    
-    const elapsed = (Date.now() - opponentPaddleRef.current.lastUpdateTime) / 1000;
-    
-    // Use adaptive interpolation speed based on ping
-    const adaptiveSpeed = getInterpolationSpeed();
-    const progress = Math.min(1, elapsed / adaptiveSpeed);
-    
-    const startY = opponentPaddleRef.current.current;
-    const targetY = opponentPaddleRef.current.target;
-    
-    if (startY !== null && targetY !== null) {
-      // Calculate new interpolated position
-      const newY = startY + (targetY - startY) * progress;
       
-      // Add velocity prediction for smoother movement
-      const velocityPrediction = opponentPaddleRef.current.velocity * elapsed * 0.5;
-      const predictedY = newY + velocityPrediction;
-      
-      // Clamp to valid range
-      const finalY = Math.max(0, Math.min(BASE_HEIGHT - PADDLE_HEIGHT, predictedY));
-      
-      // Update the opponent's paddle position with interpolated value
-      if (gameStateRef.current[opponentPaddleKey]) {
-        gameStateRef.current[opponentPaddleKey].y = finalY;
-      }
-      
-      // Update current value for next frame
-      if (progress >= 1) {
-        opponentPaddleRef.current.current = targetY;
+      if (!paddleUpdateSentRef.current) {
+        paddleUpdateSentRef.current = { time: now, position: newY };
       } else {
-        opponentPaddleRef.current.current = newY;
+        paddleUpdateSentRef.current.time = now;
+        paddleUpdateSentRef.current.position = newY;
       }
     }
-  };
+  }
+};
   
-  // Enhanced ball movement prediction
-  const predictBallMovement = () => {
+
+  const interpolateBallPosition = () => {
     if (gameStateRef.current.gameStatus !== 'playing') return;
     
-    const timeSinceUpdate = (Date.now() - lastUpdateTimeRef.current) / 1000; // seconds
+    // If we have fewer than 2 states, we can't interpolate
+    if (serverBallStatesRef.current.length < 2) return;
+    
+    const now = Date.now();
+    
+    // Get the two most recent states
+    const states = serverBallStatesRef.current;
+    const latestState = states[states.length - 1];
+    const previousState = states[states.length - 2];
+    
+    // Calculate how far we are between the previous and latest states (0 to 1)
+    const timeSinceLatest = (now - latestState.timestamp) / 1000; // in seconds
+    
+    // Don't try to predict too far into the future
+    if (timeSinceLatest > 0.1) {
+      // Just use the latest state directly
+      gameStateRef.current.ball.x = latestState.position.x;
+      gameStateRef.current.ball.y = latestState.position.y;
+      // console.log(`Using latest server position: (${latestState.position.x.toFixed(2)}, ${latestState.position.y.toFixed(2)})`);
+      return;
+    }
+    
+    // Calculate the time between the two server updates
+    const timeBetweenUpdates = (latestState.timestamp - previousState.timestamp) / 1000;
+    if (timeBetweenUpdates <= 0) return;
+    
+    // Calculate velocity based on the two server positions
+    const velocityX = (latestState.position.x - previousState.position.x) / timeBetweenUpdates;
+    const velocityY = (latestState.position.y - previousState.position.y) / timeBetweenUpdates;
+    
+    // Adjust position with conservative extrapolation
+    const extrapolationFactor = Math.min(1.0, timeSinceLatest / (2 * timeBetweenUpdates));
+    const predictedX = latestState.position.x + velocityX * timeSinceLatest * extrapolationFactor;
+    const predictedY = latestState.position.y + velocityY * timeSinceLatest * extrapolationFactor;
+    
+    // Apply smooth interpolation between current displayed position and target position
     const ball = gameStateRef.current.ball;
+    const currentX = ball.x;
+    const currentY = ball.y;
     
-    // Only predict if we have velocity data
-    if (ball.dx === 0 && ball.dy === 0) return;
+    // Calculate interpolation amount
+    const alpha = Math.min(1.0, interpolationSpeedRef.current);
     
-    // Use a slightly higher prediction factor for extrapolation
-    const predictedX = ball.x + ball.dx * timeSinceUpdate * 60 * BALL_EXTRAPOLATION_FACTOR;
-    const predictedY = ball.y + ball.dy * timeSinceUpdate * 60 * BALL_EXTRAPOLATION_FACTOR;
+    // Apply interpolation
+    ball.x = currentX + (predictedX - currentX) * alpha;
+    ball.y = currentY + (predictedY - currentY) * alpha;
     
-    // Store original positions for collision detection
-    const originalX = ball.x;
-    const originalY = ball.y;
-    
-    // Update ball position
-    ball.x = predictedX;
-    ball.y = predictedY;
-    
-    // Enhanced collision detection
-    handleAdvancedBallCollisions(ball, originalX, originalY);
+    // console.log(`Ball interpolation: current (${currentX.toFixed(2)}, ${currentY.toFixed(2)}) → interpolated (${ball.x.toFixed(2)}, ${ball.y.toFixed(2)})`);
   };
   
   // Advanced collision detection for the ball
@@ -702,7 +735,60 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       ball.dy *= 0.5;
     }
   };
-  
+
+  const updateBallPosition = () => {
+    if (gameStateRef.current.gameStatus !== 'playing') return;
+    
+    // If we don't have server ball positions, we can't do anything
+    if (serverBallStatesRef.current.length < 2) return;
+    
+    const ball = gameStateRef.current.ball;
+    const serverStates = serverBallStatesRef.current;
+    const latestState = serverStates[serverStates.length - 1];
+    const previousState = serverStates[serverStates.length - 2];
+    
+    const now = Date.now();
+    const timeSinceLatest = (now - latestState.timestamp) / 1000;
+    const timeBetweenUpdates = (latestState.timestamp - previousState.timestamp) / 1000;
+    
+    // If it's been too long since we heard from the server, just use the latest position
+    if (timeSinceLatest > MAX_PREDICTION_TIME || timeBetweenUpdates <= 0) {
+      // Gradually move to the last known position instead of snapping
+      ball.x = ball.x + (latestState.position.x - ball.x) * INTERPOLATION_ALPHA;
+      ball.y = ball.y + (latestState.position.y - ball.y) * INTERPOLATION_ALPHA;
+      return;
+    }
+    
+    // Otherwise, calculate an estimated position based on velocity
+    const vx = (latestState.position.x - previousState.position.x) / timeBetweenUpdates;
+    const vy = (latestState.position.y - previousState.position.y) / timeBetweenUpdates;
+    
+    // Use a minimal extrapolation factor to avoid overshooting
+    const extrapolation = Math.min(timeSinceLatest / timeBetweenUpdates, 0.5);
+    
+    // Calculate target position with minimal prediction
+    const targetX = latestState.position.x + vx * timeSinceLatest * extrapolation;
+    const targetY = latestState.position.y + vy * timeSinceLatest * extrapolation;
+    
+    // Interpolate toward the target position for visual smoothness
+    ball.x = ball.x + (targetX - ball.x) * INTERPOLATION_ALPHA;
+    ball.y = ball.y + (targetY - ball.y) * INTERPOLATION_ALPHA;
+  };
+  const updateOpponentPaddle = () => {
+    // Determine which paddle is the opponent's
+    const opponentPaddleKey = connectionState.playerNumber === 1 
+      ? 'rightPaddle' 
+      : (connectionState.playerNumber === 2 ? 'leftPaddle' : null);
+    
+    if (!opponentPaddleKey || !opponentPaddleRef.current.target) return;
+    
+    // Simple linear interpolation toward target
+    const paddle = gameStateRef.current[opponentPaddleKey];
+    const targetY = opponentPaddleRef.current.target;
+    
+    // Apply a fixed interpolation factor to move smoothly toward target
+    paddle.y = paddle.y + (targetY - paddle.y) * INTERPOLATION_ALPHA;
+  };
   // Update game state locally between server updates
   const updateGameState = () => {
     // Increment frame counter for FPS calculation
@@ -717,9 +803,9 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     // Update opponent's paddle with interpolation
     updateOpponentPaddle();
     
-    // Predict ball movement between server updates
+    // Use interpolation for ball movement instead of prediction
     if (visualSmoothingEnabled) {
-      predictBallMovement();
+      interpolateBallPosition();
     }
   };
   
@@ -737,8 +823,15 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent default for game keys
+      //bring
       if (["w", "s", "ArrowUp", "ArrowDown", " "].includes(e.key)) {
         e.preventDefault();
+      }
+
+       // Only record timestamp if the key wasn't already pressed
+      if (!keysPressedRef.current[e.key]) {
+        keyPressTimestampRef.current[e.key] = Date.now();
+        // console.log(`Key ${e.key} pressed at: ${keyPressTimestampRef.current[e.key]}`);
       }
       
       setKeysPressed(prev => ({ ...prev, [e.key]: true }));

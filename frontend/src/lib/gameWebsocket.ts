@@ -50,7 +50,7 @@ export default class GameConnection {
   connect() {
     // Only connect if not already connected
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
-      console.log("Socket already connecting or connected");
+      // console.log("Socket already connecting or connected");
       return;
     }
 
@@ -59,7 +59,7 @@ export default class GameConnection {
     const host = process.env.NEXT_PUBLIC_WS_URL ||'ws://localhost:8000';
     const wsUrl = `${host}/ws/game/${this.gameId}/?token=${this.token}`;
     
-    console.log('Connecting to game server:', wsUrl);
+    // console.log('Connecting to game server:', wsUrl);
     
     try {
       // Create new WebSocket connection
@@ -77,7 +77,7 @@ export default class GameConnection {
   }
 
   private handleOpen(event: Event) {
-    console.log('Connected to game server');
+    // console.log('Connected to game server');
     this.reconnectAttempts = 0;
     this.onConnectionChange(true);
     
@@ -98,7 +98,7 @@ export default class GameConnection {
           // Set player number when connection is established
           if (message.player_number !== undefined) {
             this.playerNumber = message.player_number;
-            console.log(`Server assigned player number: ${this.playerNumber}`);
+            // console.log(`Server assigned player number: ${this.playerNumber}`);
             this.onPlayerNumber(message.player_number);
           }
           break;
@@ -117,7 +117,7 @@ export default class GameConnection {
           // Handle opponent connection/disconnection
           const isOpponent = this.playerNumber !== null && message.player !== this.playerNumber;
           if (isOpponent) {
-            console.log(`Opponent ${message.connected ? 'connected' : 'disconnected'}`);
+            // console.log(`Opponent ${message.connected ? 'connected' : 'disconnected'}`);
           }
           break;
       }
@@ -127,7 +127,7 @@ export default class GameConnection {
   }
 
   private handleClose(event: CloseEvent) {
-    console.log(`Game WebSocket closed: ${event.code} ${event.reason}`);
+    // console.log(`Game WebSocket closed: ${event.code} ${event.reason}`);
     this.onConnectionChange(false);
     this.socket = null;
     
@@ -152,7 +152,7 @@ export default class GameConnection {
       const jitter = Math.random() * 1000;
       const delay = baseDelay + jitter;
       
-      console.log(`Attempting to reconnect in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})`);
+      // console.log(`Attempting to reconnect in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})`);
       
       if (this.reconnectTimeout) {
         clearTimeout(this.reconnectTimeout);
@@ -168,7 +168,7 @@ export default class GameConnection {
   
   private processQueuedMessages() {
     if (this.socket && this.socket.readyState === WebSocket.OPEN && this.messageQueue.length > 0) {
-      console.log(`Processing ${this.messageQueue.length} queued messages`);
+      // console.log(`Processing ${this.messageQueue.length} queued messages`);
       
       while (this.messageQueue.length > 0) {
         const message = this.messageQueue.shift();
