@@ -1,14 +1,25 @@
 "use client";
 
+// import { UseUser } from "@/api/get-user";
+import { Icon } from "@iconify/react/dist/iconify.js";
+// import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import React from "react";
 import { UseFriend } from "@/api/get-friends";
 import { useFriendMutation } from "@/hooks/useFriendMutation";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+// import Image from "next/image";
 
 export default function Friends() {
   const { data: friends } = UseFriend();
+  const friendMutation = useFriendMutation();
   const router = useRouter();
+
+  const handleRemoveFriend = (username: string) => {
+    friendMutation.mutate({
+      url: "/api/friends/remove-friend/",
+      username: username,
+    });
+  };
 
   const handleNavigateToProfile = (username: string) => {
     router.push(`/en/profile/${username}`);
@@ -38,15 +49,11 @@ export default function Friends() {
             onClick={() => handleNavigateToProfile(item.username)}
             className="relative flex flex-col sm:flex-row items-center p-2 sm:p-4 mb-3 rounded-lg bg-black hover:bg-black/80 transition-all cursor-pointer"
           >
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-              <Image
-                src={item.avatar}
-                alt={`${item.username}'s avatar`}
-                fill
-                className="rounded-full object-cover"
-                sizes="(max-width: 640px) 64px, 80px"
-              />
-            </div>
+            <img
+              src={item.avatar}
+              className="rounded-full object-cover w-16 h-16 sm:w-20 sm:h-20"
+              alt={`${item.username}'s avatar`}
+            />
             <div className="mt-2 sm:mt-0 sm:ml-4 flex-1 text-center sm:text-left">
               <div>
                 <h1 className="text-base text-gray-300 sm:text-lg font-extralight">

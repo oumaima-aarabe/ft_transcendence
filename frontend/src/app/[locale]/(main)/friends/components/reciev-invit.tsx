@@ -35,13 +35,11 @@ export default function ReceivedInvitations() {
             onClick={() => handleNavigateToProfile(item.username)}
             className="relative flex flex-col sm:flex-row items-center p-2 sm:p-4 mb-3 rounded-lg bg-black"
           >
-              <Image
-                src={item.avatar}
-                alt={`${item.username}'s avatar`}
-                fill
-                className="rounded-full object-cover"
-                sizes="(max-width: 640px) 64px, 80px"
-              />
+            <img
+              src={item.avatar}
+              className="rounded-full object-cover w-16 h-16 sm:w-20 sm:h-20"
+              alt={`${item.username}'s avatar`}
+            />
             <div className="mt-2 sm:mt-0 sm:ml-4 flex-1 text-center sm:text-left">
               <div>
                 <h1 className="text-base text-gray-300 sm:text-lg font-extralight">

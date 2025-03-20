@@ -5,7 +5,8 @@ import React from "react";
 import { useRouter } from "@/i18n/routing";
 import { UseUser } from "@/api/get-user";
 import { UseFriend } from "@/api/get-friends";
-import { useMutation } from "@tanstack/react-query";
+// import { useMutation } from "@tanstack/react-query"
+import Image from "next/image";
 
 export default function Friendchat() {
   const router = useRouter();
@@ -16,32 +17,28 @@ export default function Friendchat() {
   const profileUsername = pathSegments[pathSegments.length - 1];
   const isOwner = profileUsername === "me" || profileUsername === me?.username;
 
-  const friendMutation = useMutation({
-    mutationFn: async ({
-      url,
-      username,
-    }: {
-      url: string;
-      username: string;
-    }) => {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
-      });
-      if (!response.ok) throw new Error("Network response was not ok");
-      return response.json();
-    },
-  });
-
-  const handleRemoveFriend = (username: string) => {
-    friendMutation.mutate({
-      url: "/api/friends/remove-friend/",
-      username: username,
-    });
+  const handleNavigateToProfile = (username: string) => {
+    router.push(`/en/profile/${username}`);
   };
 
-  // If not the owner's profile, show private message
+  // const friendMutation = useMutation({
+  //   mutationFn: async ({
+  //     url,
+  //     username,
+  //   }: {
+  //     url: string;
+  //     username: string;
+  //   }) => {
+  //     const response = await fetch(url, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ username }),
+  //     });
+  //     if (!response.ok) throw new Error("Network response was not ok");
+  //     return response.json();
+  //   },
+  // });
+
   if (!isOwner) {
     return (
       <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
@@ -92,6 +89,7 @@ export default function Friendchat() {
         {friends.slice(0, 4).map((item) => (
           <div
             key={item.username}
+            onClick={() => handleNavigateToProfile(item.username)}
             className="relative flex flex-col sm:flex-row items-center p-2 sm:p-4 mb-3 w-[98%] rounded-lg bg-black/30"
           >
             <img
@@ -110,58 +108,9 @@ export default function Friendchat() {
                 <h3 className="text-sm sm:text-base">{item.last_name}</h3>
               </div>
             </div>
-            <div className="relative sm:absolute right-0 sm:right-5 mt-2 sm:mt-0 top-auto sm:top-1/2 transform sm:-translate-y-1/2 flex items-center gap-2 sm:gap-3">
-              <button
-                onClick={() => handleRemoveFriend(item.username)}
-                className="px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base bg-[#c75b37]/20 text-[#c75b37] rounded-lg hover:bg-[#c75b37]/30 transition-all"
-              >
-                Remove
-              </button>
-            </div>
           </div>
         ))}
       </div>
     </div>
   );
 }
-
-// "use client";
-
-// import { useNotifications } from '@/hooks/useNotifications';
-// import { useQueryClient } from '@tanstack/react-query';
-// import { useEffect } from 'react';
-
-// export default function Friendchat() {
-//   const { socket } = useNotifications();
-//   const queryClient = useQueryClient();
-//   const router = useRouter();
-
-//   useEffect(() => {
-//     if (!socket) return;
-
-//     const handleFriendUpdate = () => {
-//       // Refetch friends list to update the UI
-//       queryClient.invalidateQueries(['friends']);
-//     };
-
-//     socket.on('friend_request', handleFriendUpdate);
-//     socket.on('friend_request_accepted', handleFriendUpdate);
-//     socket.on('block_status_update', handleFriendUpdate);
-
-//     return () => {
-//       socket.off('friend_request', handleFriendUpdate);
-//       socket.off('friend_request_accepted', handleFriendUpdate);
-//       socket.off('block_status_update', handleFriendUpdate);
-//     };
-//   }, [socket, queryClient]);
-
-//   if (!friends || friends?.length === 0) {
-//     // ... your empty state JSX
-//   }
-
-//   return (
-//     <div className="h-full w-full space-y-4 flex flex-col justify-center items-center">
-//       {/* ... your existing JSX ... */}
-//     </div>
-//   );
-// }

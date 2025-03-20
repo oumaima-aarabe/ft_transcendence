@@ -21,10 +21,6 @@ interface FriendsData {
 	requestsReceived: Friend[];
 }
 
-// export interface FriendsProps {
-// 	data: Friend[];
-// }
-
 export default function Page() {
 
 	const [friends, setFriends] = useState<string>("friends");
