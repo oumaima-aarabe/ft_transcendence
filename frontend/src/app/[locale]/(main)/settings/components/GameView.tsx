@@ -55,7 +55,7 @@ const GameComponent: React.FC = () => {
                             } transition focus:outline-none`}
                         onClick={() => setConnectivity('local')}
                     >
-                        <div className="absolute top-1/2 left-3 transform -translate-y-1/2">
+                        <div className="absolute top-1/2 left-3 transform -translate-y-1/2">=
                             <img src='/assets/icons/invisible-icon.svg' alt="local Icon" className="h-5 w-5" />
                         </div>
                         {t('connectivity.local')}
