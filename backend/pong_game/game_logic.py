@@ -677,10 +677,10 @@ def update_paddle_position(game_id, player_num, position):
         return False
     
     # Validate the move
-    valid, reason = validate_game_state(game_id, player_id, position)
-    if not valid:
-        print(f"Invalid paddle move: {reason}")
-        return False
+    # valid, reason = validate_game_state(game_id, player_id, position)
+    # if not valid:
+    #     print(f"Invalid paddle move: {reason}")
+    #     return False
     
     # Update the appropriate paddle
     paddle_key = 'left_paddle' if player_num == 1 else 'right_paddle'
