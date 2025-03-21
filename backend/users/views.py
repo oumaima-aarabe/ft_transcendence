@@ -13,6 +13,7 @@ from django.db.models import Q
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Notification
 from .serializers import NotificationSerializer
+from friends.models import Friend
 
 
 @permission_classes([IsAuthenticated])
@@ -48,6 +49,21 @@ def search_users(request, query):
     if not query:
         return Response([])
 
+    # Get users who have blocked the current user or are blocked by the current user
+    blocked_relation = Friend.objects.filter(
+        (Q(sender=request.user) | Q(recipient=request.user)) &
+        Q(state='blocked')
+    ).values_list('sender', 'recipient')
+    
+    # Extract all user IDs involved in blocking relationships
+    blocked_users = set()
+    for sender_id, recipient_id in blocked_relation:
+        if sender_id == request.user.id:
+            blocked_users.add(recipient_id)  # Users blocked by current user
+        elif recipient_id == request.user.id:
+            blocked_users.add(sender_id)  # Users who blocked current user
+
+    # Find users matching the search query but exclude blocked users
     users = User.objects.filter(
         Q(username__icontains=query) |
         Q(first_name__icontains=query) |
@@ -55,9 +71,7 @@ def search_users(request, query):
     ).exclude(
         id=request.user.id
     ).exclude(
-        blocked_users=request.user9
-    ).exclude(
-        blocked_by=request.user
+        id__in=blocked_users
     )[:5]
 
     return Response(UserSerializer(users, many=True).data)
