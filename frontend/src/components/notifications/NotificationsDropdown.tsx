@@ -16,6 +16,8 @@ import { useNotificationsContext } from '@/providers/NotificationsProvider';
 import { useTranslations } from 'next-intl';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useRouter } from '@/i18n/routing';
+import { Notification } from '@/types/notification';
 
 export function NotificationsDropdown() {
   const { 
@@ -28,14 +30,18 @@ export function NotificationsDropdown() {
     refreshNotifications 
   } = useNotificationsContext();
   const t = useTranslations('notifications');
-  
+  const router = useRouter();
+
   // Refresh notifications when the dropdown is opened
   const handleDropdownOpen = () => {
     refreshNotifications();
   };
   
-  const handleNotificationClick = (id: string) => {
-    markAsRead(id);
+  const handleNotificationClick = (notification: Notification) => {
+    if (notification.type == 'friend_request') {
+      router.push(`/profile/${notification.data.user.username}`);
+    }
+    markAsRead(notification.id);
   };
   
   return (
@@ -98,7 +104,7 @@ export function NotificationsDropdown() {
                   "hover:bg-black/20 focus:bg-black/20 focus:text-white",
                   !notification.read ? 'bg-[#D05F3B]/10' : ''
                 )}
-                onClick={() => handleNotificationClick(notification.id)}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex justify-between w-full">
                   <span className={`font-medium ${!notification.read ? 'text-[#D05F3B]' : 'text-white'}`}>
