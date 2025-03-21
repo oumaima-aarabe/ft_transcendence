@@ -23,6 +23,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export interface FormDataRegister {
   first_name: string;
@@ -41,6 +42,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState(true);
+  const t = useTranslations('auth');
 
   const PasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -129,7 +131,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
     <Card className="w-full max-w-[690px] bg-[#751d03] bg-opacity-[18%] p-8 md:p-10 flex flex-col justify-center rounded-3xl border-none backdrop-blur-lg">
       <div className="text-center mb-6">
         <p className="text-[18px] md:text-[22px] font-medium text-white">
-          Join us by entering your information
+          {t('sign_up.title')}
         </p>
       </div>
       <Form {...registerForm}>
@@ -143,7 +145,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
               name="first_name"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[220px]">
-                  <FormLabel className="text-white">First Name</FormLabel>
+                  <FormLabel className="text-white">{t('sign_up.first_name_label')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                         <Icon icon="mdi:account" 
@@ -152,7 +154,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                         className="absolute left-3 top-1/2 transform -translate-y-1/2"
                         />
                       <Input
-                        placeholder="Enter your first name"
+                        placeholder={t('sign_up.first_name_placeholder')}
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                         {...field}
                       />
@@ -167,7 +169,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
               name="last_name"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[220px]">
-                  <FormLabel className="text-white">Last Name</FormLabel>
+                  <FormLabel className="text-white">{t('sign_up.last_name_label')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                         <Icon icon="mdi:account" 
@@ -176,7 +178,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                         className="absolute left-3 top-1/2 transform -translate-y-1/2"
                         />
                       <Input
-                        placeholder="Enter your last name"
+                        placeholder={t('sign_up.last_name_placeholder')}
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                         {...field}
                       />
@@ -193,7 +195,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Username</FormLabel>
+                <FormLabel className="text-white">{t('sign_up.username_label')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                       <Icon icon="mdi:account-circle" 
@@ -202,7 +204,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                       className="absolute left-3 top-1/2 transform -translate-y-1/2"
                       />
                     <Input
-                      placeholder="Enter your username"
+                      placeholder={t('sign_up.username_placeholder')}
                       className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
                       />
@@ -218,7 +220,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-white">Email</FormLabel>
+                <FormLabel className="text-white">{t('sign_up.email_label')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                       <Icon icon="entypo:email" 
@@ -227,7 +229,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                       className="absolute left-3 top-1/2 transform -translate-y-1/2"
                       />
                     <Input
-                      placeholder="Enter your email"
+                      placeholder={t('sign_up.email_placeholder')}
                       className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
                       />
@@ -244,7 +246,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
               name="password"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[220px]">
-                  <FormLabel className="text-white">Password</FormLabel>
+                  <FormLabel className="text-white">{t('sign_up.password_label')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                         <Icon
@@ -255,7 +257,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                         />
                       <Input
                         type={showPassword ? "password" : "text"}
-                        placeholder="Enter password"
+                        placeholder={t('sign_up.password_placeholder')}
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                         {...field}
                       />
@@ -282,7 +284,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[220px]">
-                  <FormLabel className="text-white">Confirm password</FormLabel>
+                  <FormLabel className="text-white">{t('sign_up.confirm_password_label')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                         <Icon
@@ -293,7 +295,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
                         />
                       <Input
                         type={showConfirmPassword ? "password" : "text"}
-                        placeholder="Confirm password"
+                        placeholder={t('sign_up.confirm_password_placeholder')}
                         className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                         {...field}
                       />
@@ -360,21 +362,21 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
             disabled={registerMutation.isPending}
           >
             <span className="text-[#c75b37]">
-              {registerMutation.isPending ? "creating..." : "Sign up"}
+              {registerMutation.isPending ? t('auth.common.loading') : t('sign_up.button')}
             </span>
           </Button>
         </form>
       </Form>
       <div className="text-center text-sm text-white mt-6">
         <p>
-          Already have an account?{" "}
+          {t('sign_up.have_account')}{" "}
           <button
             onClick={() => {
               setLogin(true);
             }}
             className="text-[#40CFB7] hover:text-[#8D361A] focus:outline-none"
           >
-            Sign in!
+            {t('sign_up.sign_in_link')}
           </button>
         </p>
       </div>

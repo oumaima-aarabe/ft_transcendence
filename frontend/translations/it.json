@@ -2,22 +2,33 @@
   "common": {
     "loading": "Caricamento...",
     "error": {
-      "connection": "Errore di connessione. Per favore riprova.",
+      "connection": "Errore di connessione. Per favore, riprova.",
       "failed_load": "Caricamento fallito"
     }
   },
   "auth": {
+    "common": {
+      "loading": "Caricamento..."
+    },
     "sign_in": {
       "title": "Accedi",
       "new_user": "Nuovo su PongArcadia?",
       "sign_up_link": "Registrati!",
+      "email_label": "Email",
+      "password_label": "Password",
       "username_placeholder": "Inserisci il tuo nome utente",
       "password_placeholder": "Inserisci la tua password",
       "button": "Accedi",
       "or_sign_in_with": "Oppure accedi con"
     },
     "sign_up": {
-      "title": "Unisciti inserendo le tue informazioni",
+      "title": "Unisciti a noi inserendo i tuoi dati",
+      "first_name_label": "Nome",
+      "last_name_label": "Cognome",
+      "username_label": "Nome utente",
+      "email_label": "Email",
+      "password_label": "Password",
+      "confirm_password_label": "Conferma password",
       "username_placeholder": "Nome utente",
       "email_placeholder": "Email",
       "first_name_placeholder": "Nome",
@@ -27,6 +38,16 @@
       "button": "Registrati",
       "have_account": "Hai già un account?",
       "sign_in_link": "Accedi!"
+    },
+    "two_factor": {
+      "title": "Autenticazione a due fattori",
+      "subtitle": "Inserisci il codice generato dalla tua app di autenticazione per continuare",
+      "code_label": "Inserisci il tuo codice 2fa",
+      "code_placeholder": "● ● ● ● ● ●",
+      "verify_button": "Verifica",
+      "verifying": "Verifica in corso...",
+      "or": "Oppure",
+      "go_back": "Torna al login"
     }
   },
   "notifications": {

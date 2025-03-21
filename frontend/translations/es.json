@@ -7,26 +7,47 @@
     }
   },
   "auth": {
+    "common": {
+      "loading": "Cargando..."
+    },
     "sign_in": {
       "title": "Iniciar sesión",
       "new_user": "¿Nuevo en PongArcadia?",
       "sign_up_link": "¡Regístrate!",
-      "username_placeholder": "Ingresa tu nombre de usuario",
-      "password_placeholder": "Ingresa tu contraseña",
+      "email_label": "Correo electrónico",
+      "password_label": "Contraseña",
+      "username_placeholder": "Introduzca su nombre de usuario",
+      "password_placeholder": "Introduzca su contraseña",
       "button": "Iniciar sesión",
-      "or_sign_in_with": "O inicia sesión con"
+      "or_sign_in_with": "O inicie sesión con"
     },
     "sign_up": {
-      "title": "Únete ingresando tu información",
+      "title": "Únete a nosotros introduciendo tu información",
+      "first_name_label": "Nombre",
+      "last_name_label": "Apellido",
+      "username_label": "Nombre de usuario",
+      "email_label": "Correo electrónico",
+      "password_label": "Contraseña",
+      "confirm_password_label": "Confirmar contraseña",
       "username_placeholder": "Nombre de usuario",
       "email_placeholder": "Correo electrónico",
       "first_name_placeholder": "Nombre",
       "last_name_placeholder": "Apellido",
       "password_placeholder": "Contraseña",
       "confirm_password_placeholder": "Confirmar contraseña",
-      "button": "Registrarse",
+      "button": "Regístrate",
       "have_account": "¿Ya tienes una cuenta?",
       "sign_in_link": "¡Inicia sesión!"
+    },
+    "two_factor": {
+      "title": "Autenticación de dos factores",
+      "subtitle": "Introduce el código generado por tu aplicación de autenticación para continuar",
+      "code_label": "Introduce tu código 2fa",
+      "code_placeholder": "● ● ● ● ● ●",
+      "verify_button": "Verificar",
+      "verifying": "Verificando...",
+      "or": "O",
+      "go_back": "Volver al inicio de sesión"
     }
   },
   "notifications": {

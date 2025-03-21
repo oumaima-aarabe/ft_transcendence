@@ -22,6 +22,7 @@ import { useState, Dispatch, SetStateAction } from "react";
 import { fetcher } from "@/lib/fetcher";
 import { useRouter } from "@/i18n/routing";
 import endpoints from "@/constants/endpoints";
+import { useTranslations } from "next-intl";
 
 
 export interface FormDataLogin {
@@ -41,6 +42,7 @@ interface ExtendedLoginFormProps extends LoginFormProps {
 const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormProps) => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState<boolean>(true)
+  const t = useTranslations('auth');
 
   const ShowPasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -111,14 +113,14 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
   return (
     <Card className="w-full max-w-lg bg-[#751d03] bg-opacity-[18%] p-6 md:p-10 flex flex-col rounded-3xl border-none backdrop-blur-lg">
       <div className="flex justify-center items-center h-auto p-4 mb-6 text-white text-center space-x-2">
-        <p className="text-sm sm:text-base">New to PongArcadia?</p>
+        <p className="text-sm sm:text-base">{t('sign_in.new_user')}</p>
         <button
           onClick={() => {
             setLogin(false);
           }}
           className="text-[#40CFB7] hover:text-[#f18662] focus:outline-none"
         >
-          Sign up!
+          {t('sign_in.sign_up_link')}
         </button>
       </div>
 
@@ -132,7 +134,7 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-2 text-[#FFFFFF]">
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t('sign_in.email_label')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Icon
@@ -142,7 +144,7 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black"
                     />
                     <Input
-                      placeholder="Enter your email"
+                      placeholder={t('sign_in.username_placeholder')}
                       className="pl-10 !bg-[#EEE5BE] text-black !rounded-3xl w-full"
                       {...field}
                     />
@@ -158,7 +160,7 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-2 text-[#FFFFFF]">
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t('sign_in.password_label')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Icon
@@ -169,7 +171,7 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
                     />
                     <Input
                       type={showPassword ? "password" : "text"}
-                      placeholder="Enter password"
+                      placeholder={t('sign_in.password_placeholder')}
                       className="pl-10 !bg-[#EEE5BE] !text-[#4C4C4C] !rounded-3xl"
                       {...field}
                     />
@@ -207,7 +209,7 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
             className="w-full h-[54px] bg-[#40CFB7] hover:bg-[#EEE5BE] rounded-3xl shadow-shd"
           >
             <span className="text-[#c75b37]">
-              {loginMutation.isPending ? 'Signing in...' :'Sign in'}
+              {loginMutation.isPending ? t('common.loading') : t('sign_in.button')}
             </span>
           </Button>
         </form>
@@ -215,7 +217,7 @@ const LoginForm = ({ setLogin, setShowTwoFactor, setUserId }: ExtendedLoginFormP
       <div className="flex flex-col justify-center items-center mt-6 space-y-4">
         <div className="flex items-center w-full">
           <div className="border-t-2 border-[#40CFB7] flex-grow"></div>
-          <p className="text-sm text-white mx-4">Or sign in with</p>
+          <p className="text-sm text-white mx-4">{t('sign_in.or_sign_in_with')}</p>
           <div className="border-t-2 border-[#40CFB7] flex-grow"></div>
         </div>
         <button onClick={() => login42()}>
