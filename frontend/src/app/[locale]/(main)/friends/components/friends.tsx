@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import React from "react";
 import { UseFriend } from "@/api/get-friends";
 import { useFriendMutation } from "@/hooks/useFriendMutation";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 // import Image from "next/image";
 
 export default function Friends() {
@@ -22,7 +22,7 @@ export default function Friends() {
   };
 
   const handleNavigateToProfile = (username: string) => {
-    router.push(`/en/profile/${username}`);
+    router.push(`/profile/${username}`);
   };
 
   if (!friends || friends?.length === 0) {

@@ -10,7 +10,7 @@ import { NotificationsDropdown } from "@/components/notifications/NotificationsD
 import { useSearchUsers } from "@/api/get-user";
 import { useState, useRef, useEffect } from "react";
 import { User } from "@/types/user";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 
 // Custom debounce hook implementation
 function useDebounce<T>(value: T, delay: number): T {

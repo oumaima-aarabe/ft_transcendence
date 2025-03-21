@@ -3,14 +3,14 @@
 import React from "react";
 import { UseSent } from "@/api/get-sent";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 
 export default function SentInvitations() {
   const { data: sentInvit } = UseSent();
     const router = useRouter();
   
     const handleNavigateToProfile = (username: string) => {
-      router.push(`/en/profile/${username}`);
+      router.push(`/profile/${username}`);
     };
 
   if (!sentInvit || sentInvit?.length === 0) {

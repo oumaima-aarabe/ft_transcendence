@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useFriendMutation } from "@/hooks/useFriendMutation";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -151,7 +151,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
       friendShip?.state === FriendshipStatus.BLOCKED &&
       friendShip.sender !== me?.username
     ) {
-      router.push("/en/profile/me");
+      router.push("/profile/me");
     }
   }, [friendShip, me?.username, router]);
 

@@ -2,14 +2,14 @@
 
 import React from "react";
 import { UseBlocked } from "@/api/get-blocked";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 
 export default function Blocked() {
   const { data: blockedUsers } = UseBlocked();
     const router = useRouter();
 
   const handleNavigateToProfile = (username: string) => {
-    router.push(`/en/profile/${username}`);
+    router.push(`/profile/${username}`);
   };
 
   if (!blockedUsers || blockedUsers?.length === 0) {

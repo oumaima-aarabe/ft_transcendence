@@ -3,14 +3,14 @@
 import React from "react";
 import { UseInvitation } from "@/api/get-Invitation";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 
 export default function ReceivedInvitations() {
   const { data: invitation } = UseInvitation();
   const router = useRouter();
   
   const handleNavigateToProfile = (username: string) => {
-    router.push(`/en/profile/${username}`);
+    router.push(`/profile/${username}`);
   };
 
   if (!invitation || invitation?.length === 0) {

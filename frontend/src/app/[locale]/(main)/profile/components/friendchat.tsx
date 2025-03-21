@@ -18,7 +18,7 @@ export default function Friendchat() {
   const isOwner = profileUsername === "me" || profileUsername === me?.username;
 
   const handleNavigateToProfile = (username: string) => {
-    router.push(`/en/profile/${username}`);
+    router.push(`/profile/${username}`);
   };
 
   // const friendMutation = useMutation({
