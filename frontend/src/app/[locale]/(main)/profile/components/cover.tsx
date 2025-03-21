@@ -7,8 +7,10 @@ import { User } from "@/types/user";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fetcher } from "@/lib/fetcher";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useFriendMutation } from "@/hooks/useFriendMutation";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export enum FriendshipStatus {
   NONE = "none",
@@ -24,130 +26,196 @@ export type Friend = {
   state: FriendshipStatus;
 };
 
-export const getFriendShipStatus = async (username: string) => {
-  try {
-    const resp = await fetcher.get<Friend>(
-      `/api/friends/status?username=${username}`
-    );
-    return resp.data;
-  } catch (error) {
-    return null;
-  }
+export const useFriendshipStatus = (username: string | undefined) => {
+  return useQuery({
+    queryKey: ["friendshipStatus", username],
+    queryFn: async () => {
+      if (!username) return null;
+      try {
+        const resp = await fetcher.get<Friend>(
+          `/api/friends/status?username=${username}`
+        );
+        return resp.data;
+      } catch (error) {
+        return null;
+      }
+    },
+    enabled: !!username,
+  });
 };
 
 export default function Cover(props: { user: User; isOwner: boolean }) {
   const { user, isOwner } = props;
   const { data: me } = UseUser();
-  const [friendShip, setFriendShip] = useState<Friend | null>(null);
-  const router = useRouter()
-
-  const updateFriendState = async ({url, username}: {url: string, username: string}) => {
-    try {
-      const response = await fetcher.post(url, {username});
-      return response.data;
-    } catch (error: any) {
-      const errorData = error.response?.data as any;
-      if (errorData?.error) {
-        throw new Error(errorData.error);
-      }
-      throw new Error("An unexpected error occurred");
-    }
-  };
-
-  const friendMutation = useMutation({
-    mutationFn: updateFriendState,
-    onSuccess: (data) => {
-      console.log('data: ', data)
-      setFriendShip(data)
-    },
-    onError: (error) => {
-      console.log("state not updated", error);
-    }
-  })
-
-  useEffect(() => {
-    if (!user?.username || !me?.username || isOwner) return;
-  
-    const fetchStatus = async () => {
-      const status = await getFriendShipStatus(user.username);
-      if (status) {
-        setFriendShip(status);
-      } else {
-        setFriendShip({
-          id: "",
-          recipient: user.username,
-          sender: me.username,
-          state: FriendshipStatus.NONE,
-        });
-      }
-    };
-
-    fetchStatus();
-  }, [user, me, isOwner]);
+  const queryClient = useQueryClient();
+  const { data: friendShip } = useFriendshipStatus(
+    isOwner ? undefined : user?.username
+  );
+  const router = useRouter();
+  const { socket } = useNotifications();
+  const friendMutation = useFriendMutation(user.username);
 
   const handleAddFriend = () => {
-    friendMutation.mutate({url: '/api/friends/send-request/', username: user.username})
+    friendMutation.mutate({
+      url: "/api/friends/send-request/",
+      username: user.username,
+    });
   };
 
   const handleRemoveFriend = () => {
-    friendMutation.mutate({url: '/api/friends/remove-friend/', username: user.username})
+    friendMutation.mutate({
+      url: "/api/friends/remove-friend/",
+      username: user.username,
+    });
   };
 
   const handleCancelRequest = () => {
-    friendMutation.mutate({url: '/api/friends/cancel-request/', username: user.username})
+    friendMutation.mutate({
+      url: "/api/friends/cancel-request/",
+      username: user.username,
+    });
   };
 
   const handleBlockUser = () => {
-    friendMutation.mutate({url: '/api/friends/block/', username: user.username})
+    friendMutation.mutate({
+      url: "/api/friends/block/",
+      username: user.username,
+    });
   };
 
   const handleUnBlockUser = () => {
-    friendMutation.mutate({url: '/api/friends/unblock/', username: user.username})
+    friendMutation.mutate({
+      url: "/api/friends/unblock/",
+      username: user.username,
+    });
   };
 
   const handleAcceptRequest = () => {
-    friendMutation.mutate({url: '/api/friends/confirm-request/', username: user.username})
+    friendMutation.mutate({
+      url: "/api/friends/confirm-request/",
+      username: user.username,
+    });
   };
+
+  useEffect(() => {
+    if (!socket || !user.username || !me) return;
+
+    const handleFriendshipUpdate = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["friendshipStatus", user.username],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["friendshipStatus", me.username],
+      });
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      // Handle different types of friendship notifications
+      switch (data.notification.type) {
+        case "friend_request":
+          handleFriendshipUpdate();
+          break;
+
+        case "friend_request_accepted":
+          handleFriendshipUpdate();
+          break;
+
+        case "block":
+          handleFriendshipUpdate();
+          break;
+
+        case "unblock":
+          handleFriendshipUpdate();
+          break;
+
+        case "remove_friend":
+          handleFriendshipUpdate();
+          break;
+
+        case "cancel_request":
+          handleFriendshipUpdate();
+          break;
+      }
+    };
+
+    // Cleanup function
+    return () => {
+      socket.onmessage = null;
+    };
+  }, [socket, user.username, queryClient, me]);
+
+  useEffect(() => {
+    if (
+      friendShip?.state === FriendshipStatus.BLOCKED &&
+      friendShip.sender !== me?.username
+    ) {
+      router.push("/en/profile/me");
+    }
+  }, [friendShip, me?.username, router]);
 
   // if (!user) return null
 
-  // Render buttons based on friendship status
   const renderFriendshipButton = () => {
-    if (isOwner) return null
+    if (isOwner) return null;
 
-    if (!friendShip || friendShip.state === FriendshipStatus.BLOCKED) return null;
-
-    // console.log('status: ', friendShip.state)
-    // console.log('status type: ', typeof(friendShip.state))
+    if (!friendShip || friendShip.state === FriendshipStatus.BLOCKED)
+      return null;
 
     switch (friendShip.state) {
       case FriendshipStatus.NONE:
         return (
-          <Button onClick={handleAddFriend} variant="default" disabled={friendMutation.isPending}>
+          <Button
+            onClick={handleAddFriend}
+            variant="default"
+            disabled={friendMutation.isPending}
+            className="bg-[#40CFB7] hover:bg-[#40CFB7]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
+          >
             {friendMutation.isPending ? "Adding..." : "Add Friend"}
           </Button>
         );
       case FriendshipStatus.ACCEPTED:
         return (
-          <Button onClick={handleRemoveFriend} variant="destructive" disabled={friendMutation.isPending}>
-            {friendMutation.isPending ? "Removing..." : "Remove Friend"}
+          <Button
+            onClick={handleRemoveFriend}
+            variant="destructive"
+            disabled={friendMutation.isPending}
+            className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
+          >
+            {friendMutation.isPending ? "Removing..." : "Remove"}
           </Button>
         );
       case FriendshipStatus.PENDING:
         if (friendShip.sender === me?.username) {
           return (
-            <Button onClick={handleCancelRequest} variant="default" disabled={friendMutation.isPending}>
-              {friendMutation.isPending ? "Cancelling..." : "Cancel Request"}
+            <Button
+              onClick={handleCancelRequest}
+              variant="default"
+              disabled={friendMutation.isPending}
+              className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
+            >
+              {friendMutation.isPending ? "Cancelling..." : "Cancel"}
             </Button>
           );
         } else {
           return (
-            <div className="flex gap-2">
-              <Button onClick={handleAcceptRequest} variant="default" disabled={friendMutation.isPending}>
-                {friendMutation.isPending ? "Accepting..." : "Accept Request"}
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              <Button
+                onClick={handleAcceptRequest}
+                variant="default"
+                disabled={friendMutation.isPending}
+                className="bg-[#40CFB7] hover:bg-[#40CFB7]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
+              >
+                {friendMutation.isPending ? "Accepting..." : "Accept"}
               </Button>
-              <Button onClick={handleCancelRequest} variant="destructive" disabled={friendMutation.isPending}>
-                {friendMutation.isPending ? "Deleting..." : "Delete Request"}
+              <Button
+                onClick={handleCancelRequest}
+                variant="destructive"
+                disabled={friendMutation.isPending}
+                className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
+              >
+                {friendMutation.isPending ? "Deleting..." : "Decline"}
               </Button>
             </div>
           );
@@ -157,54 +225,68 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
     }
   };
 
+  // Modify the renderBlockButton function
   const renderBlockButton = () => {
-    if (!friendShip || isOwner)
-      return null
+    if (!friendShip || isOwner) return null;
 
     if (friendShip.state === FriendshipStatus.BLOCKED) {
       if (friendShip.sender === me?.username) {
         return (
-          <Button onClick={handleUnBlockUser} variant="destructive" disabled={friendMutation.isPending}>
-            {friendMutation.isPending ? "Unblocking..." : "Unblock User"}
+          <Button
+            onClick={handleUnBlockUser}
+            variant="destructive"
+            disabled={friendMutation.isPending}
+            className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
+          >
+            {friendMutation.isPending ? "Unblocking..." : "Unblock"}
           </Button>
-        )
+        );
       }
-      router.push('/en/profile/me')
-      return null
+      return null;
     } else {
       return (
-        <Button onClick={handleBlockUser} variant="destructive" disabled={friendMutation.isPending}>
-          {friendMutation.isPending ? "Blocking..." : "Block User"}
+        <Button
+          onClick={handleBlockUser}
+          variant="destructive"
+          disabled={friendMutation.isPending}
+          className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
+        >
+          {friendMutation.isPending ? "Blocking..." : "Block"}
         </Button>
-      )
+      );
     }
   };
 
   return (
-    <div className="relative w-full min-h-[30%] rounded-2xl bg-cover  backdrop-blur-sm bg-center flex flex-col justify-center items-center">
+    <div className="relative w-full h-fit rounded-2xl bg-cover backdrop-blur-sm bg-center flex flex-col justify-center items-center">
       <div className="absolute -z-10 inset-0 w-full h-full bg-black/70 rounded-2xl"></div>
-      <div className="w-[50%] h-[70%]">
-        <div className="flex justify-center items-center h-[75%]">
-          <Avatar className="h-28 w-28">
+      <div className="w-full sm:w-[85%] md:w-[70%] flex flex-col items-center gap-3 py-4">
+        <div className="flex flex-col items-center">
+          <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2 border-[#40CFB7]">
             <AvatarImage
               src={user.avatar}
               alt="profile image"
-              className="h-full w-full"
+              className="h-full w-full object-cover"
             />
-            <AvatarFallback>{user.username?.substring(0, 2).toUpperCase() || "UN"}</AvatarFallback>
+            <AvatarFallback>
+              {user.username?.substring(0, 2).toUpperCase() || "UN"}
+            </AvatarFallback>
           </Avatar>
+          <div className="text-lg sm:text-xl text-white font-medium mt-2">
+            {user.username}
+          </div>
         </div>
-        <div className="flex justify-center items-center">{user.username}</div>
-        <>
-          {renderFriendshipButton()}
-          {renderBlockButton()}
-        </>
-      </div>
 
-      <div className=" w-[80%] h-[30%]">
-        <div className="space-y-4">
-          {user.level || "Level 0"}
-          <Progress value={60} />
+        {!isOwner && (
+          <div className="flex items-center justify-center gap-1 sm:gap-2 mt-2">
+            {renderFriendshipButton()}
+            {renderBlockButton()}
+          </div>
+        )}
+
+        <div className="w-[90%] sm:w-[80%] space-y-1 mt-2">
+          <div className="text-white/90 text-sm">{user.level || "Level 0"}</div>
+          <Progress value={60} className="h-1.5" />
         </div>
       </div>
     </div>

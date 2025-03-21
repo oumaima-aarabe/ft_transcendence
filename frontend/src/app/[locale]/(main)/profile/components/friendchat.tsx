@@ -2,73 +2,59 @@
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import React from "react";
-import { Friend } from "@/types/friends";
-import { UseFriend } from "@/api/get-friends";
 import { useRouter } from "@/i18n/routing";
-
-const friends = [
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "ka",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "kaboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "kaboussi2",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "kaboussi3",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "ussi",
-    avatar: "/assets/images/logo.svg",
-  },
-  {
-    first_name: "kawtar ",
-    last_name: "aboussi",
-    username: "aboussi",
-    avatar: "/assets/images/logo.svg",
-  },
-];
-
-const FriendItem = ({ item }: { item: Friend }) => (
-  <div className="relative flex items-center rounded-full bg-black">
-    <img src={item.avatar} className="rounded-full object-cover size-20" />
-    <div className="ml-4">
-      <div>
-        <h1 className="text-lg font-extralight">{item.username}</h1>
-      </div>
-      <div className="flex flex-row space-x-1">
-        <h2>{item.first_name}</h2>
-        <h3>{item.last_name}</h3>
-      </div>
-    </div>
-    <Icon
-      icon="token:chat"
-      width="50"
-      height="50"
-      className="absolute right-5 top-1/2 transform -translate-y-1/2 text-white"
-    />
-  </div>
-);
+import { UseUser } from "@/api/get-user";
+import { UseFriend } from "@/api/get-friends";
+// import { useMutation } from "@tanstack/react-query"
+import Image from "next/image";
 
 export default function Friendchat() {
-  // const {data: friends} = UseFriend()
   const router = useRouter();
+  const { data: me } = UseUser();
+  const { data: friends } = UseFriend();
+
+  const pathSegments = window.location.pathname.split("/");
+  const profileUsername = pathSegments[pathSegments.length - 1];
+  const isOwner = profileUsername === "me" || profileUsername === me?.username;
+
+  const handleNavigateToProfile = (username: string) => {
+    router.push(`/en/profile/${username}`);
+  };
+
+  // const friendMutation = useMutation({
+  //   mutationFn: async ({
+  //     url,
+  //     username,
+  //   }: {
+  //     url: string;
+  //     username: string;
+  //   }) => {
+  //     const response = await fetch(url, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ username }),
+  //     });
+  //     if (!response.ok) throw new Error("Network response was not ok");
+  //     return response.json();
+  //   },
+  // });
+
+  if (!isOwner) {
+    return (
+      <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
+        <div className="bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
+          <Icon
+            icon="mdi:friends-lock"
+            className="text-white/70 w-12 h-12 mb-3"
+          />
+          <h3 className="text-xl sm:text-2xl font-medium text-white mb-2">
+            Private Friends List
+          </h3>
+          <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full my-4" />
+        </div>
+      </div>
+    );
+  }
 
   if (!friends || friends?.length === 0) {
     return (
@@ -99,38 +85,28 @@ export default function Friendchat() {
         </span>
       </div>
 
-      <div className="scrollbar-hide h-[90%] w-full rounded-lg flex justify-center items-center flex-col pt-1">
+      <div className="scrollbar-hide h-[90%] w-full rounded-lg flex justify-start items-center flex-col pt-1">
         {friends.slice(0, 4).map((item) => (
           <div
             key={item.username}
-            className="relative flex items-center p-4 mb-3 w-[98%] rounded-lg bg-black/30"
+            onClick={() => handleNavigateToProfile(item.username)}
+            className="relative flex flex-col sm:flex-row items-center p-2 sm:p-4 mb-3 w-[98%] rounded-lg bg-black/30"
           >
             <img
               src={item.avatar}
-              className="rounded-full object-cover size-14"
+              className="rounded-full object-cover w-16 h-16 sm:w-20 sm:h-20"
+              alt={`${item.username}'s avatar`}
             />
-            <div className="ml-4">
+            <div className="mt-2 sm:mt-0 sm:ml-4 flex-1 text-center sm:text-left">
               <div>
-                <h1 className="text-lg font-extralight">{item.username}</h1>
+                <h1 className="text-base text-gray-300 sm:text-lg font-extralight">
+                  {item.username}
+                </h1>
               </div>
-              <div className="flex flex-row space-x-1">
-                <h2>{item.first_name}</h2>
-                <h3>{item.last_name}</h3>
+              <div className="flex flex-row justify-center sm:justify-start space-x-1 text-white">
+                <h2 className="text-sm sm:text-base">{item.first_name}</h2>
+                <h3 className="text-sm sm:text-base">{item.last_name}</h3>
               </div>
-            </div>
-            <div className="absolute right-5 top-1/2 transform -translate-y-1/2 flex items-center gap-3">
-              <Icon
-                icon="game-icons:ping-pong-bat"
-                width="40"
-                height="40"
-                className="text-[#40CFB7] cursor-pointer hover:text-[#35b09c]"
-              />
-              <Icon
-                icon="token:chat"
-                width="40"
-                height="40"
-                className="text-[#40CFB7] cursor-pointer hover:text-[#35b09c]"
-              />
             </div>
           </div>
         ))}
