@@ -1,16 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { sendRequest } from '@/lib/axios';
 import endpoints from '@/constants/endpoints';
-
-export type Notification = {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  data?: any;
-  read: boolean;
-  timestamp: string;
-};
+import { Notification } from '@/types/notification';
 
 // Map backend notification to frontend notification format
 const mapNotification = (notification: any): Notification => ({
