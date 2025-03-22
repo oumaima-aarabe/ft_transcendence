@@ -7,6 +7,7 @@ from .serializers import (PlayerProfileSerializer, GameListSerializer,
                          GameInviteSerializer, MatchmakingQueueSerializer)
 from django.shortcuts import get_object_or_404
 import uuid
+from django.db.models import Q
 
 class PlayerProfileView(APIView):
     def get(self, request):
@@ -311,3 +312,37 @@ class UserPreferencesView(APIView):
             })
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+try:
+    from .game_logic import active_games
+except ImportError:
+    # Define a fallback empty dictionary if import fails
+    active_games = {}
+
+class PlayerGameStatusView(APIView):
+    """API endpoint to check if a player is already in an active game"""
+    
+    def get(self, request):
+        """Check if the current user is in an active game"""
+        if not request.user.is_authenticated:
+            return Response({"active_game": False})
+        
+        # First check database for not-completed games
+        active_game = Game.objects.filter(
+            Q(status__in=['waiting', 'in_progress', 'paused']),
+            Q(player1=request.user) | Q(player2=request.user)
+        ).first()
+        
+        if active_game:
+            # User is in an active game
+            return Response({
+                "active_game": True,
+                "game_id": str(active_game.id),
+                "player1": active_game.player1.username,
+                "player2": active_game.player2.username if active_game.player2 else None,
+                "status": active_game.status
+            })
+            
+        # User is not in an active game
+        return Response({"active_game": False})
