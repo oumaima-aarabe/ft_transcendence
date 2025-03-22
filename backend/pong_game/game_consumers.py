@@ -100,6 +100,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 
                 game_logic.active_games[self.game_id]['loop_running'] = True
                 asyncio.create_task(self.game_loop())
+            if game_logic.are_both_players_connected(self.game_id):
+                # Update game status in database
+                await self.update_game_status('in_progress')
     
     async def disconnect(self, close_code):
         """Handle WebSocket disconnection"""
@@ -477,6 +480,26 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             game = Game.objects.get(id=self.game_id)
             # new status for cancelled games in your StatusChoices class
             game.status = 'cancelled'
+            game.save()
+            return True
+        except Game.DoesNotExist:
+            return False
+
+    @database_sync_to_async
+    def update_game_status(self, status):
+        """Update the game status in the database"""
+        try:
+            game = Game.objects.get(id=self.game_id)
+            game.status = status
+            
+            # If game is starting, set started_at timestamp
+            if status == 'in_progress' and not game.started_at:
+                game.started_at = timezone.now()
+                
+            # If game is completing or cancelling, set completed_at timestamp
+            if status in ['completed', 'cancelled'] and not game.completed_at:
+                game.completed_at = timezone.now()
+                
             game.save()
             return True
         except Game.DoesNotExist:

@@ -110,6 +110,16 @@ class PlayerProfile(models.Model):
             # Track consecutive wins logic could be added here
             
             self.save()
+        if game.winner == self.player and game.final_score_player2 == 0:
+            # Pure win achievement
+            if not self.pure_win:
+                self.pure_win = True
+            self.save()
+        if game.winner == self.player and self.matches_won == 3:
+            # Triple win achievement
+            if not self.triple_win:
+                self.triple_win = True
+            self.save()
 
 
 class GameInvite(models.Model):

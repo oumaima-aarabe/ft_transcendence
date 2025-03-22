@@ -102,7 +102,7 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
 }) => {
   // UI State
   const [uiState, setUiState] = useState({
-    gameStatus: "waiting" as "waiting" | "menu" | "playing" | "paused" | "matchOver" | "gameOver",
+    gameStatus: "waiting" as "waiting" | "menu" | "playing" | "cancelled" | "paused" |"matchOver" | "gameOver",
     matchWins: { player1: 0, player2: 0 },
     currentMatch: 1,
   });
@@ -441,8 +441,6 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
       drawWaitingScreen(ctx, themeProps);
     } else if (gameStatus === "menu") {
       drawMenuScreen(ctx, themeProps);
-    } else if (gameStatus === "paused") {
-      drawPauseScreen(ctx, themeProps);
     } else if (gameStatus === "matchOver") {
       drawMatchOverScreen(ctx, themeProps);
     } else if (gameStatus === "gameOver") {

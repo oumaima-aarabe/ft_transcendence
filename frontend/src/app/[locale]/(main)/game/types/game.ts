@@ -96,7 +96,7 @@ export interface EnhancedGameState {
     player2: number;
   };
   currentMatch: number;
-  gameStatus: "waiting" | "menu" | "playing" | "paused" | "matchOver" | "gameOver";
+  gameStatus: "waiting" | "menu" | "playing" | "paused" | "matchOver" | "gameOver"| "cancelled";
   winner: "player1" | "player2" | null;
 }
 

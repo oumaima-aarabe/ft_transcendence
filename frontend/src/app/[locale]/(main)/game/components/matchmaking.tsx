@@ -14,6 +14,7 @@ import {
   disconnectMatchmakingSocket,
   sendMatchmakingMessage 
 } from '@/lib/matchmakingWebsocket';
+import { checkPlayerGameStatus } from '@/api/player-status';
 
 interface MatchmakingProps {
   userId: string;
@@ -198,38 +199,70 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     };
   }, [isLoading, userData, preferencesLoaded, onGameFound]);
 
-  const startMatchmaking = () => {
-    const socket = getMatchmakingSocket();
-    
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      console.log('WebSocket not ready, current state:', socket?.readyState);
-      setMessage('Connection not ready. Attempting to reconnect...');
-      
-      // Try to reconnect
-      initMatchmakingSocket();
-      
-      // Wait a moment and check again
-      setTimeout(() => {
-        const reconnectedSocket = getMatchmakingSocket();
-        if (reconnectedSocket && reconnectedSocket.readyState === WebSocket.OPEN) {
-          console.log('Connection reestablished, sending join request');
-          sendMatchmakingMessage('join_queue', { difficulty: gameDifficulty });
-          setIsAnimating(true);
-          setStatus('searching');
-        } else {
-          setMessage('Unable to connect. Please try again later.');
+    const startMatchmaking = async () => {
+      // First, check if the user is already in an active game
+      try {
+        const statusResponse = await checkPlayerGameStatus();
+        
+        if (statusResponse.active_game && statusResponse.game_id) {
+          // User is already in a game - redirect them
+          setMessage('You are already in an active game.');
+          
+          // Wait a moment to show the message
+          setTimeout(() => {
+            // If you have a redirect function available in props, use it
+            if (onGameFound && statusResponse.game_id) {
+              onGameFound(
+                statusResponse.game_id,
+                statusResponse.player1 || 'Player 1',
+                statusResponse.player2 || 'Player 2',
+                `/game/${statusResponse.game_id}/`
+              );
+            } else {
+              // Otherwise, use direct navigation if possible
+              window.location.href = `/game/remote?gameId=${statusResponse.game_id}`;
+            }
+          }, 1500);
+          
+          return;
         }
-      }, 1000);
+      } catch (error) {
+        console.error('Error checking active games:', error);
+        // Continue with matchmaking if the check fails
+      }
       
-      return;
-    }
-    
-    // Socket is ready, send the message with server preferences
-    console.log('Sending join_queue message with difficulty:', gameDifficulty);
-    sendMatchmakingMessage('join_queue', { difficulty: gameDifficulty });
-    setIsAnimating(true);
-    setStatus('searching');
-  };
+      // Proceed with normal matchmaking
+      const socket = getMatchmakingSocket();
+        
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        console.log('WebSocket not ready, current state:', socket?.readyState);
+        setMessage('Connection not ready. Attempting to reconnect...');
+        
+        // Try to reconnect
+        initMatchmakingSocket();
+        
+        // Wait a moment and check again
+        setTimeout(() => {
+          const reconnectedSocket = getMatchmakingSocket();
+          if (reconnectedSocket && reconnectedSocket.readyState === WebSocket.OPEN) {
+            console.log('Connection reestablished, sending join request');
+            sendMatchmakingMessage('join_queue', { difficulty: gameDifficulty });
+            setIsAnimating(true);
+            setStatus('searching');
+          } else {
+            setMessage('Unable to connect. Please try again later.');
+          }
+        }, 1000);
+        
+        return;
+      }
+      
+      // Socket is ready, send the message with server preferences
+      console.log('Sending join_queue message with difficulty:', gameDifficulty);
+      sendMatchmakingMessage('join_queue', { difficulty: gameDifficulty });
+      setIsAnimating(true);
+      setStatus('searching');
+    };
 
   const cancelMatchmaking = () => {
     const socket = getMatchmakingSocket();
