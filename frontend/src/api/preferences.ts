@@ -21,7 +21,7 @@ export async function getUserPreferences(): Promise<UserPreferences> {
 
 export async function updateUserPreferences(preferences: UserPreferences): Promise<UserPreferences> {
   try {
-    const response = await sendRequest('put', '/preferences/', preferences);
+    const response = await sendRequest('put', '/pong_game/preferences/', preferences);
     return response.data;
   } catch (error) {
     console.error('Error updating preferences:', error);
