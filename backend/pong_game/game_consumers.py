@@ -107,26 +107,20 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             # Mark player as disconnected
             connection_info = game_logic.set_player_connection(self.game_id, self.player_num, False)
             
-            # Notify other player
+            # Force disconnect the other player too
             await self.channel_layer.group_send(
                 self.game_group,
                 {
-                    'type': 'player_status',
-                    'player': self.player_num,
-                    'connected': False
+                    'type': 'force_disconnect',
+                    'reason': f'Player {self.player_num} disconnected'
                 }
             )
             
-            # If connection changed game status, notify both players
-            if connection_info and connection_info['status_changed']:
-                await self.channel_layer.group_send(
-                    self.game_group,
-                    {
-                        'type': 'game_status_changed',
-                        'status': connection_info['new_status'],
-                        'reason': f'Player {self.player_num} disconnected'
-                    }
-                )
+            # Set game as completed and save results immediately
+            if game_logic.active_games[self.game_id]['game_status'] != 'gameOver':
+                game_logic.active_games[self.game_id]['game_status'] = 'gameOver'
+                # Save the game results with the current state
+                await game_logic.save_game_results(self.game_id)
             
             # Leave game group
             await self.channel_layer.group_discard(
@@ -134,16 +128,28 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 self.channel_name
             )
             
-            # If both players disconnected and game is over, save results and clean up
-            if connection_info and not connection_info['any_connected']:
-                game_status = game_logic.active_games[self.game_id]['game_status']
-                if game_status in ['gameOver', 'matchOver']:
-                    # Save results
-                    await game_logic.save_game_results(self.game_id)
-                    
-                    # Clean up
+            # Clean up game state if both players are disconnected
+            if not connection_info['any_connected']:
+                if self.game_id in game_logic.active_games:
                     del game_logic.active_games[self.game_id]
-    
+
+    async def force_disconnect(self, event):
+        """Force client to disconnect"""
+        await self.send_json({
+            'type': 'force_disconnect',
+            'reason': event.get('reason', 'Other player disconnected')
+        })
+        # Close the WebSocket connection
+        await self.close(code=4000)
+        
+    async def player_status(self, event):
+        """Send player connection status and handle forced disconnections"""
+        await self.send_json(event)
+        
+        # If this is a forced disconnect notification, close the connection
+        if event.get('force_disconnect', False):
+            await self.close(code=4002)  # Use a specific code for forced disconnection
+
     async def receive_json(self, content):
         """Handle messages from client"""
         try:
@@ -171,26 +177,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'status': new_status
                             }
                         )
-            
-            # elif message_type == 'toggle_pause':
-            #     # Toggle pause state
-            #     if self.game_id in game_logic.active_games:
-            #         current_status = game_logic.active_games[self.game_id]['game_status']
-            #         if current_status == 'playing':
-            #             new_status = game_logic.set_game_status(self.game_id, 'paused')
-            #         elif current_status == 'paused':
-            #             new_status = game_logic.set_game_status(self.game_id, 'playing')
-            #         else:
-            #             return
-                    
-            #         # Notify all players about status change
-            #         await self.channel_layer.group_send(
-            #             self.game_group,
-            #             {
-            #                 'type': 'game_status_changed',
-            #                 'status': new_status
-            #             }
-            #         )
             
             elif message_type == 'next_match':
                 # Start next match if current match is over
@@ -352,7 +338,18 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                     'state': game_logic.active_games[self.game_id]
                                 }
                             )
-                    
+                            if game_logic.active_games[self.game_id]['game_status'] == 'gameOver':
+                                await game_logic.save_game_results(self.game_id)
+                                
+                                # Force both players to disconnect since game is over
+                                await self.channel_layer.group_send(
+                                    self.game_group,
+                                    {
+                                        'type': 'game_completed',
+                                        'winner': game_logic.active_games[self.game_id]['winner'],
+                                        'final_state': game_logic.active_games[self.game_id]
+                                    }
+                                )
                     # Broadcast state at controlled intervals to avoid network congestion
                     time_since_last_broadcast = current_time - last_state_broadcast_time
                     if time_since_last_broadcast >= broadcast_interval:
@@ -422,9 +419,31 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def player_status(self, event):
         """Send player connection status"""
         await self.send_json(event)
+    async def game_completed(self, event):
+        """Handle game completion and prepare for socket closure"""
+        await self.send_json({
+            'type': 'game_completed',
+            'winner': event['winner'],
+            'final_state': event['final_state']
+        })
+        await asyncio.sleep(2)
+        # Close the connection
+        await self.close(code=1000)  # Normal closure
     
-    # Database methods
-    
+        # Give the client a moment to process the final state before disconnecting
+        await asyncio.sleep(10)
+        # Close the connection
+        await self.close(code=1000)  # Normal closure
+        # Database methods
+    async def force_disconnect(self, event):
+        """Force client to disconnect"""
+        await self.send_json({
+            'type': 'force_disconnect',
+            'reason': event.get('reason', 'Other player disconnected')
+        })
+        # Close the WebSocket connection
+        await self.close(code=4000)
+        
     @database_sync_to_async
     def get_game(self, game_id):
         """Get game from database"""
@@ -451,3 +470,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             self.game_id, 
             self.game
         )
+    @database_sync_to_async
+    def save_cancelled_game(self):
+        """Save game as cancelled in the database"""
+        try:
+            game = Game.objects.get(id=self.game_id)
+            # new status for cancelled games in your StatusChoices class
+            game.status = 'cancelled'
+            game.save()
+            return True
+        except Game.DoesNotExist:
+            return False

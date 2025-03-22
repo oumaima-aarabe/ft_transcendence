@@ -7,6 +7,7 @@ import { GameTheme, GameDifficulty } from '../types/game';
 import Link from 'next/link';
 import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
 import { UseUser } from "@/api/get-user";
+import { getUserPreferences, updateUserPreferences } from '@/api/preferences';
 import { 
   initMatchmakingSocket,
   getMatchmakingSocket, 
@@ -16,7 +17,7 @@ import {
 
 interface MatchmakingProps {
   userId: string;
-  onGameFound: (gameId: string, player1: string, player2:string, gameUrl:string) => void;
+  onGameFound: (gameId: string, player1: string, player2: string, gameUrl: string) => void;
   onBack: () => void;
 }
 
@@ -32,9 +33,32 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
   // Game preferences
   const [gameTheme, setGameTheme] = useState<GameTheme>('water');
   const [gameDifficulty, setGameDifficulty] = useState<GameDifficulty>('medium');
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
   // Get user data
   const { data: userData, isLoading } = UseUser();
+
+  // Fetch user preferences
+  useEffect(() => {
+    if (!userData) return;
+
+    // Fetch user preferences from the server
+    const fetchPreferences = async () => {
+        try {
+          const data = await getUserPreferences();
+          console.log('Loaded user preferences:', data);
+          setGameTheme(data.theme);
+          setGameDifficulty(data.difficulty);
+        } catch (error) {
+          console.error('Error fetching preferences, using defaults:', error);
+          // Default values will remain in state
+        } finally {
+          setPreferencesLoaded(true);
+        }
+      };
+
+    fetchPreferences();
+  }, [userData]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
@@ -45,7 +69,8 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
 
   // Set up WebSocket connection and message handlers
   useEffect(() => {
-    if (isLoading || !userData) return;
+    // Don't connect until preferences are loaded
+    if (isLoading || !userData || !preferencesLoaded) return;
 
     console.log('Setting up matchmaking connection for user:', userData.username);
     
@@ -94,16 +119,11 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             }
             break;
             
-            // Inside your handleMessage function in matchmaking.tsx, update the 'match_found' case:
-
           case 'match_found':
               console.log('Match found event received! Game ID:', data.game_id);
               
               setStatus('connecting');
               setMessage('Opponent found! Connecting to game...');
-              
-              // Important: DON'T call disconnectMatchmakingSocket() here!
-              // Let the cleanup function handle it
               
               if (timerRef.current) {
                 clearInterval(timerRef.current);
@@ -116,13 +136,11 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
               const player2 = data.player2;
               const gameUrl = data.game_url;
               
-              // Create opponent data structure
-              
-              // Add a delay before navigation to make sure both clients are ready
+              // delay before navigation to make sure both clients are ready
               setTimeout(() => {
                 console.log('Transitioning to game after delay, Game ID:', gameId);
                 // Notify parent component about game creation
-                onGameFound(gameId, player1, player2 , gameUrl);
+                onGameFound(gameId, player1, player2, gameUrl);
               }, 1000); // 1 second delay
               
               break;
@@ -146,12 +164,6 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      
-      // Attempt to reconnect after a delay, why ?
-      // setTimeout(() => {
-      //   console.log('Attempting to reconnect to matchmaking...');
-      //   initMatchmakingSocket();
-      // }, 3000);
     };
     
     const handleError = (error: Event) => {
@@ -181,11 +193,10 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
       }
       
       // Important: Only disconnect if component is unmounting
-      // This prevents premature disconnection when match is found
       console.log('Disconnecting matchmaking socket during cleanup');
       disconnectMatchmakingSocket();
     };
-  }, [isLoading, userData, onGameFound]);
+  }, [isLoading, userData, preferencesLoaded, onGameFound]);
 
   const startMatchmaking = () => {
     const socket = getMatchmakingSocket();
@@ -213,7 +224,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
       return;
     }
     
-    // Socket is ready, send the message
+    // Socket is ready, send the message with server preferences
     console.log('Sending join_queue message with difficulty:', gameDifficulty);
     sendMatchmakingMessage('join_queue', { difficulty: gameDifficulty });
     setIsAnimating(true);
@@ -240,23 +251,29 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     sendMatchmakingMessage('leave_queue');
   };
   
-  const handlePreferencesUpdate = (theme: GameTheme, difficulty: GameDifficulty) => {
+  const handlePreferencesUpdate = async (theme: GameTheme, difficulty: GameDifficulty) => {
+    // Update preferences locally
     setGameTheme(theme);
     setGameDifficulty(difficulty);
     setPreferencesOpen(false);
+    
+    // Save preferences to server
+    try {
+        await updateUserPreferences({ theme, difficulty });
+      } catch (error) {
+        console.error('Failed to save preferences:', error);
+      }
   };
 
-
-  // Show loading state while fetching user data
-  if (isLoading) {
-    return (
-      <div className="w-full max-w-4xl mx-auto flex items-center justify-center h-64">
-        <div className="w-16 h-16 rounded-full border-t-4 border-b-4 border-[#40CFB7] animate-spin"></div>
-      </div>
-    );
+    // Show loading state while fetching user data or preferences
+    if (isLoading || !preferencesLoaded) {
+      return (
+        <div className="w-full max-w-4xl mx-auto flex items-center justify-center h-64">
+          <div className="w-16 h-16 rounded-full border-t-4 border-b-4 border-[#40CFB7] animate-spin"></div>
+        </div>
+      );
   }
 
-  // Rest of your component remains the same...
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-black bg-opacity-60 backdrop-blur-sm rounded-xl overflow-hidden relative">
@@ -289,12 +306,12 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             <div className="w-full max-w-md bg-black bg-opacity-50 rounded-xl p-6 border border-gray-800 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold text-xl">Game Preferences</h3>
-                {/* <Button 
+                <Button 
                   onClick={() => setPreferencesOpen(true)}
                   className="bg-transparent hover:bg-gray-800 p-2 rounded-full"
                 >
                   <Settings className="text-gray-400 hover:text-white" />
-                </Button> */}
+                </Button>
               </div>
               
               <div className="grid grid-cols-2 gap-6">

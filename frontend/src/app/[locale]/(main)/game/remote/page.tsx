@@ -9,6 +9,7 @@ import RemotePongGame from '../components/remote-pong-game';
 import { UseUser } from "@/api/get-user";
 import { GameTheme, GameDifficulty } from '../types/game';
 import GameBackground from '../components/game-background';
+import { getUserPreferences } from '@/api/preferences';
 
 // Game flow state type
 type RemoteGameFlowState = 'loading' | 'error' | 'matchmaking' | 'connecting' | 'playing';
@@ -24,11 +25,32 @@ export default function RemoteGamePage() {
     gameUrl: string;
     player1: string;
     player2: string;
+    theme?: GameTheme;
+    difficulty?: GameDifficulty;
   } | null>(null);
   
-  // Default game settings
+  // Default game settings - these will be overridden by server preferences
   const [theme, setTheme] = useState<GameTheme>('water');
   const [difficulty, setDifficulty] = useState<GameDifficulty>('medium');
+  
+  // Fetch user preferences
+  useEffect(() => {
+    if (isLoading || isError || !user) return;
+    
+    const fetchPreferences = async () => {
+      try {
+        const data = await getUserPreferences();
+        console.log('Loaded user preferences:', data);
+        setTheme(data.theme);
+        setDifficulty(data.difficulty);
+      } catch (error) {
+        console.error('Error fetching preferences, using defaults:', error);
+        // Default values will remain
+      }
+    };
+
+    fetchPreferences();
+  }, [isLoading, isError, user]);
   
   // Initialize states based on user data loading
   useEffect(() => {
@@ -37,12 +59,6 @@ export default function RemoteGamePage() {
     } else if (isError) {
       setFlowState('error');
       setErrorMessage('Unable to load user data. Please try again later.');
-      // Show toast notification
-      toast({
-        title: "Authentication Error",
-        description: "Session expired or network error. Redirecting to login...",
-        variant: "destructive",
-      });
       
       // Redirect to auth after delay
       const timer = setTimeout(() => {
@@ -53,44 +69,30 @@ export default function RemoteGamePage() {
     } else if (user) {
       setFlowState('matchmaking');
     }
-  }, [isLoading, isError, user, router, toast]);
+  }, [isLoading, isError, user, router]);
 
   const handleGameFound = (gameId: string, player1: string, player2: string, gameUrl: string) => {
-    // console.log("Game found in page component:", gameId, player1, player2, gameUrl);
-    
     try {
       // Update state to connecting during transition
       setFlowState('connecting');
-      setGameData({ gameId, gameUrl, player1, player2 });
       
-      // Show toast for found game
-      toast({
-        title: "Match Found",
-        description: `Connecting to game with ${player2}...`,
-        variant: "default",
+      // Store game data with theme and difficulty preferences
+      setGameData({ 
+        gameId, 
+        gameUrl, 
+        player1, 
+        player2,
+        theme, 
+        difficulty 
       });
       
       // Use a timeout to allow for a visual transition
       setTimeout(() => {
         setFlowState('playing');
-        // console.log("Transitioned to playing state");
       }, 500);
     } catch (err) {
       console.error("Error during game transition:", err);
-      setFlowState('error');
-      setErrorMessage('Failed to connect to game. Please try again.');
-      
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to game. Please try again.",
-        variant: "destructive",
-      });
-      
-      // Reset after delay
-      setTimeout(() => {
-        setFlowState('matchmaking');
-        setGameData(null);
-      }, 3000);
+      setFlowState('matchmaking');
     }
   };
 
@@ -99,33 +101,14 @@ export default function RemoteGamePage() {
   };
 
   const handleExitGame = () => {
-    if (flowState === 'playing') {
-      // Show confirmation dialog before exiting an active game
-      if (confirm('Are you sure you want to leave the current game? This will count as a forfeit.')) {
-        setFlowState('matchmaking');
-        setGameData(null);
-        
-        toast({
-          title: "Game Exit",
-          description: "Returned to matchmaking",
-          variant: "default",
-        });
-      }
-    } else {
-      handleBackToOptions();
-    }
+    setFlowState('matchmaking');
+    setGameData(null);
   };
   
   const handleRetry = () => {
     if (flowState === 'error') {
       // Reset error state
       setErrorMessage('');
-      
-      toast({
-        title: "Retrying",
-        description: "Attempting to reconnect...",
-        variant: "default",
-      });
       
       // Try to return to matchmaking
       if (user) {
@@ -139,14 +122,7 @@ export default function RemoteGamePage() {
 
   // Handle connection errors in game
   const handleConnectionError = (error: string) => {
-    toast({
-      title: "Connection Lost",
-      description: error,
-      variant: "destructive",
-    });
-    
-    setFlowState('error');
-    setErrorMessage('Connection to game server lost. This may be due to network issues.');
+    setFlowState('matchmaking');
   };
   
   // Generate content based on current flow state
@@ -255,9 +231,10 @@ export default function RemoteGamePage() {
               player2Name={gameData.player2}
               player1Avatar={user!.avatar || "https://iili.io/2D8ByIj.png"}
               player2Avatar={"https://iili.io/2D8ByIj.png"}
-              theme={theme}
-              difficulty={difficulty}
+              theme={gameData.theme || theme}
+              difficulty={gameData.difficulty || difficulty}
               onBackToSetup={handleExitGame}
+              onConnectionError={handleConnectionError}
             />
           </motion.div>
         ) : (
@@ -267,11 +244,6 @@ export default function RemoteGamePage() {
             <button
               onClick={() => {
                 setFlowState('matchmaking');
-                toast({
-                  title: "Error Recovered",
-                  description: "Returned to matchmaking due to missing game data",
-                  variant: "destructive",
-                });
               }}
               className="mt-4 bg-[#40CFB7] text-black px-6 py-2 rounded-lg"
             >
@@ -286,10 +258,10 @@ export default function RemoteGamePage() {
     <div className="w-full h-screen overflow-hidden flex items-center justify-center">
       <div className="w-full max-w-6xl px-4 relative">
         <div className="relative z-10">
-        {flowState === 'playing' && (
+        {flowState === 'playing' && gameData && (
             <GameBackground 
               isPlaying={flowState === 'playing'} 
-              theme={"water"}//change recieve from server
+              theme={gameData.theme || theme}
             />
           )}
           <AnimatePresence mode="wait">

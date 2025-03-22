@@ -260,3 +260,54 @@ class ActiveGamesView(APIView):
             return Response(user_games)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class UserPreferencesView(APIView):
+    """API endpoint for managing user preferences"""
+    
+    def get(self, request):
+        """Get user preferences only"""
+        try:
+            profile, created = PlayerProfile.objects.get_or_create(player=request.user)
+            return Response({
+                'theme': profile.theme,
+                'difficulty': profile.difficulty
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request):
+        """Update user preferences only"""
+        try:
+            profile, created = PlayerProfile.objects.get_or_create(player=request.user)
+            
+            # Get theme and difficulty from request data
+            theme = request.data.get('theme', profile.theme)
+            difficulty = request.data.get('difficulty', profile.difficulty)
+            
+            # Validate theme
+            valid_themes = [choice[0] for choice in PlayerProfile.THEME_CHOICES]
+            if theme not in valid_themes:
+                return Response(
+                    {"error": f"Invalid theme. Choose from {valid_themes}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate difficulty
+            valid_difficulties = [choice[0] for choice in PlayerProfile.DIFFICULTY_CHOICES]
+            if difficulty not in valid_difficulties:
+                return Response(
+                    {"error": f"Invalid difficulty. Choose from {valid_difficulties}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Update profile
+            profile.theme = theme
+            profile.difficulty = difficulty
+            profile.save()
+            
+            return Response({
+                'theme': theme,
+                'difficulty': difficulty
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

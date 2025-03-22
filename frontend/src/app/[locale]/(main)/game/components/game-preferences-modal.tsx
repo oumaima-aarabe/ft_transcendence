@@ -21,11 +21,26 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
 }) => {
   const [selectedTheme, setSelectedTheme] = useState<GameTheme>(initialTheme);
   const [selectedDifficulty, setSelectedDifficulty] = useState<GameDifficulty>(initialDifficulty);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    onSave(selectedTheme, selectedDifficulty);
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Update server preferences through the onSave prop
+      onSave(selectedTheme, selectedDifficulty);
+      
+      // brief delay to show saving state
+      setTimeout(() => {
+        setIsSaving(false);
+        onClose();
+      }, 300);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -165,12 +180,20 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
           </Button>
           <Button
             onClick={handleSave}
+            disabled={isSaving}
             className={`text-white hover:opacity-90`}
             style={{ 
               backgroundColor: selectedTheme === 'fire' ? '#D05F3B' : '#40CFB7'
             }}
           >
-            Save Preferences
+            {isSaving ? (
+              <div className="flex items-center">
+                <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2"></div>
+                Saving...
+              </div>
+            ) : (
+              "Save Preferences"
+            )}
           </Button>
         </div>
       </motion.div>

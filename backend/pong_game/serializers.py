@@ -11,6 +11,17 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'avatar', 'theme', 'difficulty', 
                   'matches_played', 'matches_won', 'matches_lost',
                   'first_win', 'pure_win', 'triple_win']
+        def validate_theme(self, value):
+            valid_themes = dict(PlayerProfile.THEME_CHOICES).keys()
+            if value not in valid_themes:
+                raise serializers.ValidationError(f"Invalid theme. Choose from {valid_themes}")
+            return value
+        
+        def validate_difficulty(self, value):
+            valid_difficulties = dict(PlayerProfile.DIFFICULTY_CHOICES).keys()
+            if value not in valid_difficulties:
+                raise serializers.ValidationError(f"Invalid difficulty. Choose from {valid_difficulties}")
+            return value
 
 class GameListSerializer(serializers.ModelSerializer):
     player1_username = serializers.CharField(source='player1.username', read_only=True)

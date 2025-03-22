@@ -13,6 +13,7 @@ class StatusChoices:
     
     # Game statuses
     WAITING = 'waiting'
+    CANCELLED = 'cancelled'
     IN_PROGRESS = 'in_progress'
     COMPLETED = 'completed'
     PAUSED = 'paused'
@@ -267,6 +268,7 @@ class Game(models.Model):
         (StatusChoices.IN_PROGRESS, 'In Progress'),
         (StatusChoices.PAUSED, 'Paused'),
         (StatusChoices.COMPLETED, 'Completed'),
+        (StatusChoices.CANCELLED, 'Cancelled'),
     ]
     
     # Basic game info
@@ -425,7 +427,6 @@ class Match(models.Model):
         self.game.save()
         
         # Check if game should be completed based on match results
-        # (Example: best of 3 matches)
         if self.game.final_score_player1 >= 2:  # Player 1 won best of 3
             self.game.complete_game(self.game.player1)
         elif self.game.final_score_player2 >= 2:  # Player 2 won best of 3

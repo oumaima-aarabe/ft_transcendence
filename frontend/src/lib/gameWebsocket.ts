@@ -4,14 +4,12 @@ type GameStateCallback = (state: any) => void;
 type StatusChangeCallback = (status: string, reason?: string) => void;
 type ConnectionChangeCallback = (connected: boolean) => void;
 type PlayerNumberCallback = (playerNumber: number) => void;
+type ForceDisconnectCallback = (reason: string) => void;
 
 export default class GameConnection {
   private socket: WebSocket | null = null;
   private gameId: string;
   private token: string;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
   private messageQueue: {type: string, data: any}[] = [];
   private gameLoopInterval: NodeJS.Timeout | null = null;
   private currentPaddleY: number | null = null;
@@ -26,6 +24,7 @@ export default class GameConnection {
   private onStatusChange: StatusChangeCallback;
   private onConnectionChange: ConnectionChangeCallback;
   private onPlayerNumber: PlayerNumberCallback;
+  private onForceDisconnect: ForceDisconnectCallback;
   
   // Player information
   private playerNumber: number | null = null;
@@ -37,7 +36,8 @@ export default class GameConnection {
     onGameState: GameStateCallback,
     onStatusChange: StatusChangeCallback,
     onConnectionChange: ConnectionChangeCallback,
-    onPlayerNumber: PlayerNumberCallback
+    onPlayerNumber: PlayerNumberCallback,
+    onForceDisconnect: ForceDisconnectCallback
   ) {
     this.gameId = gameId;
     this.token = token;
@@ -45,21 +45,18 @@ export default class GameConnection {
     this.onStatusChange = onStatusChange;
     this.onConnectionChange = onConnectionChange;
     this.onPlayerNumber = onPlayerNumber;
+    this.onForceDisconnect = onForceDisconnect;
   }
 
   connect() {
     // Only connect if not already connected
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
-      // console.log("Socket already connecting or connected");
       return;
     }
 
     // Create WebSocket URL with game ID and authentication token
-    // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = process.env.NEXT_PUBLIC_WS_URL ||'ws://localhost:8000';
     const wsUrl = `${host}/ws/game/${this.gameId}/?token=${this.token}`;
-    
-    // console.log('Connecting to game server:', wsUrl);
     
     try {
       // Create new WebSocket connection
@@ -72,13 +69,11 @@ export default class GameConnection {
       this.socket.onerror = this.handleError.bind(this);
     } catch (error) {
       console.error('Error creating WebSocket:', error);
-      this.scheduleReconnection();
+      this.onConnectionChange(false);
     }
   }
 
   private handleOpen(event: Event) {
-    // console.log('Connected to game server');
-    this.reconnectAttempts = 0;
     this.onConnectionChange(true);
     
     // Process any queued messages
@@ -91,14 +86,12 @@ export default class GameConnection {
   private handleMessage(event: MessageEvent) {
     try {
       const message = JSON.parse(event.data);
-      // console.log('Received game message:', message.type);
       
       switch (message.type) {
         case 'connection_established':
           // Set player number when connection is established
           if (message.player_number !== undefined) {
             this.playerNumber = message.player_number;
-            // console.log(`Server assigned player number: ${this.playerNumber}`);
             this.onPlayerNumber(message.player_number);
           }
           break;
@@ -116,9 +109,26 @@ export default class GameConnection {
         case 'player_status':
           // Handle opponent connection/disconnection
           const isOpponent = this.playerNumber !== null && message.player !== this.playerNumber;
-          if (isOpponent) {
-            // console.log(`Opponent ${message.connected ? 'connected' : 'disconnected'}`);
+          if (isOpponent && !message.connected) {
+            // Opponent disconnected - we'll handle this via force_disconnect
           }
+          break;
+          
+        case 'force_disconnect':
+          // Handle force disconnect message
+          this.onForceDisconnect(message.reason || 'Other player disconnected');
+          this.disconnect();
+          break;
+          
+        case 'game_completed':
+          // Game has completed, handle the final state before disconnection
+          this.onGameState(message.final_state);
+          this.onStatusChange('gameOver', 'Game completed');
+          
+          // Disconnect after a short delay
+          setTimeout(() => {
+            this.disconnect();
+          }, 1000);
           break;
       }
     } catch (error) {
@@ -127,49 +137,20 @@ export default class GameConnection {
   }
 
   private handleClose(event: CloseEvent) {
-    // console.log(`Game WebSocket closed: ${event.code} ${event.reason}`);
     this.onConnectionChange(false);
     this.socket = null;
     
     // Stop game loop
     this.stopGameLoop();
-    
-    // Attempt to reconnect unless explicitly closed by user
-    if (event.code !== 1000 && event.code !== 1001) {
-      this.scheduleReconnection();
-    }
   }
 
   private handleError(error: Event) {
     console.error('Game WebSocket error:', error);
-  }
-  
-  private scheduleReconnection() {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      // Exponential backoff with jitter
-      const baseDelay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
-      const jitter = Math.random() * 1000;
-      const delay = baseDelay + jitter;
-      
-      // console.log(`Attempting to reconnect in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})`);
-      
-      if (this.reconnectTimeout) {
-        clearTimeout(this.reconnectTimeout);
-      }
-      
-      this.reconnectTimeout = setTimeout(() => {
-        this.connect();
-      }, delay);
-    } else {
-      console.error('Max reconnection attempts reached');
-    }
+    this.onConnectionChange(false);
   }
   
   private processQueuedMessages() {
     if (this.socket && this.socket.readyState === WebSocket.OPEN && this.messageQueue.length > 0) {
-      // console.log(`Processing ${this.messageQueue.length} queued messages`);
-      
       while (this.messageQueue.length > 0) {
         const message = this.messageQueue.shift();
         if (message) {
@@ -182,8 +163,7 @@ export default class GameConnection {
 
   // Send paddle movement to server - but only send when there's an actual change
   sendPaddleMove(position: number) {
-    // Only queue if position has changed
-        // Round position to reduce jitter and unnecessary precision
+    // Round position to reduce jitter and unnecessary precision
     position = Math.round(position);
 
     
@@ -234,22 +214,7 @@ export default class GameConnection {
       }
     },  this.minSendInterval); // 33ms = 30 updates per second
   }
-  public updatePaddleThreshold(latency: number) {
-    // Dynamically adjust threshold based on latency
-    // Higher latency = higher threshold to reduce message frequency
-    if (latency < 50) {
-      this.paddleMovementThreshold = 1; // Very responsive
-    } else if (latency < 100) {
-      this.paddleMovementThreshold = 2; // Normal
-    } else if (latency < 200) {
-      this.paddleMovementThreshold = 4; // Reduced frequency
-    } else {
-      this.paddleMovementThreshold = 6; // Minimum updates
-    }
-    
-    // Also adjust send interval based on latency
-    this.minSendInterval = Math.max(33, Math.min(100, latency / 3));
-  }
+  
   private stopGameLoop() {
     if (this.gameLoopInterval) {
       clearInterval(this.gameLoopInterval);
@@ -305,11 +270,6 @@ export default class GameConnection {
 
   disconnect() {
     this.stopGameLoop();
-    
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
     
     if (this.socket) {
       try {

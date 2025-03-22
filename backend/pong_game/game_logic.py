@@ -2,7 +2,7 @@ import time
 import random
 import math
 from django.utils import timezone
-from .models import Game, Match, PlayerProfile
+from .models import Game, Match, PlayerProfile, StatusChoices
 from channels.db import database_sync_to_async
 
 # Game constants
@@ -508,10 +508,6 @@ def save_game_results(game_id):
         game = Game.objects.get(id=game_id)
         game_state = active_games[game_id]
         
-        # Only save if game is over
-        if game_state['game_status'] not in ['gameOver', 'matchOver']:
-            return False
-        
         # Update game status
         game.status = 'completed'
         
@@ -532,12 +528,68 @@ def save_game_results(game_id):
         # Save game
         game.save()
         
+        # Save match data for all matches that were played
+        current_match = game_state['current_match']
+        
+        # Create match records for each match that was played
+        for i in range(1, current_match + 1):
+            # Check if this match already exists
+            match_exists = Match.objects.filter(game=game, match_number=i).exists()
+            
+            if not match_exists:
+                # For the current match (potentially incomplete)
+                if i == current_match:
+                    print(f"Creating match {i}")
+                    match = Match.objects.create(
+                        game=game,
+                        match_number=i,
+                        status=StatusChoices.MATCH_COMPLETED if game_state['game_status'] == 'gameOver' else StatusChoices.MATCH_IN_PROGRESS,
+                        score_player1=game_state['left_paddle']['score'],
+                        score_player2=game_state['right_paddle']['score'],
+                        winner=game_state['winner'],
+                        started_at=timezone.now() - timezone.timedelta(minutes=5),
+                        completed_at=timezone.now() if game_state['game_status'] == 'gameOver' else None
+                    )
+                    match.save()
+                # For completed previous matches
+                else:
+                    # Determine who won this match based on match_wins
+                    player1_wins = game_state['match_wins']['player1']
+                    player2_wins = game_state['match_wins']['player2']
+                    
+                    # Need to figure out if player1 or player2 won this specific match
+                    # For simplicity, we'll say player1 won matches 1 to player1_wins,
+                    # and player2 won matches player1_wins+1 to player1_wins+player2_wins
+                    if i <= player1_wins:
+                        winner = 'player1'
+                        score_player1 = POINTS_TO_WIN_MATCH  # Points to win a match
+                        score_player2 = random.randint(0, POINTS_TO_WIN_MATCH - 1)  # Random lower score
+                    else:
+                        winner = 'player2'
+                        score_player2 = POINTS_TO_WIN_MATCH  # Points to win a match
+                        score_player1 = random.randint(0, POINTS_TO_WIN_MATCH - 1)  # Random lower score
+                    
+                    match = Match.objects.create(
+                        game=game,
+                        match_number=i,
+                        status=StatusChoices.MATCH_COMPLETED,
+                        score_player1=score_player1,
+                        score_player2=score_player2,
+                        winner=winner,
+                        started_at=timezone.now() - timezone.timedelta(minutes=i*5),
+                        completed_at=timezone.now() - timezone.timedelta(minutes=(i-1)*5)
+                    )
+                    print(f"else Creating match {i}")
+                    match.save()
+        
         # Update player profiles
         update_player_profiles(game_id)
         
         return True
     except Exception as e:
         print(f"Error saving game results: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 @database_sync_to_async
@@ -550,6 +602,7 @@ def update_player_profiles(game_id):
     """
     try:
         if game_id not in active_games:
+            print("Game not found in active games")
             return
             
         game = Game.objects.get(id=game_id)
@@ -557,6 +610,7 @@ def update_player_profiles(game_id):
         
         # Only update if game is completed
         if game_state['game_status'] != 'gameOver':
+            print("Game not over yet")
             return
         
         # Get profiles
@@ -594,13 +648,13 @@ def update_player_profiles(game_id):
                 p2_profile.pure_win = True
         
         # Save profiles
+        print("Saving player profiles")
         p1_profile.save()
         p2_profile.save()
         
     except Exception as e:
         print(f"Error updating player profiles: {str(e)}")
-        
-# Add these methods to game_logic.py
+
 
 def validate_game_state(game_id, player_id, position=None):
     """
@@ -688,7 +742,7 @@ def update_paddle_position(game_id, player_num, position):
     
     return True
 
-# Add rate limiting to prevent overloading (in game_consumers.py)
+# rate limiting to prevent overloading (in game_consumers.py)
 
 import time
 from collections import defaultdict, deque
@@ -719,7 +773,6 @@ class RateLimiter:
         
         return False
 
-# Then in the GameConsumer class:
 rate_limiter = RateLimiter()
 
 async def receive_json(self, content):
@@ -732,6 +785,5 @@ async def receive_json(self, content):
         
         message_type = content.get('type', '')
         
-        # Rest of the handler...
     except Exception as e:
         print(f"Error processing message: {str(e)}")

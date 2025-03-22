@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { EnhancedGameState, GameDifficulty, GameTheme, KeyStates } from "../types/game";
 import GameConnection from "@/lib/gameWebsocket";
 import { Wifi, WifiOff, AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import RemotePongRenderer from "./remote-pong-renderer";
 import { Button } from "@/components/ui/button";
 
@@ -15,58 +14,6 @@ const BALL_RADIUS = 10;
 const PADDLE_SPEED = 8;
 const POINTS_TO_WIN_MATCH = 5;
 const MATCHES_TO_WIN_GAME = 3;
-
-// Connection timeout in milliseconds (10 seconds)
-const CONNECTION_TIMEOUT = 10000;
-
-// Smoothing and prediction settings
-const PADDLE_INTERPOLATION_SPEED = 0.1; // Lower = smoother but slower
-const MAX_PADDLE_DIVERGENCE = 25; // Maximum allowed difference between local and server paddle positions
-// const BALL_EXTRAPOLATION_FACTOR = 1.05; // Slightly predict ahead of current trajectory
-const SERVER_UPDATE_BUFFER_SIZE = 3; // Number of server updates to buffer for smoothing
-const MIN_INTERPOLATION_SPEED = 0.05; // Minimum interpolation speed for high latency
-const MAX_INTERPOLATION_SPEED = 0.2; // Maximum interpolation speed for low latency
-
-// Initial game state
-const createInitialGameState = (): EnhancedGameState => ({
-  ball: {
-    x: BASE_WIDTH / 2,
-    y: BASE_HEIGHT / 2,
-    dx: 0,
-    dy: 0,
-    speed: 0,
-    radius: BALL_RADIUS,
-  },
-  leftPaddle: {
-    x: 20,
-    y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-    width: PADDLE_WIDTH,
-    height: PADDLE_HEIGHT,
-    speed: PADDLE_SPEED,
-    score: 0,
-  },
-  rightPaddle: {
-    x: BASE_WIDTH - 20 - PADDLE_WIDTH,
-    y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-    width: PADDLE_WIDTH,
-    height: PADDLE_HEIGHT,
-    speed: PADDLE_SPEED,
-    score: 0,
-  },
-  matchWins: {
-    player1: 0,
-    player2: 0,
-  },
-  currentMatch: 1,
-  gameStatus: "waiting",
-  winner: null,
-});
-
-// Type for server updates buffer
-interface ServerUpdate {
-  state: any;
-  timestamp: number;
-}
 
 interface RemotePongGameProps {
   gameId: string;
@@ -95,7 +42,6 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
 }) => {
   const INTERPOLATION_ALPHA = 0.3; // Controls smoothness - lower = smoother but less responsive
   const MAX_PREDICTION_TIME = 0.1; // Maximum time in seconds to predict ahead
-  const { toast } = useToast();
   
   const keyPressTimestampRef = useRef<Record<string, number>>({});
   const paddleUpdateSentRef = useRef<{time: number, position: number | null}>({
@@ -107,9 +53,6 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   
   // Track last server update timestamp
   const lastUpdateTimeRef = useRef<number>(Date.now());
-  
-  // Track disconnection time for timeout handling
-  const disconnectionTimeRef = useRef<number | null>(null);
   
   // Store opponent's paddle position for interpolation
   const opponentPaddleRef = useRef({
@@ -123,7 +66,7 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   const interpolationSpeedRef = useRef<number>(0.3); // Adjust between 0.1-0.5 for smoother or more responsive movement
   
   // Buffer for server updates to smooth out inconsistencies
-  const serverUpdatesRef = useRef<ServerUpdate[]>([]);
+  const serverUpdatesRef = useRef<{state: any, timestamp: number}[]>([]);
   
   // Store previous ball positions for trails and prediction
   const previousBallPositionsRef = useRef<{x: number, y: number}[]>([]);
@@ -136,8 +79,7 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     connected: false,
     connecting: true,
     playerNumber: null as number | null,
-    ping: 0,
-    reconnectAttempt: 0,
+    ping: 0
   });
 
   // WebSocket connection ref
@@ -166,36 +108,51 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   
   // Flag to indicate if we've had a recent score (used to reset prediction)
   const recentScoreRef = useRef<boolean>(false);
-  
-  // Adaptive interpolation speed based on ping
-  const getInterpolationSpeed = () => {
-    const basePing = connectionState.ping || 50; // Default to 50ms if ping is unknown
-    
-    // Calculate adaptive speed: faster for low ping, slower for high ping
-    // Clamp between min and max values
-    const adaptiveSpeed = Math.max(
-      MIN_INTERPOLATION_SPEED,
-      Math.min(
-        MAX_INTERPOLATION_SPEED,
-        PADDLE_INTERPOLATION_SPEED * (50 / Math.max(10, basePing))
-      )
-    );
-    
-    return adaptiveSpeed;
-  };
-  
-  // Sync keys pressed to ref
-  useEffect(() => {
-    keysPressedRef.current = keysPressed;
-  }, [keysPressed]);
-  
-    // Get the access token from cookies
-    const getAccessToken = () => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; accessToken=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return "";
+
+  // Initial game state
+  function createInitialGameState(): EnhancedGameState {
+    return {
+      ball: {
+        x: BASE_WIDTH / 2,
+        y: BASE_HEIGHT / 2,
+        dx: 0,
+        dy: 0,
+        speed: 0,
+        radius: BALL_RADIUS,
+      },
+      leftPaddle: {
+        x: 20,
+        y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+        width: PADDLE_WIDTH,
+        height: PADDLE_HEIGHT,
+        speed: PADDLE_SPEED,
+        score: 0,
+      },
+      rightPaddle: {
+        x: BASE_WIDTH - 20 - PADDLE_WIDTH,
+        y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+        width: PADDLE_WIDTH,
+        height: PADDLE_HEIGHT,
+        speed: PADDLE_SPEED,
+        score: 0,
+      },
+      matchWins: {
+        player1: 0,
+        player2: 0,
+      },
+      currentMatch: 1,
+      gameStatus: "waiting",
+      winner: null,
     };
+  }
+  
+  // Get the access token from cookies
+  const getAccessToken = () => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; accessToken=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return "";
+  };
 
   // Setup WebSocket connection
   useEffect(() => {
@@ -209,42 +166,12 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       handleGameState,
       handleStatusChange,
       handleConnectionChange,
-      handlePlayerNumber
+      handlePlayerNumber,
+      handleForceDisconnect
     );
     
     connectionRef.current = gameConnection;
     gameConnection.connect();
-    
-    // Connection timeout check
-    const connectionCheckInterval = setInterval(() => {
-      // If disconnected, check timeout
-      if (disconnectionTimeRef.current !== null) {
-        const disconnectionDuration = Date.now() - disconnectionTimeRef.current;
-        
-        // If disconnected for too long, end the game
-        if (disconnectionDuration > CONNECTION_TIMEOUT) {
-          clearInterval(connectionCheckInterval);
-          
-          // Update connection state
-          setConnectionState(prev => ({
-            ...prev,
-            connecting: false,
-          }));
-          
-          // Notify parent component
-          if (onConnectionError) {
-            onConnectionError("Connection timed out. The game has ended.");
-          }
-          
-          // Show toast
-          toast({
-            title: "Connection Lost",
-            description: "Failed to reconnect within the time limit. The game has ended.",
-            variant: "destructive",
-          });
-        }
-      }
-    }, 1000);
     
     // Setup FPS counter
     const fpsInterval = setInterval(() => {
@@ -259,7 +186,6 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     
     // Cleanup on unmount
     return () => {
-      clearInterval(connectionCheckInterval);
       clearInterval(fpsInterval);
       
       if (connectionRef.current) {
@@ -267,17 +193,17 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
         connectionRef.current = null;
       }
     };
-  }, [gameId, toast, onConnectionError]);
+  }, [gameId, onConnectionError]);
   
+  // Sync keys pressed to ref
+    useEffect(() => {
+      keysPressedRef.current = keysPressed;
+    }, [keysPressed]);
   // Handler for game state updates from server
   const handleGameState = (serverState: any) => {
     // Log timing of server updates
     const now = Date.now();
-    const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
-    // console.log(`Server update received. Time since last update: ${timeSinceLastUpdate}ms`);
-    
-    // Reset reconnection state if we're receiving updates
-    disconnectionTimeRef.current = null;
+    lastUpdateTimeRef.current = now;
     
     // Update server/client clock difference
     const serverTime = serverState.timestamp || Date.now();
@@ -289,8 +215,8 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       timestamp: Date.now()
     });
     
-    // Keep buffer at desired size
-    if (serverUpdatesRef.current.length > SERVER_UPDATE_BUFFER_SIZE) {
+    // Keep buffer at desired size (3 updates)
+    if (serverUpdatesRef.current.length > 3) {
       serverUpdatesRef.current.shift();
     }
     
@@ -312,19 +238,12 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     
     // Process the latest update immediately if this is the first one or after a score
     if (serverUpdatesRef.current.length === 1 || recentScoreRef.current) {
-      const processStartTime = Date.now();
       processServerUpdate(serverState);
-      // console.log(`Server update processing time: ${Date.now() - processStartTime}ms`);
       recentScoreRef.current = false;
     } else {
       // Otherwise use buffered updates to smooth transitions
-      const processStartTime = Date.now();
       processBufferedUpdates();
-      // console.log(`Buffered updates processing time: ${Date.now() - processStartTime}ms`);
     }
-    
-    // Update last update timestamp
-    lastUpdateTimeRef.current = now;
   };
   
   // Process all buffered updates to get a smoothed state
@@ -422,9 +341,8 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     let useLocalPaddleY = true;
     if (myCurrentPaddleY !== null && serverPaddleY !== null) {
       // If the difference is too large, snap to server position
-      if (Math.abs(myCurrentPaddleY - serverPaddleY) > MAX_PADDLE_DIVERGENCE) {
+      if (Math.abs(myCurrentPaddleY - serverPaddleY) > 25) {
         useLocalPaddleY = false;
-        // console.log(`Large paddle divergence corrected: ${Math.abs(myCurrentPaddleY - serverPaddleY)}`);
       }
     }
     
@@ -503,25 +421,6 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   
   // Handle game status changes from server
   const handleStatusChange = (status: string, reason?: string) => {
-    if (status === 'gameOver') {
-      toast({
-        title: "Game Over",
-        description: `${gameStateRef.current.winner === 'player1' ? player1Name : player2Name} wins the game!`,
-        variant: "default",
-      });
-    } else if (status === 'matchOver') {
-      toast({
-        title: "Match Over",
-        description: `${gameStateRef.current.winner === 'player1' ? player1Name : player2Name} wins the match!`,
-        variant: "default",
-      });
-    } else if (status === 'paused' && reason) {
-      toast({
-        title: "Game Paused",
-        description: reason,
-        variant: "default",
-      });
-    }
   };
   
   // Handle connection status changes
@@ -530,97 +429,77 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       ...prev, 
       connected,
       connecting: connected ? false : true,
-      reconnectAttempt: connected ? 0 : prev.reconnectAttempt + 1
     }));
     
-    if (connected) {
-      // Reset disconnection timer
-      disconnectionTimeRef.current = null;
-      
-      toast({
-        title: "Connected",
-        description: "Connected to game server",
-        variant: "default",
-      });
-    } else {
-      // Start disconnection timer
-      disconnectionTimeRef.current = Date.now();
-      
-      toast({
-        title: "Disconnected",
-        description: "Lost connection to game server. Attempting to reconnect...",
-        variant: "destructive",
-      });
+    if (!connected) {
+      // Go back to menu immediately on disconnection
+      onBackToSetup();
     }
   };
   
   // Handle player number assignment
   const handlePlayerNumber = (playerNumber: number) => {
     setConnectionState(prev => ({ ...prev, playerNumber }));
-    
-    toast({
-      title: "Player Assignment",
-      description: `You are Player ${playerNumber}`,
-      variant: "default",
-    });
   };
-  // const keyPressTimestampRef = useRef<Record<string, number>>({});
+  
+  // Handle forced disconnection by server
+  const handleForceDisconnect = (reason: string) => {
+    // Immediately go back to menu when force disconnected
+    onBackToSetup();
+  };
+
   // Update position of our paddle based on key presses
   const updatePaddlePosition = () => {
-  // Determine which paddle we control
-  const controlledPaddleKey = connectionState.playerNumber === 1 
-    ? 'leftPaddle' 
-    : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
-  
-  if (!controlledPaddleKey || !connectionRef.current?.isConnected()) return;
-  
-  const paddle = gameStateRef.current[controlledPaddleKey];
-  const keys = keysPressedRef.current;
-  
-  let newY = paddle.y;
-  
-  // Apply a fixed movement amount for consistent speed
-  if (connectionState.playerNumber === 1) {
-    // Player 1: W/S keys
-    if (keys["w"] && paddle.y > 0) {
-      newY = Math.max(0, paddle.y - paddle.speed);
-    }
-    if (keys["s"] && paddle.y + paddle.height < BASE_HEIGHT) {
-      newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
-    }
-  } else if (connectionState.playerNumber === 2) {
-    // Player 2: Arrow keys
-    if (keys["ArrowUp"] && paddle.y > 0) {
-      newY = Math.max(0, paddle.y - paddle.speed);
-    }
-    if (keys["ArrowDown"] && paddle.y + paddle.height < BASE_HEIGHT) {
-      newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
-    }
-  }
-  
-  // Only update if position changed
-  if (newY !== paddle.y) {
-    // Update local state immediately for responsive feel
-    gameStateRef.current[controlledPaddleKey].y = newY;
+    // Determine which paddle we control
+    const controlledPaddleKey = connectionState.playerNumber === 1 
+      ? 'leftPaddle' 
+      : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
     
-    // Throttle server updates - only send every 32ms (about 30Hz)
-    const now = Date.now();
-    const lastSendTime = paddleUpdateSentRef.current?.time || 0;
-    if (now - lastSendTime >= 32) {
-      // Send update to server
-      connectionRef.current.sendPaddleMove(newY);
+    if (!controlledPaddleKey || !connectionRef.current?.isConnected()) return;
+    
+    const paddle = gameStateRef.current[controlledPaddleKey];
+    const keys = keysPressedRef.current;
+    
+    let newY = paddle.y;
+    
+    // Apply a fixed movement amount for consistent speed
+    if (connectionState.playerNumber === 1) {
+      // Player 1: W/S keys
+      if (keys["w"] && paddle.y > 0) {
+        newY = Math.max(0, paddle.y - paddle.speed);
+      }
+      if (keys["s"] && paddle.y + paddle.height < BASE_HEIGHT) {
+        newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
+      }
+    } else if (connectionState.playerNumber === 2) {
+      // Player 2: Arrow keys
+      if (keys["ArrowUp"] && paddle.y > 0) {
+        newY = Math.max(0, paddle.y - paddle.speed);
+      }
+      if (keys["ArrowDown"] && paddle.y + paddle.height < BASE_HEIGHT) {
+        newY = Math.min(BASE_HEIGHT - paddle.height, paddle.y + paddle.speed);
+      }
+    }
+    
+    // Only update if position changed
+    if (newY !== paddle.y) {
+      // Update local state immediately for responsive feel
+      gameStateRef.current[controlledPaddleKey].y = newY;
       
-      if (!paddleUpdateSentRef.current) {
-        paddleUpdateSentRef.current = { time: now, position: newY };
-      } else {
+      // Throttle server updates - only send every 32ms (about 30Hz)
+      const now = Date.now();
+      const lastSendTime = paddleUpdateSentRef.current?.time || 0;
+      if (now - lastSendTime >= 32) {
+        // Send update to server
+        connectionRef.current.sendPaddleMove(newY);
+        
         paddleUpdateSentRef.current.time = now;
         paddleUpdateSentRef.current.position = newY;
       }
     }
-  }
-};
-  
+  };
 
+  // Interpolate ball position for smoother visuals
   const interpolateBallPosition = () => {
     if (gameStateRef.current.gameStatus !== 'playing') return;
     
@@ -642,7 +521,6 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       // Just use the latest state directly
       gameStateRef.current.ball.x = latestState.position.x;
       gameStateRef.current.ball.y = latestState.position.y;
-      // console.log(`Using latest server position: (${latestState.position.x.toFixed(2)}, ${latestState.position.y.toFixed(2)})`);
       return;
     }
     
@@ -670,70 +548,6 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     // Apply interpolation
     ball.x = currentX + (predictedX - currentX) * alpha;
     ball.y = currentY + (predictedY - currentY) * alpha;
-    
-    // console.log(`Ball interpolation: current (${currentX.toFixed(2)}, ${currentY.toFixed(2)}) → interpolated (${ball.x.toFixed(2)}, ${ball.y.toFixed(2)})`);
-  };
-  
-  // Advanced collision detection for the ball
-  const handleAdvancedBallCollisions = (ball: any, originalX: number, originalY: number) => {
-    // Check for wall collisions (top/bottom)
-    if (ball.y + ball.radius >= BASE_HEIGHT) {
-      if (ball.dy > 0) {
-        ball.dy = -ball.dy;
-        // Add slight randomness to prevent looping patterns
-        ball.dy += (Math.random() - 0.5) * 0.2;
-      }
-      // Correct position to avoid sticking to the wall
-      ball.y = BASE_HEIGHT - ball.radius;
-    }
-    
-    if (ball.y - ball.radius <= 0) {
-      if (ball.dy < 0) {
-        ball.dy = -ball.dy;
-        // Add slight randomness to prevent looping patterns
-        ball.dy += (Math.random() - 0.5) * 0.2;
-      }
-      // Correct position to avoid sticking to the wall
-      ball.y = ball.radius;
-    }
-    
-    // We don't predict paddle collisions here - they're handled by the server
-    // But we do prevent the ball from going through paddles visually
-    
-    const leftPaddle = gameStateRef.current.leftPaddle;
-    const rightPaddle = gameStateRef.current.rightPaddle;
-    
-    // Basic visual paddle collision correction (not affecting game logic)
-    // This just prevents the ball from visually passing through a paddle
-    
-    // Left paddle visual collision
-    if (ball.x - ball.radius < leftPaddle.x + leftPaddle.width &&
-        originalX - ball.radius >= leftPaddle.x + leftPaddle.width &&
-        ball.y + ball.radius > leftPaddle.y &&
-        ball.y - ball.radius < leftPaddle.y + leftPaddle.height) {
-      // Just correct the visual position
-      ball.x = leftPaddle.x + leftPaddle.width + ball.radius;
-    }
-    
-    // Right paddle visual collision
-    if (ball.x + ball.radius > rightPaddle.x &&
-        originalX + ball.radius <= rightPaddle.x &&
-        ball.y + ball.radius > rightPaddle.y &&
-        ball.y - ball.radius < rightPaddle.y + rightPaddle.height) {
-      // Just correct the visual position
-      ball.x = rightPaddle.x - ball.radius;
-    }
-    
-    // Detect if the ball has gone off-screen and reset its position
-    // This is just for visual purposes, the actual scoring is handled by the server
-    if (ball.x + ball.radius < 0 || ball.x - ball.radius > BASE_WIDTH) {
-      // Don't reset here - wait for server to send the new position
-      // This prevents visual glitches when scoring
-      
-      // Instead, slow down the prediction for smoother visualization
-      ball.dx *= 0.5;
-      ball.dy *= 0.5;
-    }
   };
 
   const updateBallPosition = () => {
@@ -774,6 +588,7 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     ball.x = ball.x + (targetX - ball.x) * INTERPOLATION_ALPHA;
     ball.y = ball.y + (targetY - ball.y) * INTERPOLATION_ALPHA;
   };
+
   const updateOpponentPaddle = () => {
     // Determine which paddle is the opponent's
     const opponentPaddleKey = connectionState.playerNumber === 1 
@@ -789,6 +604,7 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     // Apply a fixed interpolation factor to move smoothly toward target
     paddle.y = paddle.y + (targetY - paddle.y) * INTERPOLATION_ALPHA;
   };
+  
   // Update game state locally between server updates
   const updateGameState = () => {
     // Increment frame counter for FPS calculation
@@ -818,20 +634,18 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     // Return the last few positions for the trail effect
     return previousBallPositionsRef.current.slice(-5);
   };
-  
+
   // Setup keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent default for game keys
-      //bring
       if (["w", "s", "ArrowUp", "ArrowDown", " "].includes(e.key)) {
         e.preventDefault();
       }
 
-       // Only record timestamp if the key wasn't already pressed
+      // Only record timestamp if the key wasn't already pressed
       if (!keysPressedRef.current[e.key]) {
         keyPressTimestampRef.current[e.key] = Date.now();
-        // console.log(`Key ${e.key} pressed at: ${keyPressTimestampRef.current[e.key]}`);
       }
       
       setKeysPressed(prev => ({ ...prev, [e.key]: true }));
@@ -839,11 +653,6 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       // Toggle visual smoothing with 'v' key
       if (e.key === "v" && !e.repeat) {
         setVisualSmoothingEnabled(prev => !prev);
-        toast({
-          title: "Visual Smoothing",
-          description: `${!visualSmoothingEnabled ? "Enabled" : "Disabled"}`,
-          variant: "default",
-        });
       }
       
       // Start game on key press if on menu
@@ -868,7 +677,12 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [visualSmoothingEnabled, toast]);
+  }, [visualSmoothingEnabled]);
+
+  // Toggle visual smoothing
+  const toggleVisualSmoothing = () => {
+    setVisualSmoothingEnabled(prev => !prev);
+  };
   
   // Canvas click handler for game controls
   const handleCanvasClick = () => {
@@ -884,98 +698,9 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       connectionRef.current.startGame();
     }
   };
-  
-  // Handle manual reconnect attempt
-  const handleManualReconnect = () => {
-    if (connectionRef.current) {
-      setConnectionState(prev => ({
-        ...prev,
-        connecting: true,
-      }));
-      
-      toast({
-        title: "Reconnecting",
-        description: "Attempting to reconnect to the game server...",
-        variant: "default",
-      });
-      
-      connectionRef.current.connect();
-    }
-  };
-  
-  // Toggle visual smoothing
-  const toggleVisualSmoothing = () => {
-    setVisualSmoothingEnabled(prev => !prev);
-    toast({
-      title: "Visual Smoothing",
-      description: `${!visualSmoothingEnabled ? "Enabled" : "Disabled"}`,
-      variant: "default",
-    });
-  };
-  
-  // Render connection error overlay if needed
-  const renderConnectionOverlay = () => {
-    if (!connectionState.connected && !connectionState.connecting) {
-      return (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 rounded-xl">
-          <div className="bg-black/90 border border-red-500 p-8 rounded-lg text-center max-w-md">
-            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">Connection Lost</h2>
-            <p className="text-gray-300 mb-6">
-              We couldn't reconnect to the game server. The game has been terminated.
-            </p>
-            <div className="flex flex-col space-y-3">
-              <Button
-                onClick={handleManualReconnect}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                Try Again
-              </Button>
-              <Button
-                onClick={onBackToSetup}
-                variant="outline"
-                className="border-gray-700 text-gray-300"
-              >
-                Back to Menu
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
-    if (!connectionState.connected && connectionState.connecting) {
-      return (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 rounded-xl">
-          <div className="bg-black/90 border border-yellow-500 p-8 rounded-lg text-center max-w-md">
-            <div className="w-16 h-16 mb-4 mx-auto">
-              <div className="w-full h-full rounded-full border-t-4 border-b-4 border-yellow-500 animate-spin"></div>
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Reconnecting...</h2>
-            <p className="text-gray-300 mb-2">
-              Attempting to reconnect to the game server.
-            </p>
-            <p className="text-gray-500 text-sm mb-6">
-              Attempt {connectionState.reconnectAttempt} of 5. 
-              Game will end after {Math.ceil((CONNECTION_TIMEOUT - (disconnectionTimeRef.current ? Date.now() - disconnectionTimeRef.current : 0)) / 1000)} seconds.
-            </p>
-            <Button
-              onClick={onBackToSetup}
-              variant="outline"
-              className="border-gray-700 text-gray-300"
-            >
-              Cancel and Return to Menu
-            </Button>
-          </div>
-        </div>
-      );
-    }
-    
-    return null;
-  };
-  
+
   return (
-    <div className="relative w-full">
+    <div className="w-full">
       {/* Connection status indicator */}
       <div className="mb-2 flex items-center justify-center gap-2">
         {connectionState.connected ? (
@@ -987,7 +712,7 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2 bg-red-900/50 px-3 py-1 rounded-full text-red-400 animate-pulse">
+          <div className="flex items-center gap-2 bg-red-900/50 px-3 py-1 rounded-full text-red-400">
             <WifiOff size={16} />
             <span>Disconnected</span>
           </div>
@@ -1027,10 +752,9 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
           player1Avatar={player1Avatar}
           player2Avatar={player2Avatar}
           onCanvasClick={handleCanvasClick}
+          ballTrailPositions={getBallTrailPositions()}
+          visualSmoothingEnabled={visualSmoothingEnabled}
         />
-        
-        {/* Connection overlay */}
-        {renderConnectionOverlay()}
       </div>
     </div>
   );
