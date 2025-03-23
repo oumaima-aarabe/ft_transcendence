@@ -28,6 +28,7 @@ from django.conf import settings
 
 # Import after Django setup
 from chat.routing import websocket_urlpatterns
+from pong_game import routing
 
 # Initialize channel layer
 channel_layer = get_channel_layer()
@@ -82,7 +83,7 @@ application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": TokenAuthMiddleware(
         URLRouter(
-            websocket_urlpatterns
+            websocket_urlpatterns + routing.websocket_urlpatterns
         )
     ),
 })

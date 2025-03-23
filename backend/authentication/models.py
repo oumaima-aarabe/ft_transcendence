@@ -15,7 +15,7 @@ class User(AbstractUser):
     password = models.CharField(max_length=200)
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
-    status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES[3][0])
+    status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES[3][0], max_length=20)
     last_activity = models.DateTimeField(auto_now=True)
     experience = models.IntegerField(default=0)
     level = models.IntegerField(default=1)

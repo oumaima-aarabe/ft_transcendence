@@ -65,3 +65,39 @@ export interface DifficultySettings {
 export interface KeyStates {
   [key: string]: boolean;
 }
+
+export interface EnhancedGameState {
+  ball: {
+    x: number;
+    y: number;
+    dx: number;
+    dy: number;
+    speed: number;
+    radius: number;
+  };
+  leftPaddle: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    speed: number;
+    score: number;
+  };
+  rightPaddle: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    speed: number;
+    score: number;
+  };
+  matchWins: {
+    player1: number;
+    player2: number;
+  };
+  currentMatch: number;
+  gameStatus: "waiting" | "menu" | "playing" | "paused" | "matchOver" | "gameOver"| "cancelled";
+  winner: "player1" | "player2" | null;
+}
+
+export type GameMode = "local" | "online" | "tournament";

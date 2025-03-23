@@ -8,6 +8,8 @@ import PongGame from './components/pong-game';
 import GameBackground from './components/game-background';
 import { GameTheme, GameDifficulty } from './types/game';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
+import { LocalPongGame } from './components/local-pong-game';
 
 // Game flow state type
 type GameFlowState = 'options' | 'setup' | 'playing';
@@ -17,6 +19,7 @@ export default function GamePage() {
   // Flow state management
   const [flowState, setFlowState] = useState<GameFlowState>('options');
   const gameAreaRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   
   // Game configuration
   const [player1Name, setPlayer1Name] = useState<string>(t('player1'));
@@ -28,6 +31,9 @@ export default function GamePage() {
   const handleSelectGameMode = (mode: 'local' | 'invite' | 'matchmaking') => {
     if (mode === 'local') {
       setFlowState('setup');
+    } else if (mode === 'matchmaking') {
+      // Navigation is handled in the GameOptions component
+      // The router.push to '/game/remote' is already there
     } else {
       // For now, other modes are not implemented
       alert(`${mode} mode is not implemented yet`);
@@ -112,7 +118,7 @@ export default function GamePage() {
                 transition={{ duration: 0.3 }}
                 className="z-30 relative"
               >
-                <PongGame
+                <LocalPongGame
                   player1Name={player1Name}
                   player2Name={player2Name}
                   theme={gameTheme}

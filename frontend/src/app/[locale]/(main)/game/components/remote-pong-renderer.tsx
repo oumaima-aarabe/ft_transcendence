@@ -1,66 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button } from "../components/ui/button";
-import { Flame, Waves, Trophy } from "lucide-react";
 import { GameDifficulty, GameTheme, KeyStates } from "../types/game";
-
-//Game State interface
-export interface EnhancedGameState {
-  ball: {
-    x: number;
-    y: number;
-    dx: number;
-    dy: number;
-    speed: number;
-    radius: number;
-  };
-  leftPaddle: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    speed: number;
-    score: number;
-  };
-  rightPaddle: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    speed: number;
-    score: number;
-  };
-  matchWins: {
-    player1: number;
-    player2: number;
-  };
-  currentMatch: number;
-  gameStatus: "menu" | "playing" | "paused" | "matchOver" | "gameOver";
-  winner: "player1" | "player2" | null;
-}
-
-// Define component props
-export interface PongGameProps {
-  player1Name: string;
-  player2Name: string;
-  theme: GameTheme;
-  difficulty: GameDifficulty;
-  onBackToSetup: () => void;
-  player1Avatar?: string;
-  player2Avatar?: string;
-  gameStateRef: React.RefObject<EnhancedGameState>;
-  updateGameState: () => void;
-  setKeysPressed: React.Dispatch<React.SetStateAction<KeyStates>>;
-  scoreAnimation: {player1: boolean; player2: boolean};
-  BASE_WIDTH: number;
-  BASE_HEIGHT: number;
-  PADDLE_WIDTH: number;
-  PADDLE_HEIGHT: number;
-  BALL_RADIUS: number;
-  PADDLE_SPEED: number;
-  POINTS_TO_WIN_MATCH: number;
-  MATCHES_TO_WIN_GAME: number;
-}
-
+import { Button } from "@/components/ui/button";
+import { Flame, Waves, Trophy } from "lucide-react";
+import { EnhancedGameState } from '../types/game';
 
 // Theme-specific properties
 const themeProperties = {
@@ -74,6 +16,7 @@ const themeProperties = {
     shadowBlur: 25,
     textColor: "#D05F3B",
     background: "url('/assets/images/fire-game.png')",
+    trailColor: "rgba(208, 95, 59, 0.4)",
   },
   water: {
     color: "#40CFB7",
@@ -85,11 +28,12 @@ const themeProperties = {
     shadowBlur: 25,
     textColor: "#40CFB7",
     background: "url('/assets/images/water-game.png')",
+    trailColor: "rgba(64, 207, 183, 0.4)",
   },
 };
 
 // Difficulty settings
-export const difficultySettings = {
+const difficultySettings = {
   easy: {
     ballSpeed: 3,
     incrementMultiplier: 0.02,
@@ -107,18 +51,32 @@ export const difficultySettings = {
   },
 };
 
-const PongGame: React.FC<PongGameProps> = ({
-  player1Name,
-  player2Name,
-  theme,
-  difficulty,
-  onBackToSetup,
-  player1Avatar = "https://iili.io/2D8ByIj.png",
-  player2Avatar = "https://iili.io/2D8ByIj.png",
-  gameStateRef,
-  updateGameState,
-  setKeysPressed,
-  scoreAnimation,
+interface RemotePongRendererProps {
+  BASE_WIDTH: number;
+  BASE_HEIGHT: number;
+  PADDLE_WIDTH: number;
+  PADDLE_HEIGHT: number;
+  BALL_RADIUS: number;
+  PADDLE_SPEED: number;
+  POINTS_TO_WIN_MATCH: number;
+  MATCHES_TO_WIN_GAME: number;
+  gameStateRef: React.RefObject<EnhancedGameState>;
+  updateGameState: () => void;
+  setKeysPressed: React.Dispatch<React.SetStateAction<KeyStates>>;
+  scoreAnimation?: {player1: boolean; player2: boolean};
+  player1Name: string;
+  player2Name: string;
+  theme: GameTheme;
+  difficulty: GameDifficulty;
+  onBackToSetup: () => void;
+  player1Avatar?: string;
+  player2Avatar?: string;
+  onCanvasClick?: () => void;
+  ballTrailPositions?: {x: number, y: number}[];
+  visualSmoothingEnabled?: boolean;
+}
+
+const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
   BASE_WIDTH,
   BASE_HEIGHT,
   PADDLE_WIDTH,
@@ -127,19 +85,28 @@ const PongGame: React.FC<PongGameProps> = ({
   PADDLE_SPEED,
   POINTS_TO_WIN_MATCH,
   MATCHES_TO_WIN_GAME,
+  gameStateRef,
+  updateGameState,
+  setKeysPressed,
+  scoreAnimation = { player1: false, player2: false },
+  player1Name,
+  player2Name,
+  theme,
+  difficulty,
+  onBackToSetup,
+  player1Avatar = "https://iili.io/2D8ByIj.png",
+  player2Avatar = "https://iili.io/2D8ByIj.png",
+  onCanvasClick,
+  ballTrailPositions = [],
+  visualSmoothingEnabled = true,
 }) => {
-
   // UI State
   const [uiState, setUiState] = useState({
-    gameStatus: "menu" as
-      | "menu"
-      | "playing"
-      | "paused"
-      | "matchOver"
-      | "gameOver",
+    gameStatus: "waiting" as "waiting" | "menu" | "playing" | "cancelled" | "paused" |"matchOver" | "gameOver",
     matchWins: { player1: 0, player2: 0 },
     currentMatch: 1,
   });
+  
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef<number | null>(null);
@@ -147,14 +114,122 @@ const PongGame: React.FC<PongGameProps> = ({
   const [canvasWidth, setCanvasWidth] = useState<number>(BASE_WIDTH);
   const [canvasHeight, setCanvasHeight] = useState<number>(BASE_HEIGHT);
   
-  // render match
+  // Previous frame state for smoother transitions
+  const previousFrameState = useRef<{
+    leftPaddleY: number;
+    rightPaddleY: number;
+    ballX: number;
+    ballY: number;
+  }>({
+    leftPaddleY: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+    rightPaddleY: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+    ballX: BASE_WIDTH / 2,
+    ballY: BASE_HEIGHT / 2,
+  });
+  
+  // Update UI state from game state
+  useEffect(() => {
+    const syncUIState = () => {
+      if (!gameStateRef.current) return;
+      
+      setUiState({
+        gameStatus: gameStateRef.current.gameStatus,
+        matchWins: gameStateRef.current.matchWins,
+        currentMatch: gameStateRef.current.currentMatch,
+      });
+    };
+    
+    // Run initially
+    syncUIState();
+    
+    // Set up interval to sync UI with game state
+    const interval = setInterval(syncUIState, 100);
+    
+    return () => clearInterval(interval);
+  }, [gameStateRef]);
+  
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        // Calculate scale while maintaining aspect ratio
+        const newScale = Math.min(1, containerWidth / BASE_WIDTH);
+        
+        setScale(newScale);
+        setCanvasWidth(BASE_WIDTH * newScale);
+        setCanvasHeight(BASE_HEIGHT * newScale);
+      }
+    };
+    
+    // Initial call
+    handleResize();
+    
+    // Add resize listener
+    window.addEventListener("resize", handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, [BASE_WIDTH, BASE_HEIGHT]);
+  
+  // Set up game canvas and animation loop
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    
+    // Enable image smoothing for better visuals
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    
+    // Apply theme
+    const themeProps = themeProperties[theme];
+    
+    const gameLoop = () => {
+      // Update game state
+      updateGameState();
+      
+      // Scale the canvas context to keep game physics the same regardless of canvas size
+      context.setTransform(scale, 0, 0, scale, 0, 0);
+      
+      // Render the game
+      renderGame(context, themeProps);
+      
+      // Store current state for next frame
+      if (gameStateRef.current) {
+        previousFrameState.current = {
+          leftPaddleY: gameStateRef.current.leftPaddle.y,
+          rightPaddleY: gameStateRef.current.rightPaddle.y,
+          ballX: gameStateRef.current.ball.x,
+          ballY: gameStateRef.current.ball.y,
+        };
+      }
+      
+      // Continue the loop
+      requestIdRef.current = requestAnimationFrame(gameLoop);
+    };
+    
+    // Start the game loop
+    requestIdRef.current = requestAnimationFrame(gameLoop);
+    
+    // Cleanup function
+    return () => {
+      if (requestIdRef.current) {
+        cancelAnimationFrame(requestIdRef.current);
+      }
+    };
+  }, [theme, difficulty, scale, updateGameState]);
+  
+  // Render match win streaks with themes
   const renderMatchWinStreaks = (playerNumber: 1 | 2, wins: number) => {
     const maxWins = MATCHES_TO_WIN_GAME;
     const streaks = [];
-
+    
     for (let i = 0; i < maxWins; i++) {
       const isActive = i < wins;
-
+      
       if (theme === "fire") {
         streaks.push(
           <div
@@ -193,165 +268,223 @@ const PongGame: React.FC<PongGameProps> = ({
     return <div className="flex space-x-1">{streaks}</div>;
   };
 
-  // Set up game canvas and event listeners
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // Drawing game elements with enhanced visuals
+  const renderGame = (ctx: CanvasRenderingContext2D, themeProps: any) => {
+    const renderStartTime = Date.now();
 
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    if (!gameStateRef.current) return;
+    const { ball, leftPaddle, rightPaddle, gameStatus } = gameStateRef.current;
+    const { color, glowColor, trailColor } = themeProps;
 
-    // Apply theme
-    const themeProps = themeProperties[theme];
+    // Clear entire canvas
+    ctx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-    // Handle key presses
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent default actions for game keys
-      if (["w", "s", "ArrowUp", "ArrowDown", " "].includes(e.key)) {
-        e.preventDefault();
-      }
+    // Fill with black background
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-      setKeysPressed((prev) => ({ ...prev, [e.key]: true }));
-      // Start game on key press if on menu
-      if (gameStateRef.current.gameStatus === "menu" && !e.repeat) {
-        gameStateRef.current.gameStatus = "playing";
-        setUiState((prev) => ({ ...prev, gameStatus: "playing" }));
-      }
+    // Draw table border with glow
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    // Draw the border path
+    ctx.beginPath();
+    ctx.roundRect(2, 2, BASE_WIDTH - 4, BASE_HEIGHT - 4, 20);
+    // Create glow effect
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.stroke();
+    ctx.restore();
 
-      // Pause/unpause on Space
-      if (e.key === " " && !e.repeat) {
-        togglePause();
-      }
-    };
+    // Draw center line
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(BASE_WIDTH / 2, 0);
+    ctx.lineTo(BASE_WIDTH / 2, BASE_HEIGHT);
+    ctx.stroke();
+    ctx.restore();
 
-    const handleKeyUp = (e: KeyboardEvent) => {
-      setKeysPressed((prev) => ({ ...prev, [e.key]: false }));
-    };
+    // Draw paddles with rounded ends and enhanced visuals
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
 
-    // Add event listeners
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    // Left paddle with motion blur for smoother movement
+    if (visualSmoothingEnabled && Math.abs(leftPaddle.y - previousFrameState.current.leftPaddleY) > 2) {
+      // Add slight motion blur effect with a gradient
+      const gradient = ctx.createLinearGradient(
+        leftPaddle.x, 
+        Math.min(leftPaddle.y, previousFrameState.current.leftPaddleY),
+        leftPaddle.x,
+        Math.max(leftPaddle.y, previousFrameState.current.leftPaddleY) + leftPaddle.height
+      );
+      
+      gradient.addColorStop(0, `${color}88`); // Semi-transparent
+      gradient.addColorStop(0.5, color);
+      gradient.addColorStop(1, `${color}88`); // Semi-transparent
+      
+      ctx.fillStyle = gradient;
+    }
+    
+    ctx.beginPath();
+    ctx.roundRect(
+      leftPaddle.x,
+      leftPaddle.y,
+      leftPaddle.width,
+      leftPaddle.height,
+      5
+    );
+    ctx.fill();
 
-    const checkMatchWin = () => {
-      const { leftPaddle, rightPaddle } = gameStateRef.current;
-      const { player1, player2 } = gameStateRef.current.matchWins;
+    // Right paddle with motion blur for smoother movement
+    if (visualSmoothingEnabled && Math.abs(rightPaddle.y - previousFrameState.current.rightPaddleY) > 2) {
+      // Add slight motion blur effect with a gradient
+      const gradient = ctx.createLinearGradient(
+        rightPaddle.x, 
+        Math.min(rightPaddle.y, previousFrameState.current.rightPaddleY),
+        rightPaddle.x,
+        Math.max(rightPaddle.y, previousFrameState.current.rightPaddleY) + rightPaddle.height
+      );
+      
+      gradient.addColorStop(0, `${color}88`); // Semi-transparent
+      gradient.addColorStop(0.5, color);
+      gradient.addColorStop(1, `${color}88`); // Semi-transparent
+      
+      ctx.fillStyle = gradient;
+    } else {
+      ctx.fillStyle = color;
+    }
+    
+    ctx.beginPath();
+    ctx.roundRect(
+      rightPaddle.x,
+      rightPaddle.y,
+      rightPaddle.width,
+      rightPaddle.height,
+      5
+    );
+    ctx.fill();
+    ctx.restore();
 
-      if (leftPaddle.score === POINTS_TO_WIN_MATCH) {
-        gameStateRef.current.gameStatus = "matchOver";
-        gameStateRef.current.matchWins.player1 = player1 + 1;
-        setUiState((prev) => ({
-          ...prev,
-          gameStatus: "matchOver",
-          matchWins: { player1: player1 + 1, player2 },
-        }));
-      } else if (rightPaddle.score === POINTS_TO_WIN_MATCH) {
-        gameStateRef.current.gameStatus = "matchOver";
-        gameStateRef.current.matchWins.player2 = player2 + 1;
-        setUiState((prev) => ({
-          ...prev,
-          gameStatus: "matchOver",
-          matchWins: { player1, player2: player2 + 1 },
-        }));
-      }
+    // Draw ball trails if available and enabled
+    if (visualSmoothingEnabled && ballTrailPositions && ballTrailPositions.length > 0) {
+      ctx.save();
+      
+      // Draw each trail position with decreasing opacity
+      ballTrailPositions.forEach((pos, index) => {
+        const alpha = 0.1 + (index / ballTrailPositions.length) * 0.4;
+        const size = BALL_RADIUS * (0.4 + (index / ballTrailPositions.length) * 0.6);
+        
+        ctx.fillStyle = trailColor.replace(')', `, ${alpha})`);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      ctx.restore();
     }
 
-
-    const gameLoop = (time: number) => {
-      // Scale the canvas context to keep game physics the same regardless of canvas size
-      context.setTransform(scale, 0, 0, scale, 0, 0);
-
-      if (gameStateRef.current.gameStatus === "playing") {
-        updateGameState();
-        checkMatchWin();
-      }
-
-      renderGame(context, themeProps);
-      requestIdRef.current = requestAnimationFrame(gameLoop);
-    };
-    // Start the game loop
-    requestIdRef.current = requestAnimationFrame(gameLoop);
-
-
-    // Cleanup function
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-      if (requestIdRef.current) {
-        cancelAnimationFrame(requestIdRef.current);
-      }
-    };
-  }, [theme, difficulty, scale]); // Only re-run when these dependencies change
-
-
-  // Draw game over screen
-  const drawGameOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    const { color } = themeProps;
-    const { winner, matchWins } = gameStateRef.current;
-    
-    // Semi-transparent overlay with exact positioning and rounded corners
+    // Draw ball with glow effect
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
-    ctx.fill();
-    
-    // Winner text
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 15;
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
     
-    if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    }
+    // Add inner highlight to ball for more visual depth
+    const gradient = ctx.createRadialGradient(
+      ball.x - ball.radius * 0.3, 
+      ball.y - ball.radius * 0.3, 
+      0,
+      ball.x, 
+      ball.y, 
+      ball.radius
+    );
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
     
-    // Final score
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText(`FINAL SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
-    
-    // Restart instructions
-    ctx.shadowBlur = 5;
-    ctx.font = '20px Arial';
-    ctx.fillText('Click to play again', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
     ctx.restore();
+
+    // Draw current match scores
+    ctx.save();
+    ctx.font = "bold 16px Arial";
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 5;
+    ctx.textAlign = "left";
+    ctx.fillText(`Points: ${leftPaddle.score}`, 20, BASE_HEIGHT - 20);
+    ctx.textAlign = "right";
+    ctx.fillText(
+      `Points: ${rightPaddle.score}`,
+      BASE_WIDTH - 20,
+      BASE_HEIGHT - 20
+    );
+    ctx.restore();
+
+    // Draw game status overlays
+    if (gameStatus === "waiting") {
+      drawWaitingScreen(ctx, themeProps);
+    } else if (gameStatus === "menu") {
+      drawMenuScreen(ctx, themeProps);
+    } else if (gameStatus === "matchOver") {
+      drawMatchOverScreen(ctx, themeProps);
+    } else if (gameStatus === "gameOver") {
+      drawGameOverScreen(ctx, themeProps);
+    }
+
+      const renderEndTime = Date.now();
+      const renderDuration = renderEndTime - renderStartTime;
+      
+      // Log only if rendering is taking unusually long (more than 16ms which is ~60fps)
+      // if (renderDuration > 16) {
+      //   console.log(`Slow render detected: ${renderDuration}ms`);
+      // }
   };
 
-  // Draw match over screen
-  const drawMatchOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
+  // Screen overlays
+  const drawWaitingScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
     const { color } = themeProps;
-    const { winner, matchWins, currentMatch } = gameStateRef.current;
     
-    // Semi-transparent overlay with exact positioning and rounded corners
+    // Semi-transparent overlay
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
     ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
     ctx.fill();
     
-    // Winner text
+    // Waiting text
     ctx.fillStyle = color;
     ctx.shadowColor = color;
     ctx.shadowBlur = 15;
     ctx.font = 'bold 48px Arial';
     ctx.textAlign = 'center';
+    ctx.fillText('WAITING FOR PLAYERS', BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
     
-    if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
-    }
+    // Spinner animation (circle with a gap)
+    const now = Date.now();
+    const angle = (now % 2000) / 2000 * Math.PI * 2;
     
-    // Current match score
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText(`MATCH SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    ctx.beginPath();
+    ctx.arc(BASE_WIDTH / 2, BASE_HEIGHT / 2 + 40, 20, angle, angle + Math.PI * 1.5);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.stroke();
     
-    // Continue instructions
-    ctx.shadowBlur = 5;
-    ctx.font = '20px Arial';
-    ctx.fillText('Click to continue to next match', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
     ctx.restore();
   };
 
@@ -359,7 +492,7 @@ const PongGame: React.FC<PongGameProps> = ({
     const { color } = themeProps;
     const { currentMatch } = gameStateRef.current;
     
-    // Semi-transparent overlay with exact positioning and rounded corners
+    // Semi-transparent overlay
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
@@ -391,121 +524,10 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.restore();
   };
 
-
-  // Render the game - using your exact table styles
-  const renderGame = (ctx: CanvasRenderingContext2D, themeProps: any) => {
-    const { ball, leftPaddle, rightPaddle, gameStatus, matchWins, winner } =
-      gameStateRef.current;
-    const { color, glowColor, borderRadius } = themeProps;
-
-    // Clear entire canvas
-    ctx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-
-    // Fill with black background
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
-
-    // Draw table border with glow, exactly matching your reference images
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    // Draw the border path
-    ctx.beginPath();
-    ctx.roundRect(2, 2, BASE_WIDTH - 4, BASE_HEIGHT - 4, 20);
-    // Create glow effect
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.stroke();
-    ctx.restore();
-
-    // Draw center line
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.moveTo(BASE_WIDTH / 2, 0);
-    ctx.lineTo(BASE_WIDTH / 2, BASE_HEIGHT);
-    ctx.stroke();
-    ctx.restore();
-
-    // Draw paddles - with rounded ends as in the reference
-    ctx.save();
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 10;
-
-    // Left paddle with rounded ends
-    ctx.beginPath();
-    ctx.roundRect(
-      leftPaddle.x,
-      leftPaddle.y,
-      leftPaddle.width,
-      leftPaddle.height,
-      5
-    );
-    ctx.fill();
-
-    // Right paddle with rounded ends
-    ctx.beginPath();
-    ctx.roundRect(
-      rightPaddle.x,
-      rightPaddle.y,
-      rightPaddle.width,
-      rightPaddle.height,
-      5
-    );
-    ctx.fill();
-    ctx.restore();
-
-    // Draw ball
-    ctx.save();
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 15;
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // Draw current match scores (not match wins) - small in bottom corners
-    ctx.save();
-    ctx.font = "bold 16px Arial";
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 5;
-    ctx.textAlign = "left";
-    ctx.fillText(`Points: ${leftPaddle.score}`, 20, BASE_HEIGHT - 20);
-    ctx.textAlign = "right";
-    ctx.fillText(
-      `Points: ${rightPaddle.score}`,
-      BASE_WIDTH - 20,
-      BASE_HEIGHT - 20
-    );
-    ctx.restore();
-
-    // Draw game status overlays
-    if (gameStatus === "menu") {
-      drawMenuScreen(ctx, themeProps);
-    } else if (gameStatus === "paused") {
-      drawPauseScreen(ctx, themeProps);
-    } else if (gameStatus === "matchOver") {
-      drawMatchOverScreen(ctx, themeProps);
-    } else if (gameStatus === "gameOver") {
-      drawGameOverScreen(ctx, themeProps);
-    }
-  };
-
-  // Draw menu screen
-
-  // Draw pause screen
   const drawPauseScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
     const { color } = themeProps;
     
-    // Semi-transparent overlay with exact positioning and rounded corners
+    // Semi-transparent overlay
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.beginPath();
@@ -527,132 +549,74 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.restore();
   };
 
-  // Reset game for a new match
-
-  const resetForNewMatch = () => {
-    gameStateRef.current = {
-      ...gameStateRef.current,
-      ball: {
-        x: BASE_WIDTH / 2,
-        y: BASE_HEIGHT / 2,
-        dx: difficultySettings[difficulty].ballSpeed,
-        dy: difficultySettings[difficulty].ballSpeed * BASE_HEIGHT / BASE_WIDTH,
-        speed: difficultySettings[difficulty].ballSpeed,
-        radius: BALL_RADIUS,
-      },
-      leftPaddle: {
-        ...gameStateRef.current.leftPaddle,
-        y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        score: 0,
-      },
-      rightPaddle: {
-        ...gameStateRef.current.rightPaddle,
-        y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        score: 0,
-      },
-      currentMatch: gameStateRef.current.currentMatch + 1,
-      gameStatus: "menu",
-      winner: null,
-    };
-
-    setUiState({
-      gameStatus: "menu",
-      matchWins: gameStateRef.current.matchWins,
-      currentMatch: gameStateRef.current.currentMatch,
-    });
-  };
-
-  // Handle full game restart
-  const handleRestartGame = () => {
-    gameStateRef.current = {
-      ball: {
-        x: BASE_WIDTH / 2,
-        y: BASE_HEIGHT / 2,
-        dx: difficultySettings[difficulty].ballSpeed,
-        dy: difficultySettings[difficulty].ballSpeed * BASE_HEIGHT / BASE_WIDTH,
-        speed: difficultySettings[difficulty].ballSpeed,
-        radius: BALL_RADIUS,
-      },
-      leftPaddle: {
-        x: 20,
-        y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        width: PADDLE_WIDTH,
-        height: PADDLE_HEIGHT,
-        speed: PADDLE_SPEED,
-        score: 0,
-      },
-      rightPaddle: {
-        x: BASE_WIDTH - 20 - PADDLE_WIDTH,
-        y: BASE_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        width: PADDLE_WIDTH,
-        height: PADDLE_HEIGHT,
-        speed: PADDLE_SPEED,
-        score: 0,
-      },
-      matchWins: {
-        player1: 0,
-        player2: 0,
-      },
-      currentMatch: 1,
-      gameStatus: "menu",
-      winner: null,
-    };
-
-    setUiState({
-      gameStatus: "menu",
-      matchWins: { player1: 0, player2: 0 },
-      currentMatch: 1,
-    });
-  };
-
-  // Canvas click handler
-  const handleCanvasClick = () => {
-    const currentStatus = gameStateRef.current.gameStatus;
-
-    if (currentStatus === "gameOver") {
-      handleRestartGame();
-    } else if (currentStatus === "matchOver") {
-      resetForNewMatch();
-    } else if (currentStatus === "menu") {
-      gameStateRef.current.gameStatus = "playing";
-      setUiState((prev) => ({ ...prev, gameStatus: "playing" }));
+  const drawMatchOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
+    const { color } = themeProps;
+    const { winner, matchWins, currentMatch } = gameStateRef.current;
+    
+    // Semi-transparent overlay
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.beginPath();
+    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
+    ctx.fill();
+    
+    // Winner text
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    
+    if (winner === 'player1') {
+      ctx.fillText(`${player1Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    } else if (winner === 'player2') {
+      ctx.fillText(`${player2Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
     }
+    
+    // Current match score
+    ctx.font = 'bold 36px Arial';
+    ctx.fillText(`MATCH SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    
+    // Continue instructions
+    ctx.shadowBlur = 5;
+    ctx.font = '20px Arial';
+    ctx.fillText('Click to continue to next match', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.restore();
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth;
-        // Calculate scale while maintaining aspect ratio
-        const newScale = Math.min(1, containerWidth / BASE_WIDTH);
-
-        setScale(newScale);
-        setCanvasWidth(BASE_WIDTH * newScale);
-        setCanvasHeight(BASE_HEIGHT * newScale);
-      }
-    };
-
-    // Initial call
-    handleResize();
-
-    // Add resize listener
-    window.addEventListener("resize", handleResize);
-
-    // Cleanup
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Toggle pause state
-  const togglePause = () => {
-    const newStatus =
-      gameStateRef.current.gameStatus === "playing"
-        ? "paused"
-        : gameStateRef.current.gameStatus === "paused"
-        ? "playing"
-        : gameStateRef.current.gameStatus;
-
-    gameStateRef.current.gameStatus = newStatus;
-    setUiState((prev) => ({ ...prev, gameStatus: newStatus }));
+  const drawGameOverScreen = (ctx: CanvasRenderingContext2D, themeProps: any) => {
+    const { color } = themeProps;
+    const { winner, matchWins } = gameStateRef.current;
+    
+    // Semi-transparent overlay
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.beginPath();
+    ctx.roundRect(2, 2, BASE_WIDTH-4, BASE_HEIGHT-4, 20);
+    ctx.fill();
+    
+    // Winner text
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    
+    if (winner === 'player1') {
+      ctx.fillText(`${player1Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    } else if (winner === 'player2') {
+      ctx.fillText(`${player2Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    }
+    
+    // Final score
+    ctx.font = 'bold 36px Arial';
+    ctx.fillText(`FINAL SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    
+    // Restart instructions
+    ctx.shadowBlur = 5;
+    ctx.font = '20px Arial';
+    ctx.fillText('Click to play again', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.restore();
   };
   
   return (
@@ -668,22 +632,6 @@ const PongGame: React.FC<PongGameProps> = ({
           }`}
         >
           Back to Setup
-        </Button>
-
-        <Button
-          onClick={togglePause}
-          className={`bg-transparent border-2 shadow-md text-lg px-6 py-2 ${
-            theme === "fire"
-              ? "border-[#D05F3B] text-[#D05F3B] shadow-[0_0_15px_rgba(208,95,59,0.5)]"
-              : "border-[#40CFB7] text-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.5)]"
-          }`}
-          disabled={
-            uiState.gameStatus === "menu" ||
-            uiState.gameStatus === "matchOver" ||
-            uiState.gameStatus === "gameOver"
-          }
-        >
-          {uiState.gameStatus === "paused" ? "Resume Game" : "Pause Game"}
         </Button>
       </div>
 
@@ -730,7 +678,7 @@ const PongGame: React.FC<PongGameProps> = ({
                     theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
                   } ${scoreAnimation.player1 ? "scale-150 animate-pulse" : ""}`}
                 >
-                  {/* {gameStateRef.current.leftPaddle.score} */}
+                  {gameStateRef.current?.leftPaddle.score || 0}
                 </span>
                 <div className="flex flex-col items-start">
                   <div className="flex">
@@ -801,7 +749,7 @@ const PongGame: React.FC<PongGameProps> = ({
                     theme === "water" ? "text-[#40CFB7]" : "text-[#D05F3B]"
                   } ${scoreAnimation.player2 ? "scale-150 animate-pulse" : ""}`}
                 >
-                  {/* {gameStateRef.current.rightPaddle.score} */}
+                  {gameStateRef.current?.rightPaddle.score || 0}
                 </span>
               </div>
             </div>
@@ -840,7 +788,7 @@ const PongGame: React.FC<PongGameProps> = ({
             ref={canvasRef}
             width={BASE_WIDTH}
             height={BASE_HEIGHT}
-            onClick={handleCanvasClick}
+            onClick={onCanvasClick}
             style={{
               width: `${canvasWidth}px`,
               height: `${canvasHeight}px`,
@@ -878,11 +826,16 @@ const PongGame: React.FC<PongGameProps> = ({
               <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">Space</kbd>
               <span>- Pause</span>
             </div>
+            
+            <div className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">V</kbd>
+              <span>- Toggle Smoothing</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 };
 
-export default PongGame;
+export default RemotePongRenderer;

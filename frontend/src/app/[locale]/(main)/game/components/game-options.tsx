@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
+
 
 interface GameOptionsProps {
   onSelectMode: (mode: 'local' | 'invite' | 'matchmaking') => void;
@@ -10,6 +12,8 @@ interface GameOptionsProps {
 const GameOptions: React.FC<GameOptionsProps> = ({ onSelectMode }) => {
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
   const t = useTranslations('Game');
+  const router = useRouter();
+
   const options = [
     {
       id: 'local',
@@ -33,7 +37,10 @@ const GameOptions: React.FC<GameOptionsProps> = ({ onSelectMode }) => {
       description: t('matchmakingDescription'),
       theme: 'fire',
       icon: '/assets/icons/icon-user.svg',
-      clickHandler: () => onSelectMode('matchmaking')
+      clickHandler: () => {
+        onSelectMode('matchmaking');
+        router.push('/game/remote');
+      }
     }
   ];
 
