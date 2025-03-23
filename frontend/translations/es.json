@@ -126,11 +126,6 @@
       }
     },
     "game": {
-      "connectivity": {
-        "title": "Conectividad",
-        "online": "En línea",
-        "local": "Local"
-      },
       "difficulty": {
         "title": "Dificultad del juego",
         "easy": "Fácil",
@@ -146,7 +141,8 @@
         "title": "Alias del torneo",
         "placeholder": "Alias predeterminado",
         "save": "Guardar"
-      }
+      },
+      "save": "Guardar cambios"
     },
     "language": {
       "title": "Elegir idioma",
