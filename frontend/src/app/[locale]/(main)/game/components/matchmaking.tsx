@@ -30,6 +30,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [connectionState, setConnectionState] = useState('disconnected');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const MAX_SEARCH_TIME = 60; // 60 seconds timeout
   
   // Game preferences
   const [gameTheme, setGameTheme] = useState<GameTheme>('water');
@@ -67,6 +68,36 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Add automatic timeout for matchmaking
+  useEffect(() => {
+    // Only start timeout if currently searching
+    if (status === 'searching') {
+      const TIMEOUT_DURATION = 60000; // 1 minute in milliseconds
+      
+      // Create timeout that will cancel matchmaking after duration
+      const timeoutId = setTimeout(() => {
+        if (status === 'searching') {
+          console.log('Matchmaking timed out after 1 minute');
+          setMessage('Search timed out. Please try again.');
+          
+          // Cancel the search
+          cancelMatchmaking();
+          
+          // Show timeout message for a moment before resetting to idle
+          setTimeout(() => {
+            setStatus('idle');
+            setMessage('Ready to find an opponent?');
+          }, 3000);
+        }
+      }, TIMEOUT_DURATION);
+      
+      // Clear timeout on cleanup or status change
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [status]);
 
   // Set up WebSocket connection and message handlers
   useEffect(() => {
@@ -111,6 +142,16 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             } else if (data.status.status === 'left_queue') {
               setStatus('idle');
               setMessage('Ready to find an opponent?');
+              setIsAnimating(false);
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+                setSearchTime(0);
+              }
+            } else if (data.status.status === 'timeout') {
+              // Handle the timeout message from the server
+              setStatus('idle');
+              setMessage(data.status.message || 'Search timed out. Please try again.');
               setIsAnimating(false);
               if (timerRef.current) {
                 clearInterval(timerRef.current);
@@ -388,9 +429,23 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
               
               {status === 'searching' && (
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center text-gray-300 mb-4">
+                  <div className="flex items-center text-gray-300 mb-2">
                     <Clock size={18} className="mr-2" />
                     <p>Time elapsed: {formatTime(searchTime)}</p>
+                  </div>
+                  
+                  {/* Add remaining time indicator */}
+                  <div className="w-full max-w-md mb-4">
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                      <span>Searching...</span>
+                      <span>{MAX_SEARCH_TIME - searchTime} seconds remaining</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2.5">
+                      <div 
+                        className="bg-gradient-to-r from-[#D05F3B] to-[#40CFB7] h-2.5 rounded-full transition-all duration-1000"
+                        style={{ width: `${(searchTime / MAX_SEARCH_TIME) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
                   
                   {/* User count and search visualization */}
