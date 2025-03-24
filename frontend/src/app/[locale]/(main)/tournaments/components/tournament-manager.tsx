@@ -246,13 +246,6 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-6">
-        <Button
-          onClick={onExit}
-          variant="outline"
-          className="border-gray-700 hover:text-white hover:bg-gray-800"
-        >
-          {t('exitTournament')}
-        </Button>
         
         <h2 className="text-2xl font-bold text-[#40CFB7] font-orbitron">
           {tournament.isComplete ? t('tournamentComplete') : t('tournamentInProgress')}

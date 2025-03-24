@@ -48,6 +48,7 @@ interface PongGameProps {
   onBackToSetup: () => void;
   player1Avatar?: string;
   player2Avatar?: string;
+  onGameComplete?: (player1Score: number, player2Score: number) => void;
 }
 
 // Fixed game dimensions (base dimensions)
@@ -56,7 +57,7 @@ const BASE_HEIGHT = 500;
 const PADDLE_WIDTH = 18;
 const PADDLE_HEIGHT = 100;
 const BALL_RADIUS = 10;
-const PADDLE_SPEED = 8;
+const PADDLE_SPEED = 10;
 const POINTS_TO_WIN_MATCH = 5;
 const MATCHES_TO_WIN_GAME = 3;
 
@@ -89,9 +90,9 @@ const themeProperties = {
 // Difficulty settings
 const difficultySettings = {
   easy: {
-    ballSpeed: 3,
-    incrementMultiplier: 0.02,
-    maxBallSpeed: 6,
+    ballSpeed: 4,
+    incrementMultiplier: 0.03,
+    maxBallSpeed: 7,
   },
   medium: {
     ballSpeed: 5,
@@ -113,6 +114,7 @@ const PongGame: React.FC<PongGameProps> = ({
   onBackToSetup,
   player1Avatar = "https://iili.io/2D8ByIj.png",
   player2Avatar = "https://iili.io/2D8ByIj.png",
+  onGameComplete,
 }) => {
   const t = useTranslations('localGame');
   // Canvas reference
@@ -245,6 +247,14 @@ const PongGame: React.FC<PongGameProps> = ({
 
   // Handle full game restart
   const handleRestartGame = () => {
+    // If there's a game complete callback, call it with final scores
+    if (onGameComplete && gameStateRef.current.gameStatus === "gameOver") {
+      onGameComplete(
+        gameStateRef.current.matchWins.player1,
+        gameStateRef.current.matchWins.player2
+      );
+    }
+
     gameStateRef.current = {
       ball: {
         x: BASE_WIDTH / 2,

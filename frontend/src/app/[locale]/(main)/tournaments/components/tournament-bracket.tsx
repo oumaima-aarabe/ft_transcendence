@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { TournamentMatch, TournamentPlayer, TournamentState } from "../types/tournament";
+import { TournamentMatch, TournamentState } from "../types/tournament";
 
 interface TournamentBracketProps {
   tournament: TournamentState;
@@ -156,8 +156,8 @@ function MatchCard({ match, onClick, isClickable = false, isFinal = false }: Mat
           <span className={`ml-2 font-medium flex-1 ${
             player2.color === 'fire' ? 'text-[#D05F3B]' : 'text-[#40CFB7]'
           }`}>
-            {player2.name}
-          </span>
+            {player2.name} {" "}
+            </span>
           {winner?.id === player2.id && isComplete && (
             <span className="text-yellow-500 text-sm">Winner</span>
           )}
@@ -172,7 +172,6 @@ function MatchCard({ match, onClick, isClickable = false, isFinal = false }: Mat
           )}
         </div>
       </div>
-
       {/* Winner highlight glow */}
       {winner && (
         <div 
@@ -182,5 +181,6 @@ function MatchCard({ match, onClick, isClickable = false, isFinal = false }: Mat
         />
       )}
     </div>
+
   );
 } 
