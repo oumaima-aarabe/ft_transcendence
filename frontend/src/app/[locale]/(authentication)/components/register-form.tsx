@@ -362,7 +362,7 @@ export const RegisterForm = ({ setLogin }: LoginFormProps) => {
             disabled={registerMutation.isPending}
           >
             <span className="text-[#c75b37]">
-              {registerMutation.isPending ? t('auth.common.loading') : t('sign_up.button')}
+              {registerMutation.isPending ? t('common.loading') : t('sign_up.button')}
             </span>
           </Button>
         </form>
