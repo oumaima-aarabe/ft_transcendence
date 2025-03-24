@@ -51,6 +51,8 @@ class PlayerProfile(models.Model):
     player = models.OneToOneField(User, on_delete=models.CASCADE, related_name='stats')
     
     # Stats
+    experience = models.IntegerField(default=0)
+    level = models.IntegerField(default=1)
     matches_played = models.IntegerField(default=0)
     matches_won = models.IntegerField(default=0)
     matches_lost = models.IntegerField(default=0)
