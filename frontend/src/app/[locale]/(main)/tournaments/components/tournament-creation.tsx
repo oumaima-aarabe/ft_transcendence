@@ -13,7 +13,7 @@ import { ChevronLeft, ChevronRight, Award, Settings, Users } from 'lucide-react'
 
 interface TournamentCreationProps {
   onTournamentStart: (players: TournamentPlayer[], difficulty: GameDifficulty) => void;
-  setTournamentStage: (stage: 'intro' | 'create' | 'tournament') => void;
+  setTournamentStage: (stage: 'create' | 'tournament') => void;
 }
 
 export default function TournamentCreation({ onTournamentStart, setTournamentStage }: TournamentCreationProps) {
@@ -268,20 +268,7 @@ export default function TournamentCreation({ onTournamentStart, setTournamentSta
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-        >
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button 
-              onClick={() => setTournamentStage('intro')}
-              variant="outline" 
-              className="border-white/10 bg-black/40 backdrop-blur-sm hover:bg-[#A86F43]/20 hover:border-white/20 
-              text-white/80 hover:text-white px-6 py-6 h-12 rounded-lg flex items-center transition-all duration-300
-              hover:shadow-lg"
-            >
-              <ChevronLeft className="mr-2" />
-              {t('back')}
-            </Button>
-          </motion.div>
-          
+        > 
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button 
               onClick={handleStartTournament}

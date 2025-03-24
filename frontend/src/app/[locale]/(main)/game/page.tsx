@@ -124,6 +124,7 @@ export default function GamePage() {
                   theme={gameTheme}
                   difficulty={gameDifficulty}
                   onBackToSetup={handleBackToSetup}
+                  isTournamentMode={false}
                 />
               </motion.div>
             )}

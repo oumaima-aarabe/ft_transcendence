@@ -237,6 +237,7 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
           player2Avatar={currentMatch.player2.avatar}
           onBackToSetup={handleBackToTournament}
           onGameComplete={handleGameComplete}
+          isTournamentMode={true}
         />
       </div>
     );

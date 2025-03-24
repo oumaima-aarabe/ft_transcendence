@@ -27,6 +27,6 @@ export interface TournamentState {
   difficulty: GameDifficulty;
 }
 
-export type TournamentStage = 'intro' | 'create' | 'tournament' | 'complete';
+export type TournamentStage = 'create' | 'tournament' | 'complete';
 
 export type TournamentRound = 'semifinals' | 'final'; 

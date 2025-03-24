@@ -49,6 +49,7 @@ interface PongGameProps {
   player1Avatar?: string;
   player2Avatar?: string;
   onGameComplete?: (player1Score: number, player2Score: number) => void;
+  isTournamentMode?: boolean;
 }
 
 // Fixed game dimensions (base dimensions)
@@ -115,6 +116,7 @@ const PongGame: React.FC<PongGameProps> = ({
   player1Avatar = "https://iili.io/2D8ByIj.png",
   player2Avatar = "https://iili.io/2D8ByIj.png",
   onGameComplete,
+  isTournamentMode = false,
 }) => {
   const t = useTranslations('localGame');
   // Canvas reference
@@ -858,6 +860,7 @@ const PongGame: React.FC<PongGameProps> = ({
               ? "border-[#D05F3B] text-[#D05F3B] shadow-[0_0_15px_rgba(208,95,59,0.5)]"
               : "border-[#40CFB7] text-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.5)]"
           }`}
+          disabled={isTournamentMode}
         >
           {t('backToSetup')}
         </Button>
