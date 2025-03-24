@@ -20,8 +20,6 @@ class User(AbstractUser):
     avatar = models.URLField(default="https://iili.io/2D8ByIj.png", null=True, blank=True)
     cover = models.URLField(default="https://iili.io/2bE295P.png", null=True, blank=True)
     is_anonymized = models.BooleanField(default=False)
-    is_2fa_enabled = models.BooleanField(default=False)
-    # tfa = models.JSONField(_("TFA"), encoder=, decoder=)
     
     # 2FA fields
     is_2fa_enabled = models.BooleanField(default=False)

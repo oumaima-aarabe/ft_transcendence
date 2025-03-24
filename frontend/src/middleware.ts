@@ -9,15 +9,17 @@ const intlMiddleware = createMiddleware(routing);
 // List of public routes that don't require authentication
 const publicRoutes = ["/", "/auth"];
 
-// List of protected routes
+// List of protected routes that actually exist in the app
 const protectedRoutes = [
-  "/dashboard",
   "/chat",
   "/game",
   "/tournaments",
   "/settings",
   "/profile",
 ];
+
+// Combine all valid routes
+const validRoutes = [...publicRoutes, ...protectedRoutes];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -28,12 +30,12 @@ export async function middleware(request: NextRequest) {
   const locale =
     (pathnameSegments[1] as (typeof routing.locales)[number]) ||
     routing.defaultLocale;
-
+  
   // Handle root path redirect
   if (pathname === "/") {
     if (accessToken) {
       try {
-        const tokenData = JSON.parse(atob(accessToken.split(".")[1]));
+        const tokenData = JSON.parse(atob(accessToken.value.split(".")[1]));
         const isTokenValid = tokenData.exp * 1000 > Date.now();
         if (isTokenValid) {
           return NextResponse.redirect(
@@ -45,6 +47,20 @@ export async function middleware(request: NextRequest) {
       }
     }
     return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
+  }
+  
+  // Check if the path is valid by comparing with valid routes
+  // Strip locale from pathname for comparison
+  const pathWithoutLocale = pathname.replace(new RegExp(`^\\/${locale}`), '');
+  const isValidPath = validRoutes.some(route => 
+    pathWithoutLocale === route || 
+    pathWithoutLocale.startsWith(`${route}/`)
+  );
+  
+  // If not a valid path, let Next.js handle it (will show 404 page)
+  if (!isValidPath && locale && pathWithoutLocale !== '') {
+    // Let Next.js handle 404s properly by passing to intlMiddleware
+    return intlMiddleware(request);
   }
 
   // Allow access to public routes without authentication
@@ -59,7 +75,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // For protected routes, check if user is authenticated
-  if (protectedRoutes.some((route) => pathname.endsWith(route))) {
+  if (protectedRoutes.some((route) => pathname.endsWith(route) || pathname.includes(`${route}/`))) {
     if (!accessToken) {
       return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
     }

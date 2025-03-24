@@ -5,7 +5,7 @@ from .models import User
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'username', 'password', 'first_name', 'last_name', 'avatar', 'cover', 'status', 'last_activity')
+        fields = ('email', 'username', 'password', 'first_name', 'last_name', 'avatar', 'cover', 'status', 'last_activity', 'is_2fa_enabled')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_username(self, value):
