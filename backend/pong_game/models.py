@@ -52,7 +52,7 @@ class PlayerProfile(models.Model):
     
     # Stats
     experience = models.IntegerField(default=0)
-    level = models.IntegerField(default=1)
+    level = models.IntegerField(default=0)
     matches_played = models.IntegerField(default=0)
     matches_won = models.IntegerField(default=0)
     matches_lost = models.IntegerField(default=0)

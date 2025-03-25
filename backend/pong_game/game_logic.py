@@ -507,14 +507,15 @@ def save_game_results(game_id):
             
         game = Game.objects.get(id=game_id)
         game_state = active_games[game_id]
-        
+        if game.status == 'cancelled':
+            return False
         # Update game status
         if game.status != 'cancelled':
             game.status = 'completed'
         
             # Set winner if game ended
             if game_state['game_status'] == 'gameOver':
-                if game_state['match_wins']['player1'] > game_state['match_wins']['player2']:
+                if game_state['match_wins']['player1'] > game_state['match_wins']['player2'] :
                     game.winner = game.player1
                 else:
                     game.winner = game.player2
@@ -595,6 +596,7 @@ def save_game_results(game_id):
 
 @database_sync_to_async
 def update_player_profiles(game_id):
+    print("Updating player profiles")
     try:
         if game_id not in active_games:
             print("Game not found in active games")
@@ -623,12 +625,22 @@ def update_player_profiles(game_id):
             
             # Update achievements for player 1
             p1_profile.update_achievements(game)  # Add this line
+            
+            #update_player1 level and experience
+            p1_profile.experience += 500
+            factor = p1_profile.level if p1_profile.level > 0 else 1
+            p1_profile.level = math.floor(p1_profile.experience/(1000 * factor))
         else:
             p2_profile.matches_won += 1
             p1_profile.matches_lost += 1
             
             # Update achievements for player 2
             p2_profile.update_achievements(game)  # Add this line
+
+            #update_player2 level and experience
+            p2_profile.experience += 100
+            factor = p2_profile.level if p2_profile.level > 0 else 1
+            p2_profile.level = math.floor(p2_profile.experience/(1000 * factor))
         
         # Save profiles
         print("Saving player profiles")
