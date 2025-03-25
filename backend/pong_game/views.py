@@ -11,9 +11,9 @@ from django.db.models import Q
 
 class PlayerProfileView(APIView):
     def get(self, request):
-        """Get the current user's profile"""
+        """Get the current user's profile, creating it if it doesn't exist"""
         try:
-            profile = get_object_or_404(PlayerProfile, player=request.user)
+            profile, created = PlayerProfile.objects.get_or_create(player=request.user)
             serializer = PlayerProfileSerializer(profile)
             return Response(serializer.data)
         except Exception as e:
