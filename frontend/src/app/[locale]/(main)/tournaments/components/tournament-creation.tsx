@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslations } from 'next-intl';
 import { GameTheme, GameDifficulty, TournamentPlayer } from '../types/tournament';
-import { ChevronLeft, ChevronRight, Award, Settings, Users, Palette, Gauge } from 'lucide-react';
+import { ChevronRight, Award, Settings, Users, Palette, Gauge } from 'lucide-react';
 
 interface TournamentCreationProps {
   onTournamentStart: (players: TournamentPlayer[], difficulty: GameDifficulty, theme: GameTheme) => void;
@@ -37,6 +37,7 @@ export default function TournamentCreation({ onTournamentStart, setTournamentSta
   };
 
   const handleStartTournament = () => {
+
     // Validate all players have names
     const allPlayersNamed = players.every(player => player.name.trim() !== '');
     
