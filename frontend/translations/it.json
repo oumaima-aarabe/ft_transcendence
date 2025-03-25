@@ -267,7 +267,9 @@
     "newTournament": "Nuovo Torneo",
     "selectMatchToPlay": "Seleziona una partita da giocare",
     "playSemifinal": "Gioca Semifinale",
-    "playFinal": "Gioca Finale"
+    "playFinal": "Gioca Finale",
+    "theme": "Tema",
+    "selectTheme": "Seleziona Tema"
   },
   "Game": {
     "title": "Modalità di gioco",

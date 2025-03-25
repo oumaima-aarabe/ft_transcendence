@@ -2,7 +2,8 @@ let socket: WebSocket | null = null;
 
 export const initSocket = () => {
     if (!socket || socket.readyState === WebSocket.CLOSED) {
-        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/chat/';
+        const host = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+        const wsUrl = `${host}/ws/chat/`;
         socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
@@ -10,7 +11,6 @@ export const initSocket = () => {
         };
 
         socket.onerror = (error) => {
-            // console.error('WebSocket error:', error);
         };
 
         socket.onclose = () => {

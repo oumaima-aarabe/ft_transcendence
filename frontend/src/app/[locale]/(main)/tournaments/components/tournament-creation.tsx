@@ -9,10 +9,10 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslations } from 'next-intl';
 import { GameTheme, GameDifficulty, TournamentPlayer } from '../types/tournament';
-import { ChevronLeft, ChevronRight, Award, Settings, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Award, Settings, Users, Palette, Gauge } from 'lucide-react';
 
 interface TournamentCreationProps {
-  onTournamentStart: (players: TournamentPlayer[], difficulty: GameDifficulty) => void;
+  onTournamentStart: (players: TournamentPlayer[], difficulty: GameDifficulty, theme: GameTheme) => void;
   setTournamentStage: (stage: 'create' | 'tournament') => void;
 }
 
@@ -25,6 +25,7 @@ export default function TournamentCreation({ onTournamentStart, setTournamentSta
     { id: 4, name: '', avatar: 'https://iili.io/2D8ByIj.png', color: 'fire' },
   ]);
   const [difficulty, setDifficulty] = useState<GameDifficulty>('medium');
+  const [theme, setTheme] = useState<GameTheme>('fire');
   const [activePage, setActivePage] = useState<'settings' | 'players'>('settings');
 
   const handlePlayerChange = (id: number, field: keyof TournamentPlayer, value: string) => {
@@ -44,7 +45,7 @@ export default function TournamentCreation({ onTournamentStart, setTournamentSta
       return;
     }
     
-    onTournamentStart(players, difficulty);
+    onTournamentStart(players, difficulty, theme);
   };
 
   const getPlayerColor = (color: GameTheme) => {
@@ -140,7 +141,7 @@ export default function TournamentCreation({ onTournamentStart, setTournamentSta
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="difficulty" className="text-white font-medium mb-2 block flex items-center">
-                      <Award className="mr-2 text-[#40CFB7]" />
+                      <Gauge className="mr-2 text-[#40CFB7]" />
                       {t('difficulty')}
                     </Label>
                     <Select 
@@ -154,6 +155,24 @@ export default function TournamentCreation({ onTournamentStart, setTournamentSta
                         <SelectItem value="easy" className="hover:bg-white/10 py-2 cursor-pointer">{t('easy')}</SelectItem>
                         <SelectItem value="medium" className="hover:bg-white/10 py-2 cursor-pointer">{t('medium')}</SelectItem>
                         <SelectItem value="hard" className="hover:bg-white/10 py-2 cursor-pointer">{t('hard')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="theme" className="text-white font-medium mb-2 block flex items-center">
+                      <Palette className="mr-2 text-[#40CFB7]" />
+                      {t('theme')}
+                    </Label>
+                    <Select 
+                      value={theme} 
+                      onValueChange={(value: GameTheme) => setTheme(value)}
+                    >
+                      <SelectTrigger className="w-full bg-[#1A1311]/60 backdrop-blur-md border-white/20 text-white rounded-lg h-12 transition duration-300 shadow-sm hover:shadow-md focus:ring-2 focus:ring-[#40CFB7]/30 focus:border-[#40CFB7]">
+                        <SelectValue placeholder={t('selectTheme')} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1A1311]/90 backdrop-blur-lg border-white/10 text-white rounded-lg shadow-xl">
+                        <SelectItem value="fire" className="hover:bg-white/10 py-2 cursor-pointer">{t('fire')}</SelectItem>
+                        <SelectItem value="water" className="hover:bg-white/10 py-2 cursor-pointer">{t('water')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -219,39 +238,6 @@ export default function TournamentCreation({ onTournamentStart, setTournamentSta
                                 transition-all duration-300 shadow-inner"
                               />
                             </div>
-                          </div>
-
-                          <div>
-                            <Label htmlFor={`player-${player.id}-color`} className="text-white mb-1.5 block font-medium">
-                              {t('playerColor')}
-                            </Label>
-                            <Select 
-                              value={player.color} 
-                              onValueChange={(value: GameTheme) => handlePlayerChange(player.id, 'color', value)}
-                            >
-                              <SelectTrigger 
-                                id={`player-${player.id}-color`}
-                                className="w-full bg-gray-900/50 backdrop-blur-sm border-gray-700 text-white rounded-lg h-11
-                                hover:border-white/30 focus:border-[#40CFB7] focus:ring-2 focus:ring-[#40CFB7]/30
-                                transition-all duration-300 shadow-inner"
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-[#1A1311]/90 backdrop-blur-lg border-white/10 text-white rounded-lg shadow-xl">
-                                <SelectItem value="fire" className="hover:bg-white/10 py-2 cursor-pointer">
-                                  <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-[#D05F3B] mr-2"></div>
-                                    <span className="text-[#D05F3B]">{t('fire')}</span>
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="water" className="hover:bg-white/10 py-2 cursor-pointer">
-                                  <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-[#40CFB7] mr-2"></div>
-                                    <span className="text-[#40CFB7]">{t('water')}</span>
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
                           </div>
                         </div>
                       </Card>
