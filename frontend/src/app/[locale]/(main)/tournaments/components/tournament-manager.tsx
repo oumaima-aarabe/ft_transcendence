@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from 'next-intl';
+import confetti from 'canvas-confetti';
 import { TournamentPlayer, TournamentMatch, TournamentState, GameDifficulty, GameTheme } from '../types/tournament';
 import TournamentBracket from './tournament-bracket';
 import PongGame from '@/app/[locale]/(main)/game/components/pong-game';
@@ -71,6 +72,12 @@ export default function TournamentManager({ players, difficulty, theme, onExit }
   
   // Handle match completion
   const handleMatchComplete = (winnerId: number) => {
+    // Trigger confetti effect
+    confetti({
+      particleCount: 200,
+      spread: 200
+    });
+
     setTournament(prev => {
       const updatedMatches = [...prev.matches];
       
