@@ -21,7 +21,6 @@ export default function ChatApp() {
   const [showProfile, setShowProfile] = useState(true);
   const [chats, setChats] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const { data: myUserData } = UseUser()
   const selectedChatRef = useRef<Conversation | null>(null);
 
@@ -61,7 +60,6 @@ export default function ChatApp() {
       return [];
     } catch (error) {
       console.error("Error loading conversations:", error);
-      setError("Failed to load conversations");
       return [];
     }
   };
@@ -146,8 +144,7 @@ export default function ChatApp() {
     };
 
     socket.onerror = (error) => {
-      // console.error("WebSocket error:", error);
-      setError("Connection error. Please try again.");
+      console.log("WebSocket error:", error);
     };
 
     socket.onclose = () => {
@@ -229,7 +226,6 @@ export default function ChatApp() {
       }));
     } catch (error) {
       console.error("Error fetching messages:", error);
-      setError("Failed to fetch messages");
     }
   };
 
@@ -286,11 +282,6 @@ export default function ChatApp() {
           </div>
         )}
       </div>
-      {error && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded">
-          {error}
-        </div>
-      )}
     </div>
   );
 }
