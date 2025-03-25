@@ -8,7 +8,8 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = PlayerProfile
-        fields = ['id', 'username', 'avatar', 'theme', 'difficulty', 
+        fields = ['id', 'username', 'avatar', 'theme', 'difficulty',
+                  'experience', 'level',
                   'matches_played', 'matches_won', 'matches_lost',
                   'first_win', 'pure_win', 'triple_win']
         def validate_theme(self, value):
