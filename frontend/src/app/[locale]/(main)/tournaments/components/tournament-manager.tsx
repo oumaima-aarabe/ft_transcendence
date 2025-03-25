@@ -11,10 +11,11 @@ import PongGame from '@/app/[locale]/(main)/game/components/pong-game';
 interface TournamentManagerProps {
   players: TournamentPlayer[];
   difficulty: GameDifficulty;
+  theme: GameTheme;
   onExit: () => void;
 }
 
-export default function TournamentManager({ players, difficulty, onExit }: TournamentManagerProps) {
+export default function TournamentManager({ players, difficulty, theme, onExit }: TournamentManagerProps) {
   const t = useTranslations('Tournaments');
   const [tournament, setTournament] = useState<TournamentState>(() => {
     // Create initial tournament state
@@ -46,7 +47,8 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
       currentMatchIndex: 0,
       winner: null,
       isComplete: false,
-      difficulty
+      difficulty,
+      theme
     };
   });
   
@@ -231,7 +233,7 @@ export default function TournamentManager({ players, difficulty, onExit }: Tourn
         <PongGame 
           player1Name={currentMatch.player1.name}
           player2Name={currentMatch.player2.name}
-          theme={currentMatch.player1.color as GameTheme}
+          theme={theme}
           difficulty={tournament.difficulty}
           player1Avatar={currentMatch.player1.avatar}
           player2Avatar={currentMatch.player2.avatar}
