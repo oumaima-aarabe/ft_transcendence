@@ -105,3 +105,57 @@ class GameStateSerializer(serializers.Serializer):
 class PaddleMoveSerializer(serializers.Serializer):
     """Serializer for paddle movement messages"""
     position = serializers.FloatField(min_value=0, max_value=400)
+    
+    
+class GameHistorySerializer(serializers.ModelSerializer):
+    opponent_username = serializers.SerializerMethodField()
+    player_username = serializers.SerializerMethodField()
+    opponent_avatar = serializers.SerializerMethodField()
+    player_avatar = serializers.SerializerMethodField()
+    result = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Game
+        fields = [
+            'id', 
+            'created_at', 
+            'completed_at',
+            'player_username', 
+            'opponent_username',
+            'player_avatar',
+            'opponent_avatar',
+            'result',
+            'final_score_player1',
+            'final_score_player2',
+            'difficulty'
+        ]
+    
+    def get_opponent_username(self, obj):
+        request_user_id = self.context.get('request_user_id')
+        if obj.player1.id == request_user_id:
+            return obj.player2.username if obj.player2 else None
+        return obj.player1.username
+    
+    def get_player_username(self, obj):
+        request_user_id = self.context.get('request_user_id')
+        if obj.player1.id == request_user_id:
+            return obj.player1.username
+        return obj.player2.username if obj.player2 else None
+    
+    def get_opponent_avatar(self, obj):
+        request_user_id = self.context.get('request_user_id')
+        if obj.player1.id == request_user_id:
+            return obj.player2.avatar if obj.player2 else None
+        return obj.player1.avatar
+    
+    def get_player_avatar(self, obj):
+        request_user_id = self.context.get('request_user_id')
+        if obj.player1.id == request_user_id:
+            return obj.player1.avatar
+        return obj.player2.avatar if obj.player2 else None
+    
+    def get_result(self, obj):
+        request_user_id = self.context.get('request_user_id')
+        if not obj.winner:
+            return None
+        return "won" if obj.winner.id == request_user_id else "lost"

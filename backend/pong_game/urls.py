@@ -2,7 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('profile/', views.PlayerProfileView.as_view(), name='profile'),
     path('games/', views.GameListView.as_view(), name='game-list'),
     path('games/<str:game_id>/', views.GameDetailView.as_view(), name='game-detail'),
     path('invites/', views.GameInviteView.as_view(), name='invites'),
@@ -14,4 +13,16 @@ urlpatterns = [
     path('active-games/', views.ActiveGamesView.as_view(), name='active-games'),
     path('preferences/', views.UserPreferencesView.as_view(), name='preferences'),
     path('player-status/', views.PlayerGameStatusView.as_view(), name='player-status'),
+
+    # Get current user's profile
+    path('profile/', views.PlayerProfileView.as_view(), name='profile'),
+    
+    # get specific player's profile
+    path('profile/<int:player_id>/', views.PlayerDetailView.as_view(), name='player-profile'),
+    
+    # Get current user's game history
+    path('games/history/', GameHistoryView.as_view(), name='game-history'),
+    
+    # Get specific player's game history
+    path('games/history/<int:player_id>/', GameHistoryView.as_view(), name='player-game-history'),
 ]

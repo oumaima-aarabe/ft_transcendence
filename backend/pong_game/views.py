@@ -2,17 +2,20 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from .models import PlayerProfile, Game, Match, GameInvite, MatchmakingQueue
-from .serializers import (PlayerProfileSerializer, GameListSerializer, 
+from .serializers import (PlayerProfileSerializer, GameHistorySerializer, 
                          GameDetailSerializer, MatchSerializer,
                          GameInviteSerializer, MatchmakingQueueSerializer)
 from django.shortcuts import get_object_or_404
 import uuid
 from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated
+
 
 class PlayerProfileView(APIView):
     def get(self, request):
         """Get the current user's profile, creating it if it doesn't exist"""
         try:
+            # Use get_or_create for the current user
             profile, created = PlayerProfile.objects.get_or_create(player=request.user)
             serializer = PlayerProfileSerializer(profile)
             return Response(serializer.data)
@@ -28,6 +31,25 @@ class PlayerProfileView(APIView):
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PlayerDetailView(APIView):
+    """View for looking up another player's profile"""
+    
+    def get(self, request, player_id):
+        """Get another player's profile by player_id, creating it if it doesn't exist"""
+        try:
+            # First get the User object by ID
+            user = get_object_or_404(User, id=player_id)
+            
+            # Then get or create their profile
+            profile, created = PlayerProfile.objects.get_or_create(player=user)
+            
+            # Return the profile data
+            serializer = PlayerProfileSerializer(profile)
+            return Response(serializer.data)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -263,6 +285,7 @@ class ActiveGamesView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 class UserPreferencesView(APIView):
+    permission_classes = [IsAuthenticated]
     """API endpoint for managing user preferences"""
     
     def get(self, request):
@@ -321,6 +344,7 @@ except ImportError:
     active_games = {}
 
 class PlayerGameStatusView(APIView):
+    permission_classes = [IsAuthenticated]
     """API endpoint to check if a player is already in an active game"""
     
     def get(self, request):
@@ -346,3 +370,32 @@ class PlayerGameStatusView(APIView):
             
         # User is not in an active game
         return Response({"active_game": False})
+
+
+class GameHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, player_id=None):
+        # If no player_id is provided, use the authenticated user's ID
+        user_id = request.user.id
+        target_player_id = player_id if player_id is not None else user_id
+        
+        # Check if the requested player_id belongs to the authenticated user or if it's another player
+        if user_id != target_player_id:
+            # You could add permission check here if needed
+            pass
+        
+        # Get all completed games where the player was either player1 or player2
+        games = Game.objects.filter(
+            (Q(player1_id=target_player_id) | Q(player2_id=target_player_id)) &
+            Q(status=StatusChoices.COMPLETED)
+        ).order_by('-completed_at')
+        
+        # Serialize the data with the appropriate context
+        serializer = GameHistorySerializer(
+            games, 
+            many=True,
+            context={'request_user_id': target_player_id}
+        )
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
