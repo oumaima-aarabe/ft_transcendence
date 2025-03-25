@@ -21,8 +21,8 @@ urlpatterns = [
     path('profile/<int:player_id>/', views.PlayerDetailView.as_view(), name='player-profile'),
     
     # Get current user's game history
-    path('games/history/', GameHistoryView.as_view(), name='game-history'),
+    path('games/history/', views.GameHistoryView.as_view(), name='game-history'),
     
     # Get specific player's game history
-    path('games/history/<int:player_id>/', GameHistoryView.as_view(), name='player-game-history'),
+    path('games/history/<int:player_id>/', views.GameHistoryView.as_view(), name='player-game-history'),
 ]
