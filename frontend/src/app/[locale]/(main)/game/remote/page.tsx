@@ -255,7 +255,7 @@ export default function RemoteGamePage() {
   };
 
   return (
-    <div className="w-full h-screen overflow-hidden flex items-center justify-center">
+    <div className="fixed inset-0 flex items-center justify-center">
       <div className="w-full max-w-6xl px-4 relative">
         <div className="relative z-10">
         {flowState === 'playing' && gameData && (
