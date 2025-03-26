@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import Loading from "@/app/[locale]/loading";
 import Achievements from "../components/achievements";
 import MatchHistory from "../components/match-history";
+import History from "../components/history";
 
 export default function Page() {
   const [owner, setOwner] = useState<boolean>(false);
@@ -60,7 +61,7 @@ export default function Page() {
             </div>
 
             <div className="backdrop-blur-sm bg-black/50 rounded-2xl text-xl font-bold p-4 h-[50%] w-[100%]">
-              <MatchHistory />
+              <History />
             </div>
           </div>
 
