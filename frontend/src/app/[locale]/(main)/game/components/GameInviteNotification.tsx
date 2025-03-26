@@ -24,8 +24,13 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
   onAction,
 }) => {
   const [isLoading, setIsLoading] = useState<'accept' | 'decline' | null>(null);
+  const [isDismissed, setIsDismissed] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+
+  if (isDismissed) {
+    return null; // Don't render if dismissed
+  }
 
   const handleAccept = async () => {
     try {
@@ -42,6 +47,9 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
         // Notify parent component
         if (onAction) onAction('accept');
         
+        // Mark as dismissed
+        setIsDismissed(true);
+        
         // Navigate to the game
         router.push(`/game/remote?gameId=${response.game_id}`);
       } else {
@@ -51,6 +59,8 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
           variant: "destructive",
         });
         setIsLoading(null);
+        // Mark as dismissed to remove the notification
+        setIsDismissed(true);
       }
     } catch (error: any) {
       toast({
@@ -59,6 +69,8 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
         variant: "destructive",
       });
       setIsLoading(null);
+      // Mark as dismissed to remove the notification even if there's an error
+      setIsDismissed(true);
     }
   };
 
@@ -74,6 +86,9 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
       
       // Notify parent component
       if (onAction) onAction('decline');
+      
+      // Mark as dismissed
+      setIsDismissed(true);
     } catch (error: any) {
       toast({
         title: "Error declining invitation",
@@ -81,6 +96,8 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
         variant: "destructive",
       });
       setIsLoading(null);
+      // Mark as dismissed to remove the notification even if there's an error
+      setIsDismissed(true);
     }
   };
 

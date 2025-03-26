@@ -170,7 +170,7 @@ class GameInvite(models.Model):
             player1=self.sender.player,
             player2=self.receiver.player,
             status=StatusChoices.WAITING,
-            theme=self.sender.theme,  # Using sender's preferences
+            # theme=self.sender.theme,  # Using sender's preferences
             difficulty=self.sender.difficulty
         )
         

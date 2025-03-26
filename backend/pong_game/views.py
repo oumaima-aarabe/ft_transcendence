@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import PlayerProfile, Game, Match, GameInvite, MatchmakingQueue
+from .models import PlayerProfile, Game, Match, GameInvite, MatchmakingQueue, StatusChoices
 from .serializers import (PlayerProfileSerializer, GameHistorySerializer, 
                          GameDetailSerializer, MatchSerializer,
                          GameInviteSerializer, MatchmakingQueueSerializer)
@@ -11,6 +11,7 @@ from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from authentication.models import User
 from users.utils import send_notification
+from django.utils import timezone
 
 
 class PlayerProfileView(APIView):
@@ -306,97 +307,160 @@ class GameHistoryView(APIView):
 class GameInviteView(APIView):
     def post(self, request):
         """Create a game invitation"""
+        print("GameInviteView.post() - Starting")
+        
+        # Get the target player's profile
+        receiver_username = request.data.get('username')
+        print(f"Received username: {receiver_username}")
+        
+        if not receiver_username:
+            print("Error: No username provided")
+            return Response({"error": "Username is required"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+            
         try:
-            # Get the target player's profile
-            receiver_username = request.data.get('username')
-            if not receiver_username:
-                return Response({"error": "Username is required"}, 
-                               status=status.HTTP_400_BAD_REQUEST)
-                
-            # Find the receiver
+            # Get the user first
+            print(f"Looking up user with username: {receiver_username}")
             try:
                 receiver_user = User.objects.get(username=receiver_username)
-                receiver_profile = PlayerProfile.objects.get(player=receiver_user)
-            except (User.DoesNotExist, PlayerProfile.DoesNotExist):
-                return Response({"error": "User not found"}, 
-                               status=status.HTTP_404_NOT_FOUND)
+                print(f"Found receiver user: {receiver_user.id} - {receiver_user.username}")
+            except User.DoesNotExist:
+                print(f"Error: User '{receiver_username}' not found")
+                return Response({"error": f"User '{receiver_username}' not found"}, 
+                              status=status.HTTP_404_NOT_FOUND)
+            
+            # Get or create the player profile for the receiver
+            print(f"Getting or creating PlayerProfile for receiver: {receiver_user.username}")
+            receiver_profile, created = PlayerProfile.objects.get_or_create(player=receiver_user)
+            print(f"Receiver profile {'created' if created else 'found'}: {receiver_profile.id}")
                 
             # Get sender's profile
-            sender_profile, created = PlayerProfile.objects.get_or_create(player=request.user)
+            print(f"Getting or creating profile for sender: {request.user.username}")
+            try:
+                sender_profile, created = PlayerProfile.objects.get_or_create(player=request.user)
+                print(f"Sender profile {'created' if created else 'found'}: {sender_profile.id}")
+            except Exception as profile_error:
+                print(f"Error creating sender profile: {str(profile_error)}")
+                return Response(
+                    {"error": f"Could not get or create profile for sender: {str(profile_error)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             # Check if sender and receiver are the same
+            print(f"Checking if sender and receiver are the same user")
             if sender_profile.player == receiver_profile.player:
+                print("Error: Sender and receiver are the same user")
                 return Response({"error": "You cannot invite yourself"}, 
-                               status=status.HTTP_400_BAD_REQUEST)
+                              status=status.HTTP_400_BAD_REQUEST)
             
             # Generate a unique invitation code
             invitation_code = str(uuid.uuid4())[:8]
+            print(f"Generated invitation code: {invitation_code}")
             
             # Create the invitation
-            invite = GameInvite.objects.create(
-                sender=sender_profile,
-                receiver=receiver_profile,
-                invitation_code=invitation_code,
-                status=StatusChoices.PENDING
-            )
+            print("Creating GameInvite object")
+            try:
+                invite = GameInvite.objects.create(
+                    sender=sender_profile,
+                    receiver=receiver_profile,
+                    invitation_code=invitation_code,
+                    status=StatusChoices.PENDING
+                )
+                print(f"Created invite with ID: {invite.id}")
+            except Exception as invite_error:
+                print(f"Error creating invitation: {str(invite_error)}")
+                return Response(
+                    {"error": f"Could not create invitation: {str(invite_error)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             # Send notification to receiver
-            from users.utils import send_notification
-            send_notification(
-                username=receiver_username,
-                notification_type='game_invite',
-                message=f"{request.user.username} invited you to play Pong",
-                data={
-                    'invitation_code': invitation_code,
-                    'sender_username': request.user.username,
-                    'sender_avatar': request.user.avatar
-                }
-            )
+            print(f"Sending notification to {receiver_username}")
+            try:
+                send_notification(
+                    username=receiver_username,
+                    notification_type='game_invite',
+                    message=f"{request.user.username} invited you to play Pong",
+                    data={
+                        'invitation_code': invitation_code,
+                        'sender_username': request.user.username,
+                        'sender_avatar': request.user.avatar
+                    }
+                )
+                print("Notification sent successfully")
+            except Exception as notify_error:
+                # Don't fail if notification sending fails, just log it
+                print(f"Failed to send notification: {str(notify_error)}")
             
+            print("Serializing response data")
             serializer = GameInviteSerializer(invite)
+            print("Returning successful response")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get(self, request):
-        """Get all invitations for the current user"""
-        try:
-            profile, created = PlayerProfile.objects.get_or_create(player=request.user)
             
-            # Get all pending invitations for this user
-            invites = GameInvite.objects.filter(
-                receiver=profile,
-                status=StatusChoices.PENDING
-            )
-            
-            serializer = GameInviteSerializer(invites, many=True)
-            return Response(serializer.data)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            print("UNEXPECTED ERROR:")
+            traceback.print_exc()
+            return Response({"error": f"Unexpected error: {str(e)}"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
 
 
 class GameInviteResponseView(APIView):
     def post(self, request, invitation_code):
         """Accept or decline a game invitation"""
         try:
-            # Find the invitation
-            invite = get_object_or_404(GameInvite, 
-                                      invitation_code=invitation_code,
-                                      status=StatusChoices.PENDING)
+            print(f"Processing invitation response for code: {invitation_code}")
+            print(f"Request data: {request.data}")
             
-            # Verify the current user is the receiver
+            # Find the invitation regardless of status first
+            try:
+                invite = GameInvite.objects.get(invitation_code=invitation_code)
+                print(f"Found invitation with status: {invite.status}")
+                
+                # Check if invitation is already processed
+                if invite.status != StatusChoices.PENDING:
+                    # If already accepted, return the game ID so the user can join
+                    if invite.status == StatusChoices.ACCEPTED and invite.resulting_game:
+                        return Response({
+                            "message": "Invitation was already accepted",
+                            "game_id": str(invite.resulting_game.id)
+                        }, status=status.HTTP_200_OK)
+                    else:
+                        return Response({
+                            "message": f"Invitation has already been {invite.status}",
+                            "status": invite.status
+                        }, status=status.HTTP_200_OK)
+            except GameInvite.DoesNotExist:
+                return Response({
+                    "error": "Invalid invitation code"
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Now check if the current user is the recipient
             if invite.receiver.player != request.user:
-                return Response({"error": "This invitation is not for you"}, 
-                               status=status.HTTP_403_FORBIDDEN)
+                return Response({
+                    "error": "This invitation is not for you"
+                }, status=status.HTTP_403_FORBIDDEN)
             
-            # Get the response action (accept or decline)
+            # Get the action
             action = request.data.get('action')
             
             if action == 'accept':
-                # Create a game for these players
-                game = invite.accept()
-                if game:
-                    # Send notification to sender that invite was accepted
+                # Create the game directly
+                try:
+                    game = Game.objects.create(
+                        player1=invite.sender.player,
+                        player2=invite.receiver.player,
+                        status=StatusChoices.WAITING,
+                        difficulty=invite.sender.difficulty
+                    )
+                    
+                    # Update the invitation
+                    invite.status = StatusChoices.ACCEPTED
+                    invite.accepted_at = timezone.now()
+                    invite.resulting_game = game
+                    invite.save()
+                    
+                    # Send notification to sender
                     from users.utils import send_notification
                     send_notification(
                         username=invite.sender.player.username,
@@ -413,14 +477,17 @@ class GameInviteResponseView(APIView):
                         "message": "Invitation accepted",
                         "game_id": str(game.id)
                     }, status=status.HTTP_200_OK)
-                else:
-                    return Response({"error": "Could not accept invitation"}, 
-                                   status=status.HTTP_400_BAD_REQUEST)
+                except Exception as e:
+                    return Response({
+                        "error": f"Could not create game: {str(e)}"
+                    }, status=status.HTTP_400_BAD_REQUEST)
             
             elif action == 'decline':
-                invite.decline()
+                invite.status = StatusChoices.DECLINED
+                invite.declined_at = timezone.now()
+                invite.save()
                 
-                # Send notification to sender that invite was declined
+                # Send notification to sender
                 from users.utils import send_notification
                 send_notification(
                     username=invite.sender.player.username,
@@ -431,11 +498,18 @@ class GameInviteResponseView(APIView):
                     }
                 )
                 
-                return Response({"message": "Invitation declined"}, 
-                               status=status.HTTP_200_OK)
+                return Response({
+                    "message": "Invitation declined"
+                }, status=status.HTTP_200_OK)
             
             else:
-                return Response({"error": "Invalid action. Use 'accept' or 'decline'"}, 
-                               status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    "error": "Invalid action. Use 'accept' or 'decline'"
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            traceback.print_exc()
+            return Response({
+                "error": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)

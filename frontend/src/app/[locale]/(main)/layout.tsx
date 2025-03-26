@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
+import NotificationsExtension from './game/components/NotificationsExtension';
 
 export default function MainLayout({
   children,
@@ -19,6 +20,7 @@ export default function MainLayout({
             </main>
           </div>
         </div>
+        <NotificationsExtension />
       </div>
     </NotificationsProvider>
   );

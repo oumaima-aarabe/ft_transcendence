@@ -1,17 +1,15 @@
 import { sendRequest } from '@/lib/axios';
 
-/**
- * Send a game invitation to a user
- * @param username The username of the user to invite
- * @returns The response data with invitation details
- */
 export const sendGameInvite = async (username: string) => {
+  const url = '/pong_game/invites/';
+  console.log(`Sending game invite to ${username} via URL: ${url}`);
+  
   try {
-    const response = await sendRequest('post', '/api/pong_game/invites/', { username });
+    const response = await sendRequest('post', url, { username });
+    console.log('Game invite response:', response);
     return response.data;
   } catch (error) {
-    console.error('Error sending game invitation:', error);
-    throw error;
+    console.error(`Error sending game invitation to ${url}:`, error);
   }
 };
 
@@ -24,7 +22,7 @@ export const acceptGameInvite = async (invitationCode: string) => {
   try {
     const response = await sendRequest(
       'post', 
-      `/api/pong_game/invites/${invitationCode}/`, 
+      `/pong_game/invites/${invitationCode}/`, 
       { action: 'accept' }
     );
     return response.data;
@@ -43,7 +41,7 @@ export const declineGameInvite = async (invitationCode: string) => {
   try {
     const response = await sendRequest(
       'post', 
-      `/api/pong_game/invites/${invitationCode}/`, 
+      `/pong_game/invites/${invitationCode}/`, 
       { action: 'decline' }
     );
     return response.data;
@@ -59,7 +57,7 @@ export const declineGameInvite = async (invitationCode: string) => {
  */
 export const getPendingGameInvites = async () => {
   try {
-    const response = await sendRequest('get', '/api/pong_game/invites/');
+    const response = await sendRequest('get', '/pong_game/invites/');
     return response.data;
   } catch (error) {
     console.error('Error fetching game invitations:', error);
