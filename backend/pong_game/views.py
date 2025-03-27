@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import PlayerProfile, Game, Match, GameInvite, MatchmakingQueue, StatusChoices
+from .models import PlayerProfile, Game, Match, GameInvite, StatusChoices
 from .serializers import (PlayerProfileSerializer, GameHistorySerializer, 
                          GameDetailSerializer, MatchSerializer,
-                         GameInviteSerializer, MatchmakingQueueSerializer)
+                         GameInviteSerializer)
 from django.shortcuts import get_object_or_404
 import uuid
 from django.db.models import Q
@@ -409,6 +409,8 @@ class GameInviteResponseView(APIView):
     def post(self, request, invitation_code):
         """Accept or decline a game invitation"""
         try:
+            from users.utils import send_notification
+            
             print(f"Processing invitation response for code: {invitation_code}")
             print(f"Request data: {request.data}")
             
@@ -435,7 +437,7 @@ class GameInviteResponseView(APIView):
                     "error": "Invalid invitation code"
                 }, status=status.HTTP_404_NOT_FOUND)
             
-            # Now check if the current user is the recipient
+            # check if the current user is the recipient
             if invite.receiver.player != request.user:
                 return Response({
                     "error": "This invitation is not for you"
@@ -461,17 +463,20 @@ class GameInviteResponseView(APIView):
                     invite.save()
                     
                     # Send notification to sender
-                    from users.utils import send_notification
-                    send_notification(
-                        username=invite.sender.player.username,
-                        notification_type='game_invite_accepted',
-                        message=f"{request.user.username} accepted your game invitation",
-                        data={
-                            'game_id': str(game.id),
-                            'player1_username': invite.sender.player.username,
-                            'player2_username': request.user.username
-                        }
-                    )
+                    try:
+                        send_notification(
+                            username=invite.sender.player.username,
+                            notification_type='game_invite_accepted',
+                            message=f"{request.user.username} accepted your game invitation",
+                            data={
+                                'game_id': str(game.id),
+                                'player1_username': invite.sender.player.username,
+                                'player2_username': request.user.username
+                            }
+                        )
+                        print(f"Notification sent to {invite.sender.player.username}")
+                    except Exception as notification_error:
+                        print(f"Error sending notification: {notification_error}")
                     
                     return Response({
                         "message": "Invitation accepted",
@@ -488,15 +493,18 @@ class GameInviteResponseView(APIView):
                 invite.save()
                 
                 # Send notification to sender
-                from users.utils import send_notification
-                send_notification(
-                    username=invite.sender.player.username,
-                    notification_type='game_invite_declined',
-                    message=f"{request.user.username} declined your game invitation",
-                    data={
-                        'invitation_code': invitation_code
-                    }
-                )
+                try:
+                    send_notification(
+                        username=invite.sender.player.username,
+                        notification_type='game_invite_declined',
+                        message=f"{request.user.username} declined your game invitation",
+                        data={
+                            'invitation_code': invitation_code
+                        }
+                    )
+                    print(f"Notification sent to {invite.sender.player.username}")
+                except Exception as notification_error:
+                    print(f"Error sending notification: {notification_error}")
                 
                 return Response({
                     "message": "Invitation declined"
