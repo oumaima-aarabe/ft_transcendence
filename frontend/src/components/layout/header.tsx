@@ -69,7 +69,7 @@ export function Header() {
   };
 
   return (
-    <div className="h-20 backdrop-blur-sm flex items-center justify-between px-6 py-2">
+    <div className="h-20 backdrop-blur-sm flex items-center justify-between px-6 py-2 relative z-[100]">
       <Image
         src="/assets/images/logo.svg"
         alt="PongArcadia"
