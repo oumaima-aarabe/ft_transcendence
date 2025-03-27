@@ -22,7 +22,8 @@ interface GameDetails {
 // Fetch details for a specific game
 export const getGameDetails = async (gameId: string): Promise<GameDetails> => {
   try {
-    const response = await sendRequest('get', `/api/pong/games/${gameId}/`);
+    // Using the correct endpoint structure that matches your Django URLs
+    const response = await sendRequest('get', `/pong_game/games/${gameId}/`);
     return response.data;
   } catch (error) {
     console.error('Error fetching game details:', error);
@@ -39,7 +40,7 @@ export const getPlayerGameStatus = async (): Promise<{
   status?: string;
 }> => {
   try {
-    const response = await sendRequest('get', '/api/pong/player-game-status/');
+    const response = await sendRequest('get', '/pong_game/player-status/');
     return response.data;
   } catch (error) {
     console.error('Error fetching player game status:', error);
