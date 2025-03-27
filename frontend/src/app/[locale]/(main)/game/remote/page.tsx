@@ -10,7 +10,7 @@ import { UseUser } from "@/api/get-user";
 import { GameTheme, GameDifficulty } from '../types/game';
 import GameBackground from '../components/game-background';
 import { getUserPreferences } from '@/api/preferences';
-import { getGameDetails } from '@/api/game-api';
+import { getGameDetails } from '@/api/game-api'; 
 
 // Game flow state type
 type RemoteGameFlowState = 'loading' | 'error' | 'matchmaking' | 'connecting' | 'playing';
@@ -19,6 +19,7 @@ export default function RemoteGamePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const gameId = searchParams.get('gameId');
+  const autoConnect = searchParams.get('autoConnect') === 'true';
   
   const { data: user, isLoading, isError, error } = UseUser();
   const [flowState, setFlowState] = useState<RemoteGameFlowState>('loading');
@@ -43,44 +44,31 @@ export default function RemoteGamePage() {
     
     // If we have a gameId in the URL, try to directly join that game
     if (gameId) {
-      console.log(`Direct game join requested for game ID: ${gameId}`);
+      console.log(`Direct game join requested for game ID: ${gameId}, autoConnect: ${autoConnect}`);
       setFlowState('connecting');
       
-      // Fetch game details to get player information
-      const fetchGameDetails = async () => {
-        try {
-          const gameDetails = await getGameDetails(gameId);
-          console.log('Game details loaded:', gameDetails);
-          
-          // Set up game data based on the details
-          setGameData({
-            gameId: gameId,
-            player1: gameDetails.player1.username,
-            player2: gameDetails.player2.username,
-            theme: gameDetails.theme || theme,
-            difficulty: gameDetails.difficulty || difficulty
-          });
-          
-          // Transition to playing state
-          setFlowState('playing');
-          
-        } catch (err) {
-          console.error("Error loading game details:", err);
-          toast({
-            title: "Error Joining Game",
-            description: "Could not load game details. Falling back to matchmaking.",
-            variant: "destructive",
-          });
-          setFlowState('matchmaking');
-        }
-      };
+      // Instead of fetching game details through REST API,
+      // skip straight to the playing state and let the
+      // RemotePongGame component establish the WebSocket connection
       
-      fetchGameDetails();
+      // Set up minimal game data
+      setGameData({
+        gameId: gameId,
+        player1: user.username, // corrected by the WebSocket
+        player2: "Opponent",    // corrected by the WebSocket
+        theme: theme,
+        difficulty: difficulty
+      });
+      
+      // Transition to playing state
+      setTimeout(() => {
+        setFlowState('playing');
+      }, 500);
     } else {
       // No direct game ID, proceed to normal matchmaking
       setFlowState('matchmaking');
     }
-  }, [gameId, isLoading, user, toast, theme, difficulty]);
+  }, [gameId, isLoading, user, toast, theme, difficulty, autoConnect]);
 
   // Fetch user preferences
   useEffect(() => {
