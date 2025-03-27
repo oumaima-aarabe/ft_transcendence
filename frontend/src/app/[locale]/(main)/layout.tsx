@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
 import NotificationsExtension from './game/components/NotificationsExtension';
+import AutoRedirectHandler from './game/components/auto-redirect';
 
 export default function MainLayout({
   children,
@@ -21,6 +22,7 @@ export default function MainLayout({
           </div>
         </div>
         <NotificationsExtension />
+        <AutoRedirectHandler /> { /* this  component is invisible and wont affect your notifications since it only acts on specific notif types :) */ }
       </div>
     </NotificationsProvider>
   );
