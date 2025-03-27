@@ -29,5 +29,6 @@ typing_extensions
 # Image Processing
 pillow
 
-
+pyotp
+qrcode
 drf-yasg

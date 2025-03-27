@@ -242,35 +242,35 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
 
     const startMatchmaking = async () => {
       // First, check if the user is already in an active game
-      try {
-        const statusResponse = await checkPlayerGameStatus();
+      // try {
+      //   const statusResponse = await checkPlayerGameStatus();
         
-        if (statusResponse.active_game && statusResponse.game_id) {
-          // User is already in a game - redirect them
-          setMessage('You are already in an active game.');
+      //   if (statusResponse.active_game && statusResponse.game_id) {
+      //     // User is already in a game - redirect them
+      //     setMessage('You are already in an active game.');
           
-          // Wait a moment to show the message
-          setTimeout(() => {
-            // If you have a redirect function available in props, use it
-            if (onGameFound && statusResponse.game_id) {
-              onGameFound(
-                statusResponse.game_id,
-                statusResponse.player1 || 'Player 1',
-                statusResponse.player2 || 'Player 2',
-                `/game/${statusResponse.game_id}/`
-              );
-            } else {
-              // Otherwise, use direct navigation if possible
-              window.location.href = `/game/remote?gameId=${statusResponse.game_id}`;
-            }
-          }, 1500);
+      //     // Wait a moment to show the message
+      //     setTimeout(() => {
+      //       // If you have a redirect function available in props, use it
+      //       if (onGameFound && statusResponse.game_id) {
+      //         onGameFound(
+      //           statusResponse.game_id,
+      //           statusResponse.player1 || 'Player 1',
+      //           statusResponse.player2 || 'Player 2',
+      //           `/game/${statusResponse.game_id}/`
+      //         );
+      //       } else {
+      //         // Otherwise, use direct navigation if possible
+      //         window.location.href = `/game/remote?gameId=${statusResponse.game_id}`;
+      //       }
+      //     }, 1500);
           
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking active games:', error);
-        // Continue with matchmaking if the check fails
-      }
+      //     return;
+      //   }
+      // } catch (error) {
+      //   console.error('Error checking active games:', error);
+      //   // Continue with matchmaking if the check fails
+      // }
       
       // Proceed with normal matchmaking
       const socket = getMatchmakingSocket();
