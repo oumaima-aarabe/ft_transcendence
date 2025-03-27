@@ -467,17 +467,17 @@ class GameInviteResponseView(APIView):
                     invite.resulting_game = game
                     invite.save()
                     
-                    # Send notification to sender that includes game_id for direct joining
+                    # Send notification to sender with auto-redirect instruction
                     try:
                         send_notification(
                             username=invite.sender.player.username,
-                            notification_type='game_invite_accepted',
+                            notification_type='game_redirect',  # a special type for auto-redirect
                             message=f"{request.user.username} accepted your game invitation",
                             data={
                                 'game_id': str(game.id),
                                 'player1_username': invite.sender.player.username,
                                 'player2_username': request.user.username,
-                                'join_url': f"/game/remote?gameId={game.id}"  # Include direct URL
+                                'redirect_url': f"/game/remote?gameId={game.id}&autoConnect=true"  # Add autoConnect flag
                             }
                         )
                         print(f"Notification sent to {invite.sender.player.username} with game ID: {game.id}")
