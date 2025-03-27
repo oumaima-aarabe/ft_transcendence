@@ -456,13 +456,18 @@ class GameInviteResponseView(APIView):
                         difficulty=invite.sender.difficulty
                     )
                     
+                    # Start the game immediately to avoid matchmaking flow
+                    game.status = StatusChoices.IN_PROGRESS
+                    game.started_at = timezone.now()
+                    game.save()
+                    
                     # Update the invitation
                     invite.status = StatusChoices.ACCEPTED
                     invite.accepted_at = timezone.now()
                     invite.resulting_game = game
                     invite.save()
                     
-                    # Send notification to sender
+                    # Send notification to sender that includes game_id for direct joining
                     try:
                         send_notification(
                             username=invite.sender.player.username,
@@ -471,10 +476,11 @@ class GameInviteResponseView(APIView):
                             data={
                                 'game_id': str(game.id),
                                 'player1_username': invite.sender.player.username,
-                                'player2_username': request.user.username
+                                'player2_username': request.user.username,
+                                'join_url': f"/game/remote?gameId={game.id}"  # Include direct URL
                             }
                         )
-                        print(f"Notification sent to {invite.sender.player.username}")
+                        print(f"Notification sent to {invite.sender.player.username} with game ID: {game.id}")
                     except Exception as notification_error:
                         print(f"Error sending notification: {notification_error}")
                     

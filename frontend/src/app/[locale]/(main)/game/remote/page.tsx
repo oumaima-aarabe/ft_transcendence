@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import Matchmaking from '../components/matchmaking';
@@ -10,19 +10,23 @@ import { UseUser } from "@/api/get-user";
 import { GameTheme, GameDifficulty } from '../types/game';
 import GameBackground from '../components/game-background';
 import { getUserPreferences } from '@/api/preferences';
+import { getGameDetails } from '@/api/game-api';
 
 // Game flow state type
 type RemoteGameFlowState = 'loading' | 'error' | 'matchmaking' | 'connecting' | 'playing';
 
 export default function RemoteGamePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const gameId = searchParams.get('gameId');
+  
   const { data: user, isLoading, isError, error } = UseUser();
   const [flowState, setFlowState] = useState<RemoteGameFlowState>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const { toast } = useToast();
   const [gameData, setGameData] = useState<{
     gameId: string;
-    gameUrl: string;
+    gameUrl?: string;
     player1: string;
     player2: string;
     theme?: GameTheme;
@@ -33,6 +37,51 @@ export default function RemoteGamePage() {
   const [theme, setTheme] = useState<GameTheme>('water');
   const [difficulty, setDifficulty] = useState<GameDifficulty>('medium');
   
+  // Check for direct game ID from invitation
+  useEffect(() => {
+    if (isLoading || !user) return;
+    
+    // If we have a gameId in the URL, try to directly join that game
+    if (gameId) {
+      console.log(`Direct game join requested for game ID: ${gameId}`);
+      setFlowState('connecting');
+      
+      // Fetch game details to get player information
+      const fetchGameDetails = async () => {
+        try {
+          const gameDetails = await getGameDetails(gameId);
+          console.log('Game details loaded:', gameDetails);
+          
+          // Set up game data based on the details
+          setGameData({
+            gameId: gameId,
+            player1: gameDetails.player1.username,
+            player2: gameDetails.player2.username,
+            theme: gameDetails.theme || theme,
+            difficulty: gameDetails.difficulty || difficulty
+          });
+          
+          // Transition to playing state
+          setFlowState('playing');
+          
+        } catch (err) {
+          console.error("Error loading game details:", err);
+          toast({
+            title: "Error Joining Game",
+            description: "Could not load game details. Falling back to matchmaking.",
+            variant: "destructive",
+          });
+          setFlowState('matchmaking');
+        }
+      };
+      
+      fetchGameDetails();
+    } else {
+      // No direct game ID, proceed to normal matchmaking
+      setFlowState('matchmaking');
+    }
+  }, [gameId, isLoading, user, toast, theme, difficulty]);
+
   // Fetch user preferences
   useEffect(() => {
     if (isLoading || isError || !user) return;
@@ -66,10 +115,11 @@ export default function RemoteGamePage() {
       }, 3000);
       
       return () => clearTimeout(timer);
-    } else if (user) {
+    } else if (user && !gameId) {
+      // Only set to matchmaking if we don't have a gameId
       setFlowState('matchmaking');
     }
-  }, [isLoading, isError, user, router]);
+  }, [isLoading, isError, user, router, gameId]);
 
   const handleGameFound = (gameId: string, player1: string, player2: string, gameUrl: string) => {
     try {
@@ -123,6 +173,11 @@ export default function RemoteGamePage() {
   // Handle connection errors in game
   const handleConnectionError = (error: string) => {
     setFlowState('matchmaking');
+    toast({
+      title: "Connection Error",
+      description: error || "Lost connection to the game",
+      variant: "destructive"
+    });
   };
   
   // Generate content based on current flow state
