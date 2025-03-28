@@ -155,6 +155,7 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   };
 
   // Setup WebSocket connection
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // Get authentication token
     const token = getAccessToken() || 'anonymous';
