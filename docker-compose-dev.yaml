@@ -3,8 +3,13 @@ services:
   backend:
     build: ./backend/
     container_name: backend
+    command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+    volumes:
+      - ./backend:/app
     env_file:
-      - .env
+      - ./backend/.env
+    ports:
+      - "8000:8000"
     tty: true
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST}
@@ -17,30 +22,29 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - app-network
+
   frontend:
     build: ./frontend
     container_name: frontend
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
     depends_on:
       - backend
     tty: true
-    networks:
-      - app-network
+
   nginx:
     # Fixed the image name typo (was ngnix:ngx)
-    # image: nginx:alpine
+    image: nginx:alpine
     container_name: nginx
     build:
         context: ./nginx/
     ports:
         - "443:443"
-        - "80:80"
     depends_on:
-        backend:
-            condition: service_started
-        frontend:
-            condition: service_started
+        - backend
+        - frontend
     restart: always
     networks:
       - app-network
@@ -49,23 +53,17 @@ services:
     image: postgres:16
     container_name: postgres
     env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      - ./backend/.env
     volumes:
       - data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 30s
       timeout: 10s
       retries: 5
-    expose:
-      - 5432
-    networks:
-      - app-network
-
+  
   redis:
     image: redis:alpine
     container_name: redis
@@ -77,8 +75,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - app-network
+
 networks:
   app-network:
     driver: bridge

@@ -8,4 +8,5 @@ python manage.py migrate --noinput
 
 echo "Starting Django server"
 # python manage.py runserver
-exec "$@"
+# exec "$@"
+exec daphne -p 8000 -b 0.0.0.0 backend.asgi:application
