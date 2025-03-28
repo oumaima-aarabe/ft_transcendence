@@ -83,24 +83,6 @@ class Migration(migrations.Migration):
                 'unique_together': {('game', 'match_number')},
             },
         ),
-        migrations.CreateModel(
-            name='GameInvite',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('invitation_code', models.CharField(max_length=10, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('accepted_at', models.DateTimeField(blank=True, null=True)),
-                ('declined_at', models.DateTimeField(blank=True, null=True)),
-                ('expires_at', models.DateTimeField(blank=True, null=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('declined', 'Declined'), ('expired', 'Expired')], default='pending', max_length=10)),
-                ('receiver', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='received_invites', to='pong_game.playerprofile')),
-                ('resulting_game', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_from_invite', to='pong_game.game')),
-                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_invites', to='pong_game.playerprofile')),
-            ],
-            options={
-                'indexes': [models.Index(fields=['invitation_code'], name='pong_game_g_invitat_5967e6_idx'), models.Index(fields=['status'], name='pong_game_g_status_7646bf_idx')],
-            },
-        ),
         migrations.AddIndex(
             model_name='game',
             index=models.Index(fields=['status'], name='pong_game_g_status_4b5dc4_idx'),
