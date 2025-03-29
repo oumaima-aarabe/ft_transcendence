@@ -55,6 +55,7 @@ const GameInviteAcceptedNotification: React.FC<GameInviteAcceptedNotificationPro
     // Notify parent component
     if (onAction) onAction('dismiss');
   };
+  console.log('we did it');
 
   return (
     <Card className="p-4 bg-black bg-opacity-80 border border-gray-800 shadow-lg rounded-lg mb-2">
@@ -66,7 +67,7 @@ const GameInviteAcceptedNotification: React.FC<GameInviteAcceptedNotificationPro
         <div className="flex-1">
           <h4 className="text-white font-medium">Game Invitation Accepted</h4>
           <p className="text-gray-300 text-sm">
-            <span className="font-medium">{acceptedBy}</span> accepted your game invitation
+            <span className="font-medium">{acceptedBy}</span> accepted your game lol
           </p>
         </div>
         

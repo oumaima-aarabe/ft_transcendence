@@ -22,7 +22,7 @@ export default function MainLayout({
           </div>
         </div>
         <NotificationsExtension />
-        <AutoRedirectHandler /> { /* this  component is invisible and wont affect your notifications since it only acts on specific notif types :) */ }
+        {/* <AutoRedirectHandler /> this  component is invisible and wont affect your notifications since it only acts on specific notif types :) */ }
       </div>
     </NotificationsProvider>
   );

@@ -17,7 +17,7 @@ const mapNotification = (notification: any): Notification => ({
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(true);
   const [loading, setLoading] = useState(true);
 
   // Fetch notifications from the backend

@@ -95,7 +95,7 @@ const FriendGameInvites: React.FC<FriendGameInvitesProps> = ({ onBack }) => {
                   </div>
                 </div>
                 
-                <GameInviteButton 
+                <GameInviteButton
                   username={friend.username}
                   avatarUrl={friend.avatar}
                   size="sm"

@@ -10,7 +10,6 @@ import { UseUser } from "@/api/get-user";
 import { GameTheme, GameDifficulty } from '../types/game';
 import GameBackground from '../components/game-background';
 import { getUserPreferences } from '@/api/preferences';
-import { getGameDetails } from '@/api/game-api'; 
 
 // Game flow state type
 type RemoteGameFlowState = 'loading' | 'error' | 'matchmaking' | 'connecting' | 'playing';
@@ -19,7 +18,7 @@ export default function RemoteGamePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const gameId = searchParams.get('gameId');
-  const autoConnect = searchParams.get('autoConnect') === 'true';
+  const autoConnect = searchParams.get('autoConnect') === 'false';
   
   const { data: user, isLoading, isError, error } = UseUser();
   const [flowState, setFlowState] = useState<RemoteGameFlowState>('loading');
@@ -267,6 +266,7 @@ export default function RemoteGamePage() {
             transition={{ duration: 0.3 }}
             className="z-30 relative"
           >
+            console.log("gameData:", gameData);
             <RemotePongGame
               gameId={gameData.gameId}
               userName={user!.username}

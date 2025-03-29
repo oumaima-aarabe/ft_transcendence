@@ -10,7 +10,7 @@ import { fetcher } from "@/lib/fetcher";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/i18n/routing";
 import { useFriendMutation } from "@/hooks/useFriendMutation";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotificationsContext } from '@/providers/NotificationsProvider';
 
 export enum FriendshipStatus {
   NONE = "none",
@@ -52,7 +52,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
     isOwner ? undefined : user?.username
   );
   const router = useRouter();
-  const { socket } = useNotifications();
+  const { socket } = useNotificationsContext();
   const friendMutation = useFriendMutation(user.username);
 
   const handleAddFriend = () => {
