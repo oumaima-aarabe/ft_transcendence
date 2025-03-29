@@ -1,5 +1,6 @@
 "use client";
 
+import { UseStates } from "@/api/get-player-states";
 import {
   Dialog,
   DialogContent,
@@ -10,39 +11,45 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@iconify/react";
 
-interface Achievement {
+interface PropsAchievement {
+  userId: number | undefined;
+}
+
+interface AchievementStatic {
   id: string;
   title: string;
   description: string;
   icon: string;
-  unlocked: boolean;
+  key: 'first_win' | 'pure_win' | 'triple_win';
 }
 
-const achievements: Achievement[] = [
+const achievements: AchievementStatic[] = [
   {
     id: "1",
     title: "First Victory",
     description: "Win your first game",
     icon: "🎮",
-    unlocked: false,
+    key: "first_win",
   },
   {
     id: "2",
     title: "Perfect Game",
     description: "Win a game with score 3-0",
-    icon: "⭐",                                             
-    unlocked: false,
+    icon: "⭐",
+    key: "pure_win",
   },
   {
     id: "3",
     title: "Undefeated Champion",
-    description: "Win 3 games arrow",
+    description: "Win 3 games in a row",
     icon: "👑",
-    unlocked: false,
+    key: "triple_win",
   },
 ];
 
-export default function Achievements() {
+export default function Achievements({ userId }: PropsAchievement) {
+  const { data: playerStats } = UseStates(userId);
+
   const latestAchievement = achievements[2];
 
   return (
@@ -65,17 +72,17 @@ export default function Achievements() {
                 />
               </DialogClose>
             </DialogHeader>
-            <div className="space-y-4 ">
+            <div className="space-y-4">
               {achievements.map((achievement) => (
                 <div
                   key={achievement.id}
                   className={`p-4 rounded-lg ${
-                    achievement.unlocked
+                    playerStats && playerStats[achievement.key]
                       ? "border-[#40CFB7] border bg-[#2D2A2A]"
                       : "border-gray-800 bg-[#2D2A2A] opacity-60"
                   }`}
                 >
-                  <div className="flex items-center gap-3 ">
+                  <div className="flex items-center gap-3">
                     <span className="text-3xl">{achievement.icon}</span>
                     <div className="flex-1">
                       <h3 className="font-semibold text-xl">
@@ -85,12 +92,12 @@ export default function Achievements() {
                     </div>
                     <div
                       className={`px-3 py-1 rounded-full ${
-                        achievement.unlocked
+                        playerStats && playerStats[achievement.key]
                           ? "bg-[#40CFB7]/20 text-[#40CFB7]"
                           : "bg-gray-800 text-gray-400"
                       }`}
                     >
-                      {achievement.unlocked ? "Completed" : "Locked"}
+                      {playerStats && playerStats[achievement.key] ? "Completed" : "Locked"}
                     </div>
                   </div>
                 </div>
@@ -100,7 +107,7 @@ export default function Achievements() {
         </Dialog>
       </div>
 
-      <div className="p-4 rounded-lg border border-[#40CFB7] ">
+      <div className="p-4 rounded-lg border border-[#40CFB7]">
         <div className="flex items-center gap-3 p-4">
           <span className="text-7xl">{latestAchievement.icon}</span>
           <div className="flex-1">
@@ -108,13 +115,13 @@ export default function Achievements() {
             <p className="text-gray-400">{latestAchievement.description}</p>
           </div>
           <div
-            className={`px-3 py-1 rounded-full${
-              latestAchievement.unlocked
+            className={`px-3 py-1 rounded-full ${
+              playerStats && playerStats[latestAchievement.key]
                 ? "bg-[#40CFB7]/20 text-[#40CFB7]"
                 : "bg-red text-gray-400"
             }`}
           >
-            {latestAchievement.unlocked ? "Completed" : "Locked"}
+            {playerStats && playerStats[latestAchievement.key] ? "Completed" : "Locked"}
           </div>
         </div>
       </div>

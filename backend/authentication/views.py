@@ -341,7 +341,7 @@ class Login42API(APIView):
             last_name = user_data.get("last_name")
             if not user_email or not username:
                 error_query = urlencode({'error': 'no_email'})
-                return redirect(f"{os.getenv('FRONTEND_URL')}/en/auth/?{error_query}")
+                return redirect(f"{os.getenv('FRONTEND_URL')}/auth/?{error_query}")
 
             user = User.objects.filter(email=user_email).first()
             if user is None:
@@ -356,7 +356,7 @@ class Login42API(APIView):
             # Check if 2FA is enabled for this user
             if user.is_2fa_enabled:
                 # Return a JSON response indicating 2FA is required
-                response = redirect(f"{os.getenv('FRONTEND_URL')}/en/auth/?error=2fa_required&userId={user.id}")
+                response = redirect(f"{os.getenv('FRONTEND_URL')}/auth/?error=2fa_required&userId={user.id}")
                 return response
 
             refresh = RefreshToken.for_user(user)
@@ -366,7 +366,7 @@ class Login42API(APIView):
             user.status = "online"
             user.save()
 
-            url = os.getenv('FRONTEND_URL') + '/en/profile/me'
+            url = os.getenv('FRONTEND_URL') + '/profile/me'
             response = redirect(url)
             cookie_settings = {
                 "httponly": False,

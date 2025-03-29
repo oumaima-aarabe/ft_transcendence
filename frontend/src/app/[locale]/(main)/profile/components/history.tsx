@@ -9,39 +9,28 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Icon } from "@iconify/react";
-import { UseHistory } from "@/api/get-history";
+import { UseHistory, UseOtherHistory } from "@/lib/hooks"; // Adjusted import for your custom hooks
+import { MatchResult } from "@/types/game";
 
 interface MatchHistoryProps {
-  userId?: number;
+  playerId?: number; // Optional for fetching history of other players
 }
 
-export default function MatchHistory({ userId }: MatchHistoryProps) {
-  const { data: matchHistory, isLoading, error } = UseHistory(userId || 0);
-  const latestMatch = matchHistory?.[0];
+export default function History({ playerId }: MatchHistoryProps) {
+  // Use the appropriate query hook based on the playerId
+  const { data: matchHistory = [], isLoading, isError, error } = playerId
+    ? UseOtherHistory(playerId)
+    : UseHistory();
 
   if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#40CFB7]"></div>
-      </div>
-    );
+    return <div>Loading...</div>; // Show loading state while data is fetching
   }
 
-  if (error || !userId) {
-    return (
-      <div className="w-full h-full flex items-center justify-center text-red-500">
-        Error loading match history
-      </div>
-    );
+  if (isError) {
+    return <div>Error: {error instanceof Error ? error.message : "An error occurred"}</div>; // Show error message
   }
 
-  if (!matchHistory || matchHistory.length === 0 || !latestMatch) {
-    return (
-      <div className="w-full h-full flex items-center justify-center text-gray-500">
-        No matches found
-      </div>
-    );
-  }
+  const latestMatch = matchHistory[0]; // Get the latest match from the fetched data
 
   return (
     <div className="w-full h-full">
@@ -140,7 +129,7 @@ export default function MatchHistory({ userId }: MatchHistoryProps) {
         }`}
       >
         <div className="flex items-center justify-between p-5">
-          {/* ana */}
+          {/* Player side */}
           <div className="flex items-center gap-3">
             <img
               src={latestMatch.player.avatar}
@@ -168,7 +157,7 @@ export default function MatchHistory({ userId }: MatchHistoryProps) {
             <span className="text-gray-400 text-6xl">VS</span>
           </div>
 
-          {/* li dedi*/}
+          {/* Opponent side */}
           <div className="flex items-center gap-3">
             <div className="text-right">
               <h3 className="text-lg font-extralight">
