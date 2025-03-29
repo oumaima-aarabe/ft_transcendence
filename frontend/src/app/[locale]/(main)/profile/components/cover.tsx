@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@/i18n/routing";
 import { useFriendMutation } from "@/hooks/useFriendMutation";
 import { useNotifications } from "@/hooks/useNotifications";
+import { UseStates } from "@/api/get-player-states";
 
 export enum FriendshipStatus {
   NONE = "none",
@@ -46,6 +47,7 @@ export const useFriendshipStatus = (username: string | undefined) => {
 
 export default function Cover(props: { user: User; isOwner: boolean }) {
   const { user, isOwner } = props;
+  const { data: statistics } = UseStates(user.id)
   const { data: me } = UseUser();
   const queryClient = useQueryClient();
   const { data: friendShip } = useFriendshipStatus(
@@ -285,8 +287,8 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
         )}
 
         <div className="w-[90%] sm:w-[80%] space-y-1 mt-2">
-          <div className="text-white/90 text-sm">Level {user.level || "0"}</div>
-          <Progress value={60} className="h-1.5" />
+          <div className="text-white/90 text-sm">Level {statistics ? statistics.level : "0"}</div>
+          <Progress value={statistics ? statistics.experience % 1000 / 10 : 0} className="h-1.5" />
         </div>
       </div>
     </div>
