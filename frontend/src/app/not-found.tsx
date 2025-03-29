@@ -78,7 +78,7 @@ export default function NotFound() {
             <div className="error-code">404</div>
             <h1 className="title">Page Not Found</h1>
             <p className="message">The page you are looking for doesn't exist or has been moved.</p>
-            <a href="/" className="button">Back to Home</a>
+            <button onClick={() => window.history.back()} className="button">Go Back</button>
           </div>
         </div>
       </body>
