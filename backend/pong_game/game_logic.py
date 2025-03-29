@@ -640,8 +640,7 @@ def update_player_profiles(game_id):
             
             #update_player1 level and experience
             p1_profile.experience += 500
-            factor = p1_profile.level if p1_profile.level > 0 else 1
-            p1_profile.level = math.floor(p1_profile.experience/(1000 * factor))
+            p1_profile.level = math.floor(p1_profile.experience/(1000))
         else:
             p2_profile.matches_won += 1
             p1_profile.matches_lost += 1
