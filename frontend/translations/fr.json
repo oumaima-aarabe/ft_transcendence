@@ -1,6 +1,13 @@
 {
   "common": {
     "loading": "Chargement...",
+    "pageNotFound": "Page non trouvée",
+    "pageNotFoundMessage": "La page que vous recherchez n'existe pas.",
+    "backToHome": "Retour à la page d'accueil",
+    "oops": "Oups !",
+    "somethingWentWrong": "Quelque chose s'est mal passé",
+    "errorLoadingPage": "Erreur lors du chargement de la page",
+    "tryAgain": "Réessayer",
     "error": {
       "connection": "Erreur de connexion. Veuillez réessayer.",
       "failed_load": "Échec du chargement"
