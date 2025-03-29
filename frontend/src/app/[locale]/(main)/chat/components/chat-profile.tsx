@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from "sonner";
 import { BlockState } from '../page';
 import { sendWebSocketMessage } from "@/lib/websocket";
+import { useRouter } from "@/i18n/routing";
 
 interface ChatProfileProps {
   user: User;
@@ -26,7 +27,7 @@ interface ChatProfileProps {
 export function ChatProfile({ user, conversationId, onConversationDeleted, blockState, setBlockState }: ChatProfileProps) {
   const t = useTranslations('chat.profile');
   const [isDeleting, setIsDeleting] = useState(false);
-  
+  const router = useRouter();
 
   useEffect(() => {
 
@@ -119,6 +120,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
           <Button
             variant="outline"
             className="relative w-full text-sm text-white bg-transparent border border-white/20 hover:border-white/30 hover:text-white hover:bg-white/10 rounded-full h-11"
+            onClick={() => router.push(`/profile/${user.username}`)}
           >
             <div className="absolute top-3 left-3">
               <UserCircle className="h-4 w-4" />
