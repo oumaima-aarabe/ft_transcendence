@@ -48,6 +48,15 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
     time: 0,
     position: null
   });
+  const [playerNames, setPlayerNames] = useState({
+    player1: player1Name,
+    player2: player2Name
+  });
+
+  const [playerAvatars, setPlayerAvatars] = useState({
+    player1: player1Avatar,
+    player2: player2Avatar
+  });
   // Game state reference
   const gameStateRef = useRef(createInitialGameState());
   
@@ -259,167 +268,175 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
   };
   
   // Process a single server update
-  const processServerUpdate = (serverState: any) => {
-    // Store server state for reference
-    serverStateRef.current = {
-      ball: {
-        x: serverState.ball.x,
-        y: serverState.ball.y,
-        dx: serverState.ball.dx,
-        dy: serverState.ball.dy,
-        speed: serverState.ball.speed,
-        radius: serverState.ball.radius || BALL_RADIUS,
-      },
-      leftPaddle: {
-        x: serverState.left_paddle.x,
-        y: serverState.left_paddle.y,
-        width: serverState.left_paddle.width || PADDLE_WIDTH,
-        height: serverState.left_paddle.height || PADDLE_HEIGHT,
-        speed: serverState.left_paddle.speed || PADDLE_SPEED,
-        score: serverState.left_paddle.score,
-      },
-      rightPaddle: {
-        x: serverState.right_paddle.x,
-        y: serverState.right_paddle.y,
-        width: serverState.right_paddle.width || PADDLE_WIDTH,
-        height: serverState.right_paddle.height || PADDLE_HEIGHT,
-        speed: serverState.right_paddle.speed || PADDLE_SPEED,
-        score: serverState.right_paddle.score,
-      },
-      matchWins: {
-        player1: serverState.match_wins.player1,
-        player2: serverState.match_wins.player2,
-      },
-      currentMatch: serverState.current_match,
-      gameStatus: serverState.game_status,
-      winner: serverState.winner,
-    };
-    
-    // Check for score changes to trigger animations
-    if (gameStateRef.current.leftPaddle.score !== serverState.left_paddle.score) {
-      if (serverState.left_paddle.score > gameStateRef.current.leftPaddle.score) {
-        setScoreAnimation(prev => ({ ...prev, player1: true }));
-        setTimeout(() => setScoreAnimation(prev => ({ ...prev, player1: false })), 1000);
-        recentScoreRef.current = true;
-        
-        // Reset ball prediction after scoring
-        previousBallPositionsRef.current = [];
-      }
+// Process a single server update
+const processServerUpdate = (serverState: any) => {
+  // Extract player names from the server state if available
+  if (serverState.players && serverState.players.player1 && serverState.players.player2) {
+    setPlayerNames({
+      player1: serverState.players.player1.username || player1Name,
+      player2: serverState.players.player2.username || player2Name
+    });
     }
-    
-    if (gameStateRef.current.rightPaddle.score !== serverState.right_paddle.score) {
-      if (serverState.right_paddle.score > gameStateRef.current.rightPaddle.score) {
-        setScoreAnimation(prev => ({ ...prev, player2: true }));
-        setTimeout(() => setScoreAnimation(prev => ({ ...prev, player2: false })), 1000);
-        recentScoreRef.current = true;
-        
-        // Reset ball prediction after scoring
-        previousBallPositionsRef.current = [];
-      }
-    }
-    
-    // Determine which paddle you control and which is the opponent's
-    const controlledPaddleKey = connectionState.playerNumber === 1 
-      ? 'leftPaddle' 
-      : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
-      
-    const opponentPaddleKey = connectionState.playerNumber === 1 
-      ? 'rightPaddle' 
-      : (connectionState.playerNumber === 2 ? 'leftPaddle' : null);
-    
-    // Store the current position of your paddle before updating
-    const myCurrentPaddleY = 
-      controlledPaddleKey && gameStateRef.current[controlledPaddleKey] 
-        ? gameStateRef.current[controlledPaddleKey].y 
-        : null;
-    
-    // Get server's version of your paddle position
-    const serverPaddleY = connectionState.playerNumber === 1
-      ? serverState.left_paddle.y
-      : (connectionState.playerNumber === 2 ? serverState.right_paddle.y : null);
-    
-    // Check paddle divergence to decide whether to use local or server position
-    let useLocalPaddleY = true;
-    if (myCurrentPaddleY !== null && serverPaddleY !== null) {
-      // If the difference is too large, snap to server position
-      if (Math.abs(myCurrentPaddleY - serverPaddleY) > 25) {
-        useLocalPaddleY = false;
-      }
-    }
-    
-    // Update opponent paddle target for interpolation
-    if (opponentPaddleKey) {
-      const opponentY = connectionState.playerNumber === 1
-        ? serverState.right_paddle.y
-        : serverState.left_paddle.y;
-      
-      // Calculate opponent paddle velocity for better prediction
-      const prevY = opponentPaddleRef.current.target || opponentY;
-      const dy = opponentY - prevY;
-      
-      opponentPaddleRef.current = {
-        current: opponentPaddleRef.current.target || opponentY,
-        target: opponentY,
-        lastUpdateTime: Date.now(),
-        velocity: dy * 60 // Convert to units per second for consistent velocity calculation
-      };
-    }
-    
-    // Store previous ball position for trails and prediction refinement
-    if (gameStateRef.current.ball) {
-      previousBallPositionsRef.current.push({
-        x: gameStateRef.current.ball.x, 
-        y: gameStateRef.current.ball.y
-      });
-      
-      // Keep the history limited to avoid memory issues
-      if (previousBallPositionsRef.current.length > 10) {
-        previousBallPositionsRef.current.shift();
-      }
-    }
-    
-    // Update game state with new ball data and controlled paddle position
-    gameStateRef.current = {
-      ball: {
-        x: serverState.ball.x,
-        y: serverState.ball.y,
-        dx: serverState.ball.dx,
-        dy: serverState.ball.dy,
-        speed: serverState.ball.speed,
-        radius: serverState.ball.radius || BALL_RADIUS,
-      },
-      leftPaddle: {
-        x: serverState.left_paddle.x,
-        // Only preserve your own paddle position if you're player 1
-        y: (connectionState.playerNumber === 1 && myCurrentPaddleY !== null && useLocalPaddleY)
-           ? myCurrentPaddleY  // Keep your own paddle position
-           : serverState.left_paddle.y,  // Use server position for opponent
-        width: serverState.left_paddle.width || PADDLE_WIDTH,
-        height: serverState.left_paddle.height || PADDLE_HEIGHT,
-        speed: serverState.left_paddle.speed || PADDLE_SPEED,
-        score: serverState.left_paddle.score,
-      },
-      rightPaddle: {
-        x: serverState.right_paddle.x,
-        // Only preserve your own paddle position if you're player 2
-        y: (connectionState.playerNumber === 2 && myCurrentPaddleY !== null && useLocalPaddleY)
-           ? myCurrentPaddleY  // Keep your own paddle position
-           : serverState.right_paddle.y,  // Use server position for opponent
-        width: serverState.right_paddle.width || PADDLE_WIDTH,
-        height: serverState.right_paddle.height || PADDLE_HEIGHT,
-        speed: serverState.right_paddle.speed || PADDLE_SPEED,
-        score: serverState.right_paddle.score,
-      },
-      matchWins: {
-        player1: serverState.match_wins.player1,
-        player2: serverState.match_wins.player2,
-      },
-      currentMatch: serverState.current_match,
-      gameStatus: serverState.game_status,
-      winner: serverState.winner,
-    };
+
+  // Store server state for reference
+  serverStateRef.current = {
+    ball: {
+      x: serverState.ball.x,
+      y: serverState.ball.y,
+      dx: serverState.ball.dx,
+      dy: serverState.ball.dy,
+      speed: serverState.ball.speed,
+      radius: serverState.ball.radius || BALL_RADIUS,
+    },
+    leftPaddle: {
+      x: serverState.left_paddle.x,
+      y: serverState.left_paddle.y,
+      width: serverState.left_paddle.width || PADDLE_WIDTH,
+      height: serverState.left_paddle.height || PADDLE_HEIGHT,
+      speed: serverState.left_paddle.speed || PADDLE_SPEED,
+      score: serverState.left_paddle.score,
+    },
+    rightPaddle: {
+      x: serverState.right_paddle.x,
+      y: serverState.right_paddle.y,
+      width: serverState.right_paddle.width || PADDLE_WIDTH,
+      height: serverState.right_paddle.height || PADDLE_HEIGHT,
+      speed: serverState.right_paddle.speed || PADDLE_SPEED,
+      score: serverState.right_paddle.score,
+    },
+    matchWins: {
+      player1: serverState.match_wins.player1,
+      player2: serverState.match_wins.player2,
+    },
+    currentMatch: serverState.current_match,
+    gameStatus: serverState.game_status,
+    winner: serverState.winner,
   };
   
+  // Check for score changes to trigger animations
+  if (gameStateRef.current.leftPaddle.score !== serverState.left_paddle.score) {
+    if (serverState.left_paddle.score > gameStateRef.current.leftPaddle.score) {
+      setScoreAnimation(prev => ({ ...prev, player1: true }));
+      setTimeout(() => setScoreAnimation(prev => ({ ...prev, player1: false })), 1000);
+      recentScoreRef.current = true;
+      
+      // Reset ball prediction after scoring
+      previousBallPositionsRef.current = [];
+    }
+  }
+  
+  if (gameStateRef.current.rightPaddle.score !== serverState.right_paddle.score) {
+    if (serverState.right_paddle.score > gameStateRef.current.rightPaddle.score) {
+      setScoreAnimation(prev => ({ ...prev, player2: true }));
+      setTimeout(() => setScoreAnimation(prev => ({ ...prev, player2: false })), 1000);
+      recentScoreRef.current = true;
+      
+      // Reset ball prediction after scoring
+      previousBallPositionsRef.current = [];
+    }
+  }
+  
+  // Determine which paddle you control and which is the opponent's
+  const controlledPaddleKey = connectionState.playerNumber === 1 
+    ? 'leftPaddle' 
+    : (connectionState.playerNumber === 2 ? 'rightPaddle' : null);
+    
+  const opponentPaddleKey = connectionState.playerNumber === 1 
+    ? 'rightPaddle' 
+    : (connectionState.playerNumber === 2 ? 'leftPaddle' : null);
+  
+  // Store the current position of your paddle before updating
+  const myCurrentPaddleY = 
+    controlledPaddleKey && gameStateRef.current[controlledPaddleKey] 
+      ? gameStateRef.current[controlledPaddleKey].y 
+      : null;
+  
+  // Get server's version of your paddle position
+  const serverPaddleY = connectionState.playerNumber === 1
+    ? serverState.left_paddle.y
+    : (connectionState.playerNumber === 2 ? serverState.right_paddle.y : null);
+  
+  // Check paddle divergence to decide whether to use local or server position
+  let useLocalPaddleY = true;
+  if (myCurrentPaddleY !== null && serverPaddleY !== null) {
+    // If the difference is too large, snap to server position
+    if (Math.abs(myCurrentPaddleY - serverPaddleY) > 25) {
+      useLocalPaddleY = false;
+    }
+  }
+  
+  // Update opponent paddle target for interpolation
+  if (opponentPaddleKey) {
+    const opponentY = connectionState.playerNumber === 1
+      ? serverState.right_paddle.y
+      : serverState.left_paddle.y;
+    
+    // Calculate opponent paddle velocity for better prediction
+    const prevY = opponentPaddleRef.current.target || opponentY;
+    const dy = opponentY - prevY;
+    
+    opponentPaddleRef.current = {
+      current: opponentPaddleRef.current.target || opponentY,
+      target: opponentY,
+      lastUpdateTime: Date.now(),
+      velocity: dy * 60 // Convert to units per second for consistent velocity calculation
+    };
+  }
+  
+  // Store previous ball position for trails and prediction refinement
+  if (gameStateRef.current.ball) {
+    previousBallPositionsRef.current.push({
+      x: gameStateRef.current.ball.x, 
+      y: gameStateRef.current.ball.y
+    });
+    
+    // Keep the history limited to avoid memory issues
+    if (previousBallPositionsRef.current.length > 10) {
+      previousBallPositionsRef.current.shift();
+    }
+  }
+  
+  // Update game state with new ball data and controlled paddle position
+  gameStateRef.current = {
+    ball: {
+      x: serverState.ball.x,
+      y: serverState.ball.y,
+      dx: serverState.ball.dx,
+      dy: serverState.ball.dy,
+      speed: serverState.ball.speed,
+      radius: serverState.ball.radius || BALL_RADIUS,
+    },
+    leftPaddle: {
+      x: serverState.left_paddle.x,
+      // Only preserve your own paddle position if you're player 1
+      y: (connectionState.playerNumber === 1 && myCurrentPaddleY !== null && useLocalPaddleY)
+         ? myCurrentPaddleY  // Keep your own paddle position
+         : serverState.left_paddle.y,  // Use server position for opponent
+      width: serverState.left_paddle.width || PADDLE_WIDTH,
+      height: serverState.left_paddle.height || PADDLE_HEIGHT,
+      speed: serverState.left_paddle.speed || PADDLE_SPEED,
+      score: serverState.left_paddle.score,
+    },
+    rightPaddle: {
+      x: serverState.right_paddle.x,
+      // Only preserve your own paddle position if you're player 2
+      y: (connectionState.playerNumber === 2 && myCurrentPaddleY !== null && useLocalPaddleY)
+         ? myCurrentPaddleY  // Keep your own paddle position
+         : serverState.right_paddle.y,  // Use server position for opponent
+      width: serverState.right_paddle.width || PADDLE_WIDTH,
+      height: serverState.right_paddle.height || PADDLE_HEIGHT,
+      speed: serverState.right_paddle.speed || PADDLE_SPEED,
+      score: serverState.right_paddle.score,
+    },
+    matchWins: {
+      player1: serverState.match_wins.player1,
+      player2: serverState.match_wins.player2,
+    },
+    currentMatch: serverState.current_match,
+    gameStatus: serverState.game_status,
+    winner: serverState.winner,
+  };
+};
   // Handle game status changes from server
   const handleStatusChange = (status: string, reason?: string) => {
   };
@@ -733,6 +750,8 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
       {/* Game renderer */}
       <div className="relative">
         <RemotePongRenderer
+          // player1Name={playerNames.player1}
+          // player2Name={playerNames.player2}
           BASE_WIDTH={BASE_WIDTH}
           BASE_HEIGHT={BASE_HEIGHT}
           PADDLE_WIDTH={PADDLE_WIDTH}
@@ -745,8 +764,8 @@ const RemotePongGame: React.FC<RemotePongGameProps> = ({
           updateGameState={updateGameState}
           setKeysPressed={setKeysPressed}
           scoreAnimation={scoreAnimation}
-          player1Name={player1Name}
-          player2Name={player2Name}
+          player1Name={playerNames.player1}
+          player2Name={playerNames.player2}
           theme={theme}
           difficulty={difficulty}
           onBackToSetup={onBackToSetup}

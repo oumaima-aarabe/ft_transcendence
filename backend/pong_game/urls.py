@@ -4,6 +4,8 @@ from . import views
 urlpatterns = [
     path('games/', views.GameListView.as_view(), name='game-list'),
     path('games/<str:game_id>/', views.GameDetailView.as_view(), name='game-detail'),
+    path('invites/', views.GameInviteView.as_view(), name='invites'),
+    path('invites/<str:invitation_code>/', views.GameInviteResponseView.as_view(), name='invitation-response'),
     path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
     
     # New endpoints for game state

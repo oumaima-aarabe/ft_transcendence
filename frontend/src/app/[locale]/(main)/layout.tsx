@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { NotificationsProvider } from "@/providers/NotificationsProvider";
+import NotificationsExtension from './game/components/NotificationsExtension';
 
 export default function MainLayout({
   children,
@@ -10,7 +11,7 @@ export default function MainLayout({
   return (
     <NotificationsProvider>
       <div className="min-h-screen relative">
-        <div className="relative flex h-screen">
+        <div className="relative z-10 flex h-screen">
           <Sidebar />
           <div className="flex-1 flex flex-col">
             <Header />
@@ -19,6 +20,7 @@ export default function MainLayout({
             </main>
           </div>
         </div>
+        <NotificationsExtension />
       </div>
     </NotificationsProvider>
   );

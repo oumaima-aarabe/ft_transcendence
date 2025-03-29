@@ -15,7 +15,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     """
     
     async def connect(self):
-        """Handle WebSocket connection and authentication"""
+        """Handle WebSocket connection and authentication with improved waiting logic"""
         # Get game ID from URL route
         self.game_id = self.scope['url_route']['kwargs']['game_id']
         self.game_group = f"game_{self.game_id}"
@@ -27,13 +27,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print("User not authenticated")
             await self.close(code=4001)
             return
-        
+        print(f"DEBUG: WebSocket connection for game {self.game_id}, user_id={self.user_id}")
         # Get game from database
         self.game = await self.get_game(self.game_id)
         if not self.game:
             print(f"Game {self.game_id} not found")
             await self.close(code=4004)
             return
+        print(f"DEBUG: Game data: {self.game}")
         
         # Determine if user is player1 or player2
         if str(self.user_id) == str(self.game['player1_id']):
@@ -44,6 +45,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             print(f"User {self.user_id} is not a player in game {self.game_id}")
             await self.close(code=4003)
             return
+        print(f"DEBUG: User {self.user_id} identified as player {self.player_num}")
         
         # Initialize game state if not exists
         if self.game_id not in game_logic.active_games:
@@ -54,6 +56,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             self.game_group,
             self.channel_name
         )
+        
+        # Store connection time to handle waiting period
+        self.connection_time = time.time()
         
         # Mark player as connected
         connection_info = game_logic.set_player_connection(self.game_id, self.player_num, True)
@@ -67,10 +72,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'player_number': self.player_num,
             'game_id': self.game_id
         })
-        
+        state_to_send = game_logic.active_games[self.game_id]
+        print(f"DEBUG: Sending game state: {state_to_send}")
         await self.send_json({
             'type': 'game_state',
-            'state': game_logic.active_games[self.game_id]
+            'state': state_to_send
         })
         
         # Notify other player about connection
@@ -84,26 +90,31 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         )
         
         # If connection changed game status, notify both players
-        if connection_info and connection_info['status_changed']:
+        if connection_info and connection_info.get('status_changed', False):
             await self.channel_layer.group_send(
                 self.game_group,
                 {
                     'type': 'game_status_changed',
-                    'status': connection_info['new_status']
+                    'status': connection_info.get('new_status', 'waiting')
                 }
             )
         
-        # If both players connected, start game loop if not already running
-        if connection_info and connection_info['both_connected']:
+        # Check if both players are connected
+        if connection_info and connection_info.get('both_connected', False):
+            # Both players are connected, we can start the game
             if (game_logic.active_games[self.game_id]['game_status'] == 'menu' and
                 not game_logic.active_games[self.game_id].get('loop_running', False)):
                 
                 game_logic.active_games[self.game_id]['loop_running'] = True
                 asyncio.create_task(self.game_loop())
-            if game_logic.are_both_players_connected(self.game_id):
-                # Update game status in database
-                await self.update_game_status('in_progress')
-    
+            
+            # Update game status in database
+            await self.update_game_status('in_progress')
+        else:
+            # Only one player is connected, start waiting for other player
+            # Create a task to wait for other player (60 seconds timeout)
+            self.wait_for_opponent_task = asyncio.create_task(self.wait_for_opponent(10))
+
     async def disconnect(self, close_code):
         """Handle WebSocket disconnection"""
         print(f"Client {self.channel_name} disconnected with code {close_code}")
@@ -157,6 +168,63 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         if event.get('force_disconnect', False):
             await self.close(code=4002)  # Use a specific code for forced disconnection
             
+    async def wait_for_opponent(self, wait_seconds):
+        """Wait for the other player to connect before timing out"""
+        try:
+            # Wait a bit for opponent to join
+            for i in range(wait_seconds):
+                # Check every second if both players are connected
+                if game_logic.are_both_players_connected(self.game_id):
+                    print(f"Both players connected for game {self.game_id}")
+                    
+                    # If game was waiting, update to menu or playing state
+                    if game_logic.active_games[self.game_id]['game_status'] == 'waiting':
+                        game_logic.active_games[self.game_id]['game_status'] = 'menu'
+                        
+                        # Notify players of status change
+                        await self.channel_layer.group_send(
+                            self.game_group,
+                            {
+                                'type': 'game_status_changed',
+                                'status': 'menu'
+                            }
+                        )
+                    
+                    # Start game loop if not already running
+                    if not game_logic.active_games[self.game_id].get('loop_running', False):
+                        game_logic.active_games[self.game_id]['loop_running'] = True
+                        asyncio.create_task(self.game_loop())
+                        
+                    # Update database status
+                    await self.update_game_status('in_progress')
+                    return
+                    
+                # Send periodic updates to keep the client informed
+                if i % 5 == 0:  # Send status update every 5 seconds
+                    await self.send_json({
+                        'type': 'waiting_for_opponent',
+                        'seconds_elapsed': i,
+                        'seconds_remaining': wait_seconds - i,
+                        'message': "Waiting for opponent to connect..."
+                    })
+                    
+                await asyncio.sleep(1)
+                
+            # If we got here, timeout occurred
+            await self.send_json({
+                'type': 'timeout',
+                'message': 'Opponent did not connect in time'
+            })
+            
+            # Update game status in database
+            await self.update_game_status('cancelled')
+            
+            # Force disconnect
+            await self.close(code=4000)
+            
+        except asyncio.CancelledError:
+            # Task was cancelled (probably because opponent connected)
+            pass
 
     async def receive_json(self, content):
         """Handle messages from client"""
@@ -429,6 +497,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def player_status(self, event):
         """Send player connection status"""
         await self.send_json(event)
+        if event.get('player') != self.player_num and event.get('connected', False):
+            if hasattr(self, 'wait_for_opponent_task') and not self.wait_for_opponent_task.done():
+                self.wait_for_opponent_task.cancel()
+
     async def game_completed(self, event):
         """Handle game completion and prepare for socket closure"""
         await self.send_json({
@@ -468,6 +540,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             return
         
         # Get game from database and create state
+        print(f"DEBUG: Initializing game {self.game_id} with data: {self.game}")
         game_logic.active_games[self.game_id] = game_logic.create_game_state(
             self.game_id, 
             self.game

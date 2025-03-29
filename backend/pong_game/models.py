@@ -125,89 +125,77 @@ class PlayerProfile(models.Model):
 
 
 class GameInvite(models.Model):
-    """Model to track game invitations between players"""
-    
-    INVITATION_STATUS_CHOICES = [
+    INVITE_STATUS_CHOICES = [
         (StatusChoices.PENDING, 'Pending'),
         (StatusChoices.ACCEPTED, 'Accepted'),
         (StatusChoices.DECLINED, 'Declined'),
-        (StatusChoices.EXPIRED, 'Expired'),
+        (StatusChoices.EXPIRED, 'Expired')
     ]
     
-    # Invitation info
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_invitations')
+    invitation_code = models.CharField(max_length=10, unique=True)
+    sender = models.ForeignKey(PlayerProfile, on_delete=models.CASCADE, related_name='sent_invites')
+    receiver = models.ForeignKey(PlayerProfile, on_delete=models.CASCADE, related_name='received_invites')
+    
+    # Timestamps for tracking invite lifecycle
     created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    status = models.CharField(max_length=15, choices=INVITATION_STATUS_CHOICES, default=StatusChoices.PENDING)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    declined_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
     
-    # Game settings to be used if accepted
-    difficulty = models.CharField(max_length=10, choices=PlayerProfile.DIFFICULTY_CHOICES, default='medium')
+    status = models.CharField(max_length=10, choices=INVITE_STATUS_CHOICES, default=StatusChoices.PENDING)
     
-    # Resulting game if accepted
-    resulting_game = models.ForeignKey('Game', on_delete=models.SET_NULL, 
-                                     null=True, blank=True, related_name='created_from_invitation')
+    # Link to game if created from this invite
+    resulting_game = models.OneToOneField('Game', on_delete=models.SET_NULL, 
+                                        null=True, blank=True, related_name='created_from_invite')
     
     class Meta:
         indexes = [
+            models.Index(fields=['invitation_code']),
             models.Index(fields=['status']),
-            models.Index(fields=['sender']),
-            models.Index(fields=['recipient']),
-            models.Index(fields=['expires_at']),
         ]
     
     def __str__(self):
-        return f"Invitation from {self.sender.username} to {self.recipient.username}"
-    
-    def save(self, *args, **kwargs):
-        # Since frontend will handle expiration, we'll just set a 
-        # placeholder value for the expires_at field
-        if not self.expires_at:
-            self.expires_at = timezone.now() + timezone.timedelta(minutes=5)
-        super().save(*args, **kwargs)
+        return f"{self.sender.player.username} → {self.receiver.player.username} ({self.status})"
     
     def accept(self):
-        """Accept the invitation and create a game"""
+        """Accept an invitation and create a game"""
         if self.status != StatusChoices.PENDING:
             return None
+            
+        self.status = StatusChoices.ACCEPTED
+        self.accepted_at = timezone.now()
         
-        if timezone.now() > self.expires_at:
-            self.status = StatusChoices.EXPIRED
-            self.save()
-            return None
-        
-        # Create a game between the two players
+        # Create a game with players from the invitation
         game = Game.objects.create(
-            player1=self.sender,
-            player2=self.recipient,
+            player1=self.sender.player,
+            player2=self.receiver.player,
             status=StatusChoices.WAITING,
-            difficulty=self.difficulty
+            # theme=self.sender.theme,  # Using sender's preferences
+            difficulty=self.sender.difficulty
         )
         
-        # Update invitation
-        self.status = StatusChoices.ACCEPTED
         self.resulting_game = game
         self.save()
         
         return game
     
     def decline(self):
-        """Decline the invitation"""
+        """Decline an invitation"""
         if self.status != StatusChoices.PENDING:
             return False
-        
+            
         self.status = StatusChoices.DECLINED
+        self.declined_at = timezone.now()
         self.save()
         return True
     
-    def expire(self):
-        """Mark invitation as expired"""
-        if self.status != StatusChoices.PENDING:
-            return False
-        
-        self.status = StatusChoices.EXPIRED
-        self.save()
-        return True
+    def is_expired(self):
+        """Check if invitation has expired"""
+        if self.expires_at and timezone.now() > self.expires_at:
+            self.status = StatusChoices.EXPIRED
+            self.save()
+            return True
+        return False
 
 
 class MatchmakingQueue(models.Model):

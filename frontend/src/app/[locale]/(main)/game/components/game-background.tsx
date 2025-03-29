@@ -51,7 +51,7 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
       // Update theme immediately if not transitioning
       setCurrentTheme(theme);
     }
-  }, [theme, isPlaying, currentTheme, transitioning]);
+  }, [theme, isPlaying]);
 
   // Don't render anything if not playing and not visible
   if (!isPlaying && !visible) return null;

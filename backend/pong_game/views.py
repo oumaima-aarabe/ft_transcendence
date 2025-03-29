@@ -407,7 +407,7 @@ class GameInviteView(APIView):
 
 class GameInviteResponseView(APIView):
     def post(self, request, invitation_code):
-        """Accept or decline a game invitation"""
+        """Accept or decline a game invitation with improved redirection and synchronization"""
         try:
             from users.utils import send_notification
             
@@ -437,7 +437,7 @@ class GameInviteResponseView(APIView):
                     "error": "Invalid invitation code"
                 }, status=status.HTTP_404_NOT_FOUND)
             
-            # check if the current user is the recipient
+            # Check if the current user is the recipient
             if invite.receiver.player != request.user:
                 return Response({
                     "error": "This invitation is not for you"
@@ -457,7 +457,7 @@ class GameInviteResponseView(APIView):
                     )
                     
                     # Start the game immediately to avoid matchmaking flow
-                    game.status = StatusChoices.IN_PROGRESS
+                    game.status = StatusChoices.WAITING
                     game.started_at = timezone.now()
                     game.save()
                     
@@ -467,26 +467,35 @@ class GameInviteResponseView(APIView):
                     invite.resulting_game = game
                     invite.save()
                     
-                    # Send notification to sender with auto-redirect instruction
+                    # Generate a connection token or identifier for synchronization
+                    connection_token = str(uuid.uuid4())[:8]
+                    
+                    # Send notification to sender with enhanced synchronization data
                     try:
                         send_notification(
                             username=invite.sender.player.username,
-                            notification_type='game_redirect',  # a special type for auto-redirect
+                            notification_type='game_invite_accepted',
                             message=f"{request.user.username} accepted your game invitation",
                             data={
                                 'game_id': str(game.id),
                                 'player1_username': invite.sender.player.username,
                                 'player2_username': request.user.username,
-                                'redirect_url': f"/game/remote?gameId={game.id}&autoConnect=true"  # Add autoConnect flag
+                                'player1_id': invite.sender.player.id,
+                                'player2_id': request.user.id,
+                                'join_url': f"/game/remote?gameId={game.id}"
                             }
                         )
                         print(f"Notification sent to {invite.sender.player.username} with game ID: {game.id}")
                     except Exception as notification_error:
                         print(f"Error sending notification: {notification_error}")
                     
+                    # Return with the same synchronization data for the recipient
                     return Response({
                         "message": "Invitation accepted",
-                        "game_id": str(game.id)
+                        "game_id": str(game.id),
+                        "connection_token": connection_token,
+                        "game_ready": True,
+                        "timestamp": timezone.now().timestamp()
                     }, status=status.HTTP_200_OK)
                 except Exception as e:
                     return Response({

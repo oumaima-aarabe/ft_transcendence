@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useSearchUsers } from "@/api/get-user";
 import { UseUser } from "@/api/get-user";
 import { UseFriend } from "@/api/get-friends";
+import GameInviteButton from "./GameInviteButton";
 import { Search, ArrowLeft } from 'lucide-react';
 
 interface FriendGameInvitesProps {
@@ -94,7 +95,11 @@ const FriendGameInvites: React.FC<FriendGameInvitesProps> = ({ onBack }) => {
                   </div>
                 </div>
                 
-                {/* need to create a game invite button */}
+                <GameInviteButton
+                  username={friend.username}
+                  avatarUrl={friend.avatar}
+                  size="sm"
+                />
               </div>
             ))
           )}
