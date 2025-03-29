@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import Matchmaking from '../components/matchmaking';
@@ -16,13 +16,17 @@ type RemoteGameFlowState = 'loading' | 'error' | 'matchmaking' | 'connecting' | 
 
 export default function RemoteGamePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const gameId = searchParams.get('gameId');
+  const autoConnect = searchParams.get('autoConnect') === 'false';
+  
   const { data: user, isLoading, isError, error } = UseUser();
   const [flowState, setFlowState] = useState<RemoteGameFlowState>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const { toast } = useToast();
   const [gameData, setGameData] = useState<{
     gameId: string;
-    gameUrl: string;
+    gameUrl?: string;
     player1: string;
     player2: string;
     theme?: GameTheme;
@@ -33,6 +37,38 @@ export default function RemoteGamePage() {
   const [theme, setTheme] = useState<GameTheme>('water');
   const [difficulty, setDifficulty] = useState<GameDifficulty>('medium');
   
+  // Check for direct game ID from invitation
+  useEffect(() => {
+    if (isLoading || !user) return;
+    
+    // If we have a gameId in the URL, try to directly join that game
+    if (gameId) {
+      console.log(`Direct game join requested for game ID: ${gameId}, autoConnect: ${autoConnect}`);
+      setFlowState('connecting');
+      
+      // Instead of fetching game details through REST API,
+      // skip straight to the playing state and let the
+      // RemotePongGame component establish the WebSocket connection
+      
+      // Set up minimal game data
+      setGameData({
+        gameId: gameId,
+        player1: user.username, // corrected by the WebSocket
+        player2: "Opponent",    // corrected by the WebSocket
+        theme: theme,
+        difficulty: difficulty
+      });
+      
+      // Transition to playing state
+      setTimeout(() => {
+        setFlowState('playing');
+      }, 500);
+    } else {
+      // No direct game ID, proceed to normal matchmaking
+      setFlowState('matchmaking');
+    }
+  }, [gameId, isLoading, user, toast, theme, difficulty, autoConnect]);
+
   // Fetch user preferences
   useEffect(() => {
     if (isLoading || isError || !user) return;
@@ -66,10 +102,11 @@ export default function RemoteGamePage() {
       }, 3000);
       
       return () => clearTimeout(timer);
-    } else if (user) {
+    } else if (user && !gameId) {
+      // Only set to matchmaking if we don't have a gameId
       setFlowState('matchmaking');
     }
-  }, [isLoading, isError, user, router]);
+  }, [isLoading, isError, user, router, gameId]);
 
   const handleGameFound = (gameId: string, player1: string, player2: string, gameUrl: string) => {
     try {
@@ -123,6 +160,11 @@ export default function RemoteGamePage() {
   // Handle connection errors in game
   const handleConnectionError = (error: string) => {
     setFlowState('matchmaking');
+    toast({
+      title: "Connection Error",
+      description: error || "Lost connection to the game",
+      variant: "destructive"
+    });
   };
   
   // Generate content based on current flow state
@@ -224,6 +266,7 @@ export default function RemoteGamePage() {
             transition={{ duration: 0.3 }}
             className="z-30 relative"
           >
+            console.log("gameData:", gameData);
             <RemotePongGame
               gameId={gameData.gameId}
               userName={user!.username}

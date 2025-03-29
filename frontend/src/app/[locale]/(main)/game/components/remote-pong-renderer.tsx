@@ -149,6 +149,7 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
   }, [gameStateRef]);
   
   // Handle window resize
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {

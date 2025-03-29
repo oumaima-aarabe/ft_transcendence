@@ -37,6 +37,16 @@ def create_game_state(game_id, game_data):
     """
     settings = DIFFICULTY_SETTINGS[game_data['difficulty']]
     
+    # Fetch player usernames if not provided
+    player1_username = game_data.get('player1_username', None)
+    player2_username = game_data.get('player2_username', None)
+    
+    if player1_username is None or player2_username is None:
+        # Fetch usernames from database
+        from authentication.models import User
+        player1_username = User.objects.get(id=game_data['player1_id']).username
+        player2_username = User.objects.get(id=game_data['player2_id']).username
+    
     return {
         'game_id': game_id,
         'ball': {
@@ -73,10 +83,12 @@ def create_game_state(game_id, game_data):
         'players': {
             'player1': {
                 'id': game_data['player1_id'],
+                'username': player1_username,
                 'connected': False
             },
             'player2': {
                 'id': game_data['player2_id'],
+                'username': player2_username,
                 'connected': False
             }
         },

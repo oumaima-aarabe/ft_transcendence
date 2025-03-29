@@ -23,6 +23,7 @@ class BaseFriendView(APIView):
 
     def serialize_list_friends(self, target_user):
         return {
+            'id': target_user.id,
             'username': target_user.username,
             'first_name': target_user.first_name,
             'last_name': target_user.last_name,

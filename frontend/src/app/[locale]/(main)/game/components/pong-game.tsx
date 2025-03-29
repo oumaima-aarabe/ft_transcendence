@@ -738,6 +738,7 @@ const PongGame: React.FC<PongGameProps> = ({
     ctx.restore();
   };
   // Set up game canvas and event listeners
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;

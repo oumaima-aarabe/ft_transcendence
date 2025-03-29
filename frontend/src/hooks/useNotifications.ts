@@ -140,16 +140,22 @@ export const useNotifications = () => {
   // Get unread count
   const unreadCount = notifications.filter((n) => !n.read).length;
   
+  // Get game invites
+  const gameInvites = notifications.filter(
+    (n) => n.type === 'game_invite' && !n.read
+  );
+  
   return {
     notifications,
     unreadCount,
     connected,
     loading,
     socket,
+    gameInvites,
     markAsRead,
     markAllAsRead,
     clearNotification,
     clearAllNotifications,
     refreshNotifications: fetchNotifications,
   };
-}; 
+};
