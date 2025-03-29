@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import PlayerProfile, Game, Match, GameInvite, MatchmakingQueue
+from .models import PlayerProfile, Game, Match, GameInvite, MatchmakingQueue, StatusChoices
 from .serializers import (PlayerProfileSerializer, GameHistorySerializer, 
                          GameDetailSerializer, MatchSerializer,
                          GameInviteSerializer, MatchmakingQueueSerializer)
@@ -376,26 +376,28 @@ class GameHistoryView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request, player_id=None):
-        # If no player_id is provided, use the authenticated user's ID
-        user_id = request.user.id
-        target_player_id = player_id if player_id is not None else user_id
-        
-        # Check if the requested player_id belongs to the authenticated user or if it's another player
-        if user_id != target_player_id:
-            # You could add permission check here if needed
-            pass
-        
-        # Get all completed games where the player was either player1 or player2
-        games = Game.objects.filter(
-            (Q(player1_id=target_player_id) | Q(player2_id=target_player_id)) &
-            Q(status=StatusChoices.COMPLETED)
-        ).order_by('-completed_at')
-        
-        # Serialize the data with the appropriate context
-        serializer = GameHistorySerializer(
-            games, 
-            many=True,
-            context={'request_user_id': target_player_id}
-        )
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            # If no player_id is provided, use the authenticated user's ID
+            user_id = request.user.id
+            target_player_id = player_id if player_id is not None else user_id
+            
+            # Get all completed games where the player was either player1 or player2
+            games = Game.objects.filter(
+                (Q(player1_id=target_player_id) | Q(player2_id=target_player_id)) &
+                Q(status=StatusChoices.COMPLETED)
+            ).order_by('-completed_at')
+            
+            # Serialize the data with the appropriate context
+            serializer = GameHistorySerializer(
+                games, 
+                many=True,
+                context={'request_user_id': target_player_id}
+            )
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error in GameHistoryView: {str(e)}")  # Add logging
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )

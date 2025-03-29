@@ -9,59 +9,39 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Icon } from "@iconify/react";
+import { UseHistory } from "@/api/get-history";
 
-interface MatchResult {
-  id: string;
-  player: {
-    username: string;
-    avatar: string;
-  };
-  opponent: {
-    username: string;
-    avatar: string;
-  };
-  playerScore: number;
-  opponentScore: number;
-  date: string;
-  result: "win" | "loss";
+interface MatchHistoryProps {
+  userId?: number;
 }
 
-const matchHistory: MatchResult[] = [
-  {
-    id: "1",
-    player: {
-      username: "you",
-      avatar: "/assets/images/logo.svg",
-    },
-    opponent: {
-      username: "player1",
-      avatar: "/assets/images/logo.svg",
-    },
-    playerScore: 10,
-    opponentScore: 8,
-    date: "2024-03-06",
-    result: "win",
-  },
-  {
-    id: "2",
-    player: {
-      username: "you",
-      avatar: "/assets/images/logo.svg",
-    },
-    opponent: {
-      username: "player2",
-      avatar: "/assets/images/logo.svg",
-    },
-    playerScore: 7,
-    opponentScore: 10,
-    date: "2024-03-05",
-    result: "loss",
-  },
-  // Add more matches as needed
-];
+export default function MatchHistory({ userId }: MatchHistoryProps) {
+  const { data: matchHistory, isLoading, error } = UseHistory(userId || 0);
+  const latestMatch = matchHistory?.[0];
 
-export default function MatchHistory() {
-  const latestMatch = matchHistory[0];
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#40CFB7]"></div>
+      </div>
+    );
+  }
+
+  if (error || !userId) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-red-500">
+        Error loading match history
+      </div>
+    );
+  }
+
+  if (!matchHistory || matchHistory.length === 0 || !latestMatch) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-gray-500">
+        No matches found
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full">

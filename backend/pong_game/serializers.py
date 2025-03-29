@@ -109,54 +109,63 @@ class PaddleMoveSerializer(serializers.Serializer):
     
     
 class GameHistorySerializer(serializers.ModelSerializer):
-    opponent_username = serializers.SerializerMethodField()
-    player_username = serializers.SerializerMethodField()
-    opponent_avatar = serializers.SerializerMethodField()
-    player_avatar = serializers.SerializerMethodField()
+    player = serializers.SerializerMethodField()
+    opponent = serializers.SerializerMethodField()
+    playerScore = serializers.SerializerMethodField()
+    opponentScore = serializers.SerializerMethodField()
+    date = serializers.DateTimeField(source='completed_at')
     result = serializers.SerializerMethodField()
     
     class Meta:
         model = Game
         fields = [
-            'id', 
-            'created_at', 
-            'completed_at',
-            'player_username', 
-            'opponent_username',
-            'player_avatar',
-            'opponent_avatar',
-            'result',
-            'final_score_player1',
-            'final_score_player2',
-            'difficulty'
+            'id',
+            'player',
+            'opponent',
+            'playerScore',
+            'opponentScore',
+            'date',
+            'result'
         ]
     
-    def get_opponent_username(self, obj):
+    def get_player(self, obj):
         request_user_id = self.context.get('request_user_id')
         if obj.player1.id == request_user_id:
-            return obj.player2.username if obj.player2 else None
-        return obj.player1.username
+            return {
+                'username': obj.player1.username,
+                'avatar': obj.player1.avatar
+            }
+        return {
+            'username': obj.player2.username if obj.player2 else None,
+            'avatar': obj.player2.avatar if obj.player2 else None
+        }
     
-    def get_player_username(self, obj):
+    def get_opponent(self, obj):
         request_user_id = self.context.get('request_user_id')
         if obj.player1.id == request_user_id:
-            return obj.player1.username
-        return obj.player2.username if obj.player2 else None
+            return {
+                'username': obj.player2.username if obj.player2 else None,
+                'avatar': obj.player2.avatar if obj.player2 else None
+            }
+        return {
+            'username': obj.player1.username,
+            'avatar': obj.player1.avatar
+        }
     
-    def get_opponent_avatar(self, obj):
+    def get_playerScore(self, obj):
         request_user_id = self.context.get('request_user_id')
         if obj.player1.id == request_user_id:
-            return obj.player2.avatar if obj.player2 else None
-        return obj.player1.avatar
+            return obj.final_score_player1
+        return obj.final_score_player2
     
-    def get_player_avatar(self, obj):
+    def get_opponentScore(self, obj):
         request_user_id = self.context.get('request_user_id')
         if obj.player1.id == request_user_id:
-            return obj.player1.avatar
-        return obj.player2.avatar if obj.player2 else None
+            return obj.final_score_player2
+        return obj.final_score_player1
     
     def get_result(self, obj):
         request_user_id = self.context.get('request_user_id')
         if not obj.winner:
             return None
-        return "won" if obj.winner.id == request_user_id else "lost"
+        return "win" if obj.winner.id == request_user_id else "loss"
