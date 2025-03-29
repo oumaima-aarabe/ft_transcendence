@@ -20,6 +20,7 @@ export interface PlayerStatistics {
   matches_played :number;
   matches_won :number;
   matches_lost :number;
+  
   first_win :boolean;
   pure_win :boolean;
   triple_win :boolean;

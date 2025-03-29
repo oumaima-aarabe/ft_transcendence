@@ -285,7 +285,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
         )}
 
         <div className="w-[90%] sm:w-[80%] space-y-1 mt-2">
-          <div className="text-white/90 text-sm">{user.level || "Level 0"}</div>
+          <div className="text-white/90 text-sm">Level {user.level || "0"}</div>
           <Progress value={60} className="h-1.5" />
         </div>
       </div>

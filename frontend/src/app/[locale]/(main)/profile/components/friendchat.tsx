@@ -21,24 +21,6 @@ export default function Friendchat() {
     router.push(`/profile/${username}`);
   };
 
-  // const friendMutation = useMutation({
-  //   mutationFn: async ({
-  //     url,
-  //     username,
-  //   }: {
-  //     url: string;
-  //     username: string;
-  //   }) => {
-  //     const response = await fetch(url, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ username }),
-  //     });
-  //     if (!response.ok) throw new Error("Network response was not ok");
-  //     return response.json();
-  //   },
-  // });
-
   if (!isOwner) {
     return (
       <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
