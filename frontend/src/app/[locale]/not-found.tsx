@@ -1,11 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
-import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
-  const router = useRouter();
   const t = useTranslations('common');
 
   return (
@@ -18,7 +16,7 @@ export default function NotFound() {
         {t('pageNotFoundMessage')}
       </p>
       <Button
-        onClick={() => router.push('/profile/me')}
+        onClick={() => window.history.back()}
         className="relative bg-[#40CFB7] hover:bg-[#EEE5BE] text-[#c75b37] border text-xl px-8 py-4 rounded-full shadow-lg overflow-hidden transition-all duration-300 hover:scale-105"
       >
         <span className="absolute inset-0 bg-gradient-to-r from-[#751d03] via-[#f18662] to-[#40CFB7] opacity-25 animate-pulse"></span>
@@ -26,4 +24,4 @@ export default function NotFound() {
       </Button>
     </div>
   );
-} 
+}
