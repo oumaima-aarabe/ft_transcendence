@@ -8,5 +8,5 @@ export interface User {
     cover: string;
     level: number;
     status: "online" | "offline" | "donotdisturb" | "invisible";
-    tfa: boolean
+    tfa: boolean;
 }

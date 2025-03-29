@@ -1,16 +1,16 @@
 "use client";
 
 import { fetcher } from "@/lib/fetcher";
-import { MatchResult } from "@/types/game";
+import { MatchResult, PlayerStatistics } from "@/types/game";
 import { useQuery } from "@tanstack/react-query";
 
-export function UseHistory(playerId: number) {
-  const getHistory = async () => {
+export function UseStates(playerId: number | undefined) {
+  const getStates = async () => {
     try {
       if (!playerId)
         throw new Error("User not authenticated");
-      const response = await fetcher.get<MatchResult[]>(
-        `/api/pong_game/games/history/${playerId}/`
+      const response = await fetcher.get<PlayerStatistics>(
+        `/api/pong_game/profile/${playerId}/`
       );
       if (!response.data) {
         throw new Error("No data received");
@@ -18,16 +18,15 @@ export function UseHistory(playerId: number) {
       return response.data;
     } catch (error) {
       console.error("Error fetching other user's match history:", error);
-      return [];
+      return null;
     }
   };
 
   return useQuery({
-    queryKey: ["history", playerId],
-    queryFn: getHistory,
+    queryKey: ["state", playerId],
+    queryFn: getStates,
     retry: 1,
     staleTime: 30000,
     enabled: !!playerId && playerId !== 0, // Only run the query if we have a valid playerId
   });
 }
-
