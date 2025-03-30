@@ -9,8 +9,10 @@ import Loading from "@/app/[locale]/loading";
 import Achievements from "../components/achievements";
 import MatchHistory from "../components/match-history";
 import Statistics from "../components/statistics";
+import { useTranslations } from 'next-intl';
 
 export default function Page() {
+  const t = useTranslations('dashboard');
   const [owner, setOwner] = useState<boolean>(false);
   const { username } = useParams();
   const { data: me, isLoading: meLoading } = UseUser();
@@ -34,16 +36,15 @@ export default function Page() {
       <div className="h-full w-full flex items-center justify-center">
         <div className="text-center space-y-6 backdrop-blur-sm bg-black/50 p-8 rounded-2xl max-w-lg">
           <div className="text-[#c75b37] text-8xl font-bold">404</div>
-          <h1 className="text-3xl font-semibold text-white">User Not Found</h1>
+          <h1 className="text-3xl font-semibold text-white">{t('userNotFound')}</h1>
           <p className="text-gray-400">
-            The user you&apos;re looking for doesn&apos;t exist or has been
-            removed.
+            {t('userNotFoundDescription')}
           </p>
           <button
             onClick={() => window.history.back()}
             className="px-6 py-3 bg-[#40CFB7] hover:bg-[#40CFB7]/80 text-white rounded-lg transition-all"
           >
-            Go Back
+            {t('goBack')}
           </button>
         </div>
       </div>

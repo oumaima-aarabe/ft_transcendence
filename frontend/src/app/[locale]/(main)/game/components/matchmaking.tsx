@@ -14,7 +14,7 @@ import {
   disconnectMatchmakingSocket,
   sendMatchmakingMessage 
 } from '@/lib/matchmakingWebsocket';
-import { checkPlayerGameStatus } from '@/api/player-status';
+import { useTranslations } from 'next-intl';
 
 interface MatchmakingProps {
   userId: string;
@@ -23,8 +23,9 @@ interface MatchmakingProps {
 }
 
 const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }) => {
+  const t = useTranslations('Game');
   const [status, setStatus] = useState<'idle' | 'searching' | 'connecting'>('idle');
-  const [message, setMessage] = useState('Ready to find an opponent?');
+  const [message, setMessage] = useState(t('readyToFindOpponent'));
   const [searchTime, setSearchTime] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
@@ -79,7 +80,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
       const timeoutId = setTimeout(() => {
         if (status === 'searching') {
           console.log('Matchmaking timed out after 1 minute');
-          setMessage('Search timed out. Please try again.');
+          setMessage(t('searchTimedOut'));
           
           // Cancel the search
           cancelMatchmaking();
@@ -87,7 +88,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
           // Show timeout message for a moment before resetting to idle
           setTimeout(() => {
             setStatus('idle');
-            setMessage('Ready to find an opponent?');
+            setMessage(t('readyToFindOpponent'));
           }, 3000);
         }
       }, TIMEOUT_DURATION);
@@ -97,7 +98,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
         clearTimeout(timeoutId);
       };
     }
-  }, [status]);
+  }, [status, t]);
 
   // Set up WebSocket connection and message handlers
   useEffect(() => {
@@ -111,7 +112,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     
     if (!socket) {
       console.error('Failed to initialize matchmaking socket');
-      setMessage('Connection error. Please try again.');
+      setMessage(t('connectionError'));
       return;
     }
     
@@ -124,13 +125,13 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
         switch (data.type) {
           case 'connection_established':
             setConnectionState('connected');
-            setMessage('Connected to matchmaking server');
+            setMessage(t('connectedToMatchmaking'));
             break;
             
           case 'queue_status':
             if (data.status.status === 'in_queue') {
               setStatus('searching');
-              setMessage(`Searching for opponent... (Position: ${data.status.position || 1})`);
+              setMessage(t('searchingForOpponent', { position: data.status.position || 1 }));
               
               // Start the timer if not already running
               if (!timerRef.current) {
@@ -141,7 +142,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
               }
             } else if (data.status.status === 'left_queue') {
               setStatus('idle');
-              setMessage('Ready to find an opponent?');
+              setMessage(t('readyToFindOpponent'));
               setIsAnimating(false);
               if (timerRef.current) {
                 clearInterval(timerRef.current);
@@ -151,7 +152,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             } else if (data.status.status === 'timeout') {
               // Handle the timeout message from the server
               setStatus('idle');
-              setMessage(data.status.message || 'Search timed out. Please try again.');
+              setMessage(data.status.message || t('searchTimedOut'));
               setIsAnimating(false);
               if (timerRef.current) {
                 clearInterval(timerRef.current);
@@ -165,7 +166,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
               console.log('Match found event received! Game ID:', data.game_id);
               
               setStatus('connecting');
-              setMessage('Opponent found! Connecting to game...');
+              setMessage(t('opponentFoundConnecting'));
               
               if (timerRef.current) {
                 clearInterval(timerRef.current);
@@ -211,7 +212,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     const handleError = (error: Event) => {
       console.error('Matchmaking WebSocket error:', error);
       setConnectionState('error');
-      setMessage('Connection error. Please try again.');
+      setMessage(t('connectionError'));
     };
     
     // Attach event handlers
@@ -238,7 +239,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
       console.log('Disconnecting matchmaking socket during cleanup');
       disconnectMatchmakingSocket();
     };
-  }, [isLoading, userData, preferencesLoaded, onGameFound]);
+  }, [isLoading, userData, preferencesLoaded, onGameFound, t]);
 
     const startMatchmaking = async () => {
       // First, check if the user is already in an active game
@@ -277,7 +278,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
         
       if (!socket || socket.readyState !== WebSocket.OPEN) {
         console.log('WebSocket not ready, current state:', socket?.readyState);
-        setMessage('Connection not ready. Attempting to reconnect...');
+        setMessage(t('connectionNotReady'));
         
         // Try to reconnect
         initMatchmakingSocket();
@@ -291,7 +292,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             setIsAnimating(true);
             setStatus('searching');
           } else {
-            setMessage('Unable to connect. Please try again later.');
+            setMessage(t('unableToConnect'));
           }
         }, 1000);
         
@@ -311,7 +312,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.log('WebSocket not ready for cancellation');
       setStatus('idle');
-      setMessage('Ready to find an opponent?');
+      setMessage(t('readyToFindOpponent'));
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -367,11 +368,11 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                 style={{
                   textShadow: '0 0 10px rgba(208,95,59,0.5), 0 0 20px rgba(64,207,183,0.5)',
                 }}>
-              MATCHMAKING
+              {t('matchmaking').toUpperCase()}
             </h1>
             
             <p className="text-gray-300 max-w-2xl mx-auto">
-              Find an opponent for a real-time remote Pong match
+              {t('matchmakingDescription')}
             </p>
           </div>
 
@@ -379,7 +380,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             {/* Preferences card */}
             <div className="w-full max-w-md bg-black bg-opacity-50 rounded-xl p-6 border border-gray-800 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-bold text-xl">Game Preferences</h3>
+                <h3 className="text-white font-bold text-xl">{t('gamePreferences')}</h3>
                 <Button 
                   onClick={() => setPreferencesOpen(true)}
                   className="bg-transparent hover:bg-gray-800 p-2 rounded-full"
@@ -391,17 +392,17 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
               <div className="grid grid-cols-2 gap-6">
                 {/* Theme */}
                 <div className="flex flex-col">
-                  <span className="text-gray-400 text-sm mb-2">Theme</span>
+                  <span className="text-gray-400 text-sm mb-2">{t('theme')}</span>
                   <div className="flex items-center">
                     {gameTheme === 'fire' ? (
                       <div className="flex items-center text-[#D05F3B]">
                         <Flame className="mr-2" />
-                        <span className="font-medium">Fire</span>
+                        <span className="font-medium">{t('fireTheme')}</span>
                       </div>
                     ) : (
                       <div className="flex items-center text-[#40CFB7]">
                         <Waves className="mr-2" />
-                        <span className="font-medium">Water</span>
+                        <span className="font-medium">{t('waterTheme')}</span>
                       </div>
                     )}
                   </div>
@@ -409,14 +410,14 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                 
                 {/* Difficulty */}
                 <div className="flex flex-col">
-                  <span className="text-gray-400 text-sm mb-2">Difficulty</span>
+                  <span className="text-gray-400 text-sm mb-2">{t('selectDifficulty')}</span>
                   <div className="flex items-center">
                     <span className={`font-medium ${
                       gameDifficulty === 'easy' ? 'text-green-500' : 
                       gameDifficulty === 'medium' ? 'text-yellow-500' :
                       'text-red-500'
                     }`}>
-                      {gameDifficulty.charAt(0).toUpperCase() + gameDifficulty.slice(1)}
+                      {t(gameDifficulty)}
                     </span>
                   </div>
                 </div>
@@ -431,14 +432,14 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                 <div className="flex flex-col items-center">
                   <div className="flex items-center text-gray-300 mb-2">
                     <Clock size={18} className="mr-2" />
-                    <p>Time elapsed: {formatTime(searchTime)}</p>
+                    <p>{t('timeElapsed')}: {formatTime(searchTime)}</p>
                   </div>
                   
                   {/* Add remaining time indicator */}
                   <div className="w-full max-w-md mb-4">
                     <div className="flex justify-between text-xs text-gray-400 mb-1">
-                      <span>Searching...</span>
-                      <span>{MAX_SEARCH_TIME - searchTime} seconds remaining</span>
+                      <span>{t('searching')}...</span>
+                      <span>{t('secondsRemaining', { seconds: MAX_SEARCH_TIME - searchTime })}</span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2.5">
                       <div 
@@ -454,7 +455,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                       <div className="mb-2 p-3 rounded-full bg-[#D05F3B] shadow-[0_0_15px_rgba(208,95,59,0.7)]">
                         <User size={24} className="text-white" />
                       </div>
-                      <span className="text-[#D05F3B]">You</span>
+                      <span className="text-[#D05F3B]">{t('you')}</span>
                     </div>
                     
                     {/* Animated search waves */}
@@ -482,13 +483,13 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                       <div className="mb-2 p-3 rounded-full bg-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.7)]">
                         <User size={24} className="text-white" />
                       </div>
-                      <span className="text-[#40CFB7]">Opponent</span>
+                      <span className="text-[#40CFB7]">{t('opponent')}</span>
                     </div>
                   </div>
                   
                   {/* Animated "Searching" text */}
                   <div className="mt-4 flex items-center">
-                    <span className="text-white text-xl mr-2">Searching</span>
+                    <span className="text-white text-xl mr-2">{t('searching')}</span>
                     <motion.span 
                       className="inline-block text-white text-xl"
                       animate={{ opacity: [1, 0.3, 1] }}
@@ -503,7 +504,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
               {status === 'connecting' && (
                 <div className="flex flex-col items-center mt-4">
                   <div className="w-16 h-16 rounded-full border-t-4 border-b-4 border-[#40CFB7] animate-spin mb-4"></div>
-                  <p className="text-white">Connecting to game...</p>
+                  <p className="text-white">{t('connectingToGame')}</p>
                 </div>
               )}
             </div>
@@ -515,7 +516,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                   <div className="flex top-8 left-8 z-50 gap-10">
                     <div className="bg-transparent border-2 border-[#40CFB7] text-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.5)] px-6 h-10 flex items-center justify-center rounded-xl hover:bg-[#40CFB7] hover:text-white transition-colors">
                         <Link className='flex items-center justify-center gap-3' href={`/game`}>
-                        <FaLongArrowAltLeft size={14} /> Back to Menu
+                        <FaLongArrowAltLeft size={14} /> {t('backToMenu')}
                         </Link>
 
                     </div>
@@ -523,7 +524,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                     onClick={startMatchmaking}
                     className="bg-transparent border-2 border-[#D05F3B] text-[#D05F3B] shadow-[0_0_15px_rgba(64,207,183,0.5)] px-6  h-10 flex items-center justify-center rounded-xl hover:bg-[#D05F3B] hover:text-white transition-colors"
                   >
-                    Find Opponent <FaLongArrowAltRight size={14} />
+                    {t('findOpponent')} <FaLongArrowAltRight size={14} />
                   </Button>
                 </div>
                   
@@ -536,7 +537,7 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
                     boxShadow: '0 0 15px rgba(208,95,59,0.5)',
                   }}
                 >
-                  Cancel Search
+                  {t('cancelSearch')}
                 </Button>
               )}
             </div>

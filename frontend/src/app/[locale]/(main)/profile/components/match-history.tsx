@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@iconify/react";
 import { UseHistory } from "@/api/get-history";
+import { useTranslations } from 'next-intl';
 
 interface MatchHistoryProps {
   userId?: number;
 }
 
 export default function MatchHistory({ userId }: MatchHistoryProps) {
+  const t = useTranslations('dashboard.matchHistory');
   const { data: matchHistory, isLoading, error } = UseHistory(userId || 0);
   const latestMatch = matchHistory?.[0];
 
@@ -30,7 +32,7 @@ export default function MatchHistory({ userId }: MatchHistoryProps) {
   if (error || !userId) {
     return (
       <div className="w-full h-full flex items-center justify-center text-red-500">
-        Error loading match history
+        {t('errorLoading')}
       </div>
     );
   }
@@ -38,7 +40,7 @@ export default function MatchHistory({ userId }: MatchHistoryProps) {
   if (!matchHistory || matchHistory.length === 0 || !latestMatch) {
     return (
       <div className="w-full h-full flex items-center justify-center text-gray-500">
-        No matches found
+        {t('noMatches')}
       </div>
     );
   }
@@ -46,15 +48,15 @@ export default function MatchHistory({ userId }: MatchHistoryProps) {
   return (
     <div className="w-full h-full">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Match History</h2>
+        <h2 className="text-2xl font-bold">{t('title')}</h2>
         <Dialog>
           <DialogTrigger className="text-[#40CFB7] underline text-sm hover:text-[#35b09c]">
-            Show all matches
+            {t('showAll')}
           </DialogTrigger>
           <DialogContent className="max-h-[80vh] overflow-hidden bg-black">
             <DialogHeader className="relative">
               <DialogTitle className="text-2xl font-bold mb-4 text-white overflow-auto">
-                Full Match History
+                {t('fullHistory')}
               </DialogTitle>
               <DialogClose className="absolute right-0 top-0">
                 <Icon
@@ -98,7 +100,7 @@ export default function MatchHistory({ userId }: MatchHistoryProps) {
                     </div>
 
                     <div className="flex flex-col items-center mx-4">
-                      <span className="text-gray-400">VS</span>
+                      <span className="text-gray-400">{t('versus')}</span>
                     </div>
 
                     {/* Opponent Side */}
@@ -165,7 +167,7 @@ export default function MatchHistory({ userId }: MatchHistoryProps) {
 
           {/* vs */}
           <div className="flex flex-col items-center mx-4">
-            <span className="text-gray-400 text-6xl">VS</span>
+            <span className="text-gray-400 text-6xl">{t('versus')}</span>
           </div>
 
           {/* li dedi*/}

@@ -3,6 +3,7 @@ import { GameDifficulty, GameTheme, KeyStates } from "../types/game";
 import { Button } from "@/components/ui/button";
 import { Flame, Waves, Trophy } from "lucide-react";
 import { EnhancedGameState } from '../types/game';
+import { useTranslations } from "next-intl";
 
 // Theme-specific properties
 const themeProperties = {
@@ -100,6 +101,7 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
   ballTrailPositions = [],
   visualSmoothingEnabled = true,
 }) => {
+  const t = useTranslations('localGame');
   // UI State
   const [uiState, setUiState] = useState({
     gameStatus: "waiting" as "waiting" | "menu" | "playing" | "cancelled" | "paused" |"matchOver" | "gameOver",
@@ -428,10 +430,10 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
     ctx.shadowColor = color;
     ctx.shadowBlur = 5;
     ctx.textAlign = "left";
-    ctx.fillText(`Points: ${leftPaddle.score}`, 20, BASE_HEIGHT - 20);
+    ctx.fillText(`${t('points')}: ${leftPaddle.score}`, 20, BASE_HEIGHT - 20);
     ctx.textAlign = "right";
     ctx.fillText(
-      `Points: ${rightPaddle.score}`,
+      `${t('points')}: ${rightPaddle.score}`,
       BASE_WIDTH - 20,
       BASE_HEIGHT - 20
     );
@@ -474,7 +476,7 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
     ctx.shadowBlur = 15;
     ctx.font = 'bold 48px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('WAITING FOR PLAYERS', BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
+    ctx.fillText(t('waitingForPlayers'), BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
     
     // Spinner animation (circle with a gap)
     const now = Date.now();
@@ -506,22 +508,22 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
     ctx.shadowBlur = 15;
     ctx.font = 'bold 48px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('PONG ARCADIA', BASE_WIDTH / 2, BASE_HEIGHT / 3);
+    ctx.fillText(t('pongArcadia'), BASE_WIDTH / 2, BASE_HEIGHT / 3);
     
     // Match info
     ctx.font = 'bold 24px Arial';
-    ctx.fillText(`MATCH ${currentMatch} OF ${MATCHES_TO_WIN_GAME * 2 - 1}`, BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
+    ctx.fillText(t('matchOf', {current: currentMatch, total: MATCHES_TO_WIN_GAME * 2 - 1}), BASE_WIDTH / 2, BASE_HEIGHT / 2 - 40);
     
     // Start instructions
     ctx.font = '24px Arial';
-    ctx.fillText('Click or press any key to start', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 10);
+    ctx.fillText(t('clickOrPressAnyKeyToStart'), BASE_WIDTH / 2, BASE_HEIGHT / 2 + 10);
     
     // Controls
     ctx.shadowBlur = 5;
     ctx.font = '18px Arial';
-    ctx.fillText(`${player1Name}: W/S keys`, BASE_WIDTH / 4, BASE_HEIGHT * 0.7);
-    ctx.fillText(`${player2Name}: Arrow Up/Down`, (BASE_WIDTH / 4) * 3, BASE_HEIGHT * 0.7);
-    ctx.fillText('Press Space to pause', BASE_WIDTH / 2, BASE_HEIGHT * 0.8);
+    ctx.fillText(`${player1Name}: ${t('wSKeys')}`, BASE_WIDTH / 4, BASE_HEIGHT * 0.7);
+    ctx.fillText(`${player2Name}: ${t('arrowUpDownKeys')}`, (BASE_WIDTH / 4) * 3, BASE_HEIGHT * 0.7);
+    ctx.fillText(t('pressSpaceToPause'), BASE_WIDTH / 2, BASE_HEIGHT * 0.8);
     ctx.restore();
   };
 
@@ -541,12 +543,12 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
     ctx.shadowBlur = 15;
     ctx.font = 'bold 48px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    ctx.fillText(t('paused'), BASE_WIDTH / 2, BASE_HEIGHT / 2);
     
     // Resume instructions
     ctx.shadowBlur = 5;
     ctx.font = '20px Arial';
-    ctx.fillText('Press Space to continue', BASE_WIDTH / 2, BASE_HEIGHT / 2 + 50);
+    ctx.fillText(t('pressSpaceToContinue'), BASE_WIDTH / 2, BASE_HEIGHT / 2 + 50);
     ctx.restore();
   };
 
@@ -569,19 +571,19 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
     ctx.textAlign = 'center';
     
     if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(t('playerWinsMatch', { player: player1Name, match: currentMatch }), BASE_WIDTH / 2, BASE_HEIGHT / 3);
     } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS MATCH ${currentMatch}!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(t('playerWinsMatch', { player: player2Name, match: currentMatch }), BASE_WIDTH / 2, BASE_HEIGHT / 3);
     }
     
     // Current match score
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(`MATCH SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    ctx.fillText(t('matchScore', { score1: matchWins.player1, score2: matchWins.player2 }), BASE_WIDTH / 2, BASE_HEIGHT / 2);
     
     // Continue instructions
     ctx.shadowBlur = 5;
     ctx.font = '20px Arial';
-    ctx.fillText('Click to continue to next match', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.fillText(t('clickToContinueToNextMatch'), BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
     ctx.restore();
   };
 
@@ -604,19 +606,19 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
     ctx.textAlign = 'center';
     
     if (winner === 'player1') {
-      ctx.fillText(`${player1Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(t('playerWinsGame', { player: player1Name }), BASE_WIDTH / 2, BASE_HEIGHT / 3);
     } else if (winner === 'player2') {
-      ctx.fillText(`${player2Name} WINS THE GAME!`, BASE_WIDTH / 2, BASE_HEIGHT / 3);
+      ctx.fillText(t('playerWinsGame', { player: player2Name }), BASE_WIDTH / 2, BASE_HEIGHT / 3);
     }
     
     // Final score
     ctx.font = 'bold 36px Arial';
-    ctx.fillText(`FINAL SCORE: ${matchWins.player1} - ${matchWins.player2}`, BASE_WIDTH / 2, BASE_HEIGHT / 2);
+    ctx.fillText(t('finalScore', { score1: matchWins.player1, score2: matchWins.player2 }), BASE_WIDTH / 2, BASE_HEIGHT / 2);
     
     // Restart instructions
     ctx.shadowBlur = 5;
     ctx.font = '20px Arial';
-    ctx.fillText('Click to play again', BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
+    ctx.fillText(t('clickToPlayAgain'), BASE_WIDTH / 2, BASE_HEIGHT * 0.7);
     ctx.restore();
   };
   
@@ -632,7 +634,7 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
               : "border-[#40CFB7] text-[#40CFB7] shadow-[0_0_15px_rgba(64,207,183,0.5)]"
           }`}
         >
-          Back to Setup
+          {t('backToSetup')}
         </Button>
       </div>
 
@@ -652,6 +654,23 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
                 : "0 0 15px rgba(64,207,183,0.6)",
           }}
         >
+          {/* Center section */}
+          <div className="flex flex-col items-center">
+            <div
+              className={`text-xl font-bold mb-1 ${
+                theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
+              }`}
+            >
+              {t('match')} {uiState.currentMatch}
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-black/50 border border-white/20">
+              <span className="text-white font-bold">{t('versus')}</span>
+            </div>
+            <div className="mt-1 text-xs text-gray-400">
+              {t('firstToPoints', { points: POINTS_TO_WIN_MATCH })}
+            </div>
+          </div>
+
           {/* Player 1 */}
           <div className="flex items-center space-x-3">
             <div
@@ -692,29 +711,11 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
                       }`}
                     >
                       {uiState.matchWins.player1}{" "}
-                      {uiState.matchWins.player1 === 1 ? "match" : "matches"}{" "}
-                      won
+                      {t(uiState.matchWins.player1 === 1 ? 'matchWon' : 'matchesWon')}
                     </span>
                   )}
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Center section */}
-          <div className="flex flex-col items-center">
-            <div
-              className={`text-xl font-bold mb-1 ${
-                theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
-              }`}
-            >
-              MATCH {uiState.currentMatch}
-            </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-black/50 border border-white/20">
-              <span className="text-white font-bold">VS</span>
-            </div>
-            <div className="mt-1 text-xs text-gray-400">
-              First to {POINTS_TO_WIN_MATCH} points
             </div>
           </div>
 
@@ -740,8 +741,7 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
                       }`}
                     >
                       {uiState.matchWins.player2}{" "}
-                      {uiState.matchWins.player2 === 1 ? "match" : "matches"}{" "}
-                      won
+                      {t(uiState.matchWins.player2 === 1 ? 'matchWon' : 'matchesWon')}
                     </span>
                   )}
                 </div>
@@ -806,7 +806,7 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
           >
             <Trophy size={16} />
             <span className="font-medium">
-              First to win {MATCHES_TO_WIN_GAME} matches wins the game!
+              {t('firstToWinMatchesWinsGame', { matches: MATCHES_TO_WIN_GAME })}
             </span>
           </div>
 
@@ -825,12 +825,12 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
 
             <div className="flex items-center gap-1">
               <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">Space</kbd>
-              <span>- Pause</span>
+              <span>- {t('pause')}</span>
             </div>
             
             <div className="flex items-center gap-1">
               <kbd className="px-2 py-1 bg-gray-800 rounded text-xs">V</kbd>
-              <span>- Toggle Smoothing</span>
+              <span>- {t('toggleSmoothing')}</span>
             </div>
           </div>
         </div>

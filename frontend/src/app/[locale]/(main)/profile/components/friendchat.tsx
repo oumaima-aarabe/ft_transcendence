@@ -5,8 +5,10 @@ import React from "react";
 import { useRouter } from "@/i18n/routing";
 import { UseUser } from "@/api/get-user";
 import { UseFriend } from "@/api/get-friends";
+import { useTranslations } from 'next-intl';
 
 export default function Friendchat() {
+  const t = useTranslations('dashboard.friends');
   const router = useRouter();
   const { data: me } = UseUser();
   const { data: friends } = UseFriend();
@@ -28,7 +30,7 @@ export default function Friendchat() {
             className="text-white/70 w-12 h-12 mb-3"
           />
           <h3 className="text-xl sm:text-2xl font-medium text-white mb-2">
-            Private Friends List
+            {t('privateFriendsList')}
           </h3>
           <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full my-4" />
         </div>
@@ -46,14 +48,14 @@ export default function Friendchat() {
               router.push("/friends/");
             }}
           >
-            show all friends
+            {t('showAllFriends')}
           </span>
         </div>
 
         <div className="h-[90%] bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
-          <h3 className="text-2xl font-medium text-white mb-2">No Friends</h3>
+          <h3 className="text-2xl font-medium text-white mb-2">{t('noFriends')}</h3>
           <p className="text-white/70 mb-4">
-            Your friends list is currently empty.
+            {t('emptyFriendsList')}
           </p>
         </div>
       </div>
@@ -63,14 +65,14 @@ export default function Friendchat() {
   return (
     <div className="h-full w-full space-y-4 flex flex-col justify-center items-center">
       <div className="h-[10%] w-full flex justify-between items-center">
-        <p className="text-2xl font-bold">Friends</p>
+        <p className="text-2xl font-bold">{t('title')}</p>
         <span
           className="text-[#40CFB7] underline text-sm hover:text-[#35b09c] cursor-pointer"
           onClick={() => {
             router.push("/friends/");
           }}
         >
-          show all friends
+          {t('showAllFriends')}
         </span>
       </div>
 

@@ -10,6 +10,7 @@ import { UseUser } from "@/api/get-user";
 import { UseFriend } from "@/api/get-friends";
 import GameInviteButton from "./GameInviteButton";
 import { Search, ArrowLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface FriendGameInvitesProps {
   onBack: () => void;
@@ -21,6 +22,7 @@ const FriendGameInvites: React.FC<FriendGameInvitesProps> = ({ onBack }) => {
   const { data: currentUser } = UseUser();
   const { data: friends, isLoading: friendsLoading } = UseFriend();
   const router = useRouter();
+  const t = useTranslations('Game');
 
   // Filter search results to include only friends
   const filterFriendResults = () => {
@@ -47,14 +49,14 @@ const FriendGameInvites: React.FC<FriendGameInvitesProps> = ({ onBack }) => {
           >
             <ArrowLeft className="h-5 w-5 text-white" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">Invite a Friend</h2>
+          <h2 className="text-2xl font-bold text-white">{t('inviteFriend')}</h2>
         </div>
         
         {/* Search */}
         <div className="relative mb-6">
           <Input
             type="text"
-            placeholder="Search friends..."
+            placeholder={t('searchFriends')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-gray-900 border-gray-700 text-white pl-10 py-5"
@@ -67,12 +69,12 @@ const FriendGameInvites: React.FC<FriendGameInvitesProps> = ({ onBack }) => {
           {friendsLoading ? (
             <div className="text-center py-5">
               <div className="w-8 h-8 mx-auto rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-              <p className="text-gray-400 mt-2">Loading friends...</p>
+              <p className="text-gray-400 mt-2">{t('loadingFriends')}</p>
             </div>
           ) : filteredResults.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400">
-                {searchQuery ? "No matching friends found" : "No friends yet"}
+                {searchQuery ? t('noMatchingFriends') : t('noFriendsYet')}
               </p>
             </div>
           ) : (
@@ -111,7 +113,7 @@ const FriendGameInvites: React.FC<FriendGameInvitesProps> = ({ onBack }) => {
             onClick={onBack}
             className="bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800"
           >
-            Back to Game Options
+            {t('backToGameOptions')}
           </Button>
         </div>
       </Card>

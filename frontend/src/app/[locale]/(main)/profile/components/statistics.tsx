@@ -10,19 +10,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslations } from 'next-intl';
 
 interface StatisticsProps {
   userId: number | undefined;
 }
 
 export default function Statistics({ userId }: StatisticsProps ) {
-
+  const t = useTranslations('dashboard.statistics');
   const {data : statistics} = UseStates(userId)
+  
   if (!statistics){
     return (
-      <div className="div"> loading... </div>
+      <div className="div">{t('loading')}</div>
     );
   }
+  
   console.log("stattes L",statistics)
   // Calculate win rate
   const winRate = statistics.matches_played && statistics.matches_played > 0
@@ -32,17 +35,17 @@ export default function Statistics({ userId }: StatisticsProps ) {
   // Prepare data for the chart
   const statsData = [
     {
-      name: "Wins",
+      name: t('wins'),
       value: statistics.matches_won || 0,
       color: "#40CFB7",
     },
     {
-      name: "Losses",
+      name: t('losses'),
       value: statistics.matches_lost || 0,
       color: "#c75b37",
     },
     {
-      name: "Total",
+      name: t('total'),
       value: statistics.matches_played || 0,
       color: "#ffffff",
     },
@@ -50,15 +53,15 @@ export default function Statistics({ userId }: StatisticsProps ) {
 
   return (
     <div className="w-full h-full flex flex-col">
-      <h2 className="text-2xl font-bold mb-4">Statistics</h2>
+      <h2 className="text-2xl font-bold mb-4">{t('title')}</h2>
       
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-black/30 p-4 rounded-lg">
-          <div className="text-sm text-gray-400">Win Rate</div>
+          <div className="text-sm text-gray-400">{t('winRate')}</div>
           <div className="text-2xl font-bold text-[#40CFB7]">{winRate}%</div>
         </div>
         <div className="bg-black/30 p-4 rounded-lg">
-          <div className="text-sm text-gray-400">Experience</div>
+          <div className="text-sm text-gray-400">{t('experience')}</div>
           <div className="text-2xl font-bold text-[#40CFB7]">{statistics.experience}</div>
         </div>
       </div>
