@@ -1,3 +1,6 @@
+import { User as AppUser } from "@/types/user";
+
+// Define User type for chat that uses string IDs instead of number IDs
 export interface User {
   id: string;
   username: string;
@@ -33,4 +36,11 @@ export interface ChatPreview {
   user: User;
   lastMessage: Message;
   unreadCount: number;
+}
+
+export enum BlockState {
+  BLOCKED_BY_ME = "blocked_by_me",
+  BLOCKED_BY_OTHER = "blocked_by_other",
+  UNBLOCKED = "unblocked",
+  PENDING = "pending"
 }

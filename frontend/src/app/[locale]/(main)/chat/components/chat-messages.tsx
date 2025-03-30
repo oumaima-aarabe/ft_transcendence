@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { StatusAvatar } from "./status-avatar";
-import { BlockState } from "../page";
+import { BlockState } from "../types/chat";
 import { useTranslations } from "next-intl";
 interface ChatMessagesProps {
   messages: Message[];
