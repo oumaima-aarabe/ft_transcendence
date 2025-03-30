@@ -457,10 +457,10 @@ class GameInviteResponseView(APIView):
                     )
                     
                     # Start the game immediately to avoid matchmaking flow
-                    game.status = StatusChoices.WAITING
-                    game.started_at = timezone.now()
-                    game.save()
-                    
+                    # game.status = StatusChoices.WAITING
+                    # game.started_at = timezone.now()
+                    # game.save()
+
                     # Update the invitation
                     invite.status = StatusChoices.ACCEPTED
                     invite.accepted_at = timezone.now()
