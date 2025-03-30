@@ -2,11 +2,9 @@ import { sendRequest } from '@/lib/axios';
 
 export const sendGameInvite = async (username: string) => {
   const url = '/pong_game/invites/';
-  console.log(`Sending game invite to ${username} via URL: ${url}`);
   
   try {
     const response = await sendRequest('post', url, { username });
-    console.log('Game invite response:', response);
     return response.data;
   } catch (error) {
     console.error(`Error sending game invitation to ${url}:`, error);

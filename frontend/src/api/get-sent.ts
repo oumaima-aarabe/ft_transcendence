@@ -9,16 +9,13 @@ export function UseSent(){
     const getSent = async () => {
         try{
             const response = await fetcher.get<Friend[]>('/api/friends/requests/')
-            console.log(response.data)
             return response.data
         }
         catch(error){
-            console.log(error)
             return []
         }
     }
 
-    //
     const sent = useQuery({
         queryKey: ['Sent'],
         queryFn: getSent,

@@ -9,7 +9,6 @@ export function UseUser() {
       const response = await fetcher.get<User>("/api/users/profile/me");
       return response.data;
     } catch (error) {
-      console.log(error);
       return null;
     }
   };

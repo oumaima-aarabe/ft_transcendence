@@ -9,11 +9,9 @@ export function UseFriend(){
     const getFriend = async () => {
         try{
             const response = await fetcher.get<Friend[]>('/api/friends/')
-            console.log(response.data)
             return response.data
         }
         catch(error){
-            console.log(error)
             return []
         }
     }

@@ -30,7 +30,6 @@ const TwoFactorVerification = ({ userId, setShowTwoFactor }: TwoFactorVerificati
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations('auth');
 
-  console.log("userId", userId);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

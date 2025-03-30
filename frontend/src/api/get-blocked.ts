@@ -9,16 +9,13 @@ export function UseBlocked(){
     const getBlocked = async () => {
         try{
             const response = await fetcher.get<Friend[]>('/api/friends/blocked/')
-            console.log(response.data)
             return response.data
         }
         catch(error){
-            console.log(error)
             return []
         }
     }
 
-    //
     const blocked = useQuery({
         queryKey: ['blocked'],
         queryFn: getBlocked,

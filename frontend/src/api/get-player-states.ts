@@ -17,7 +17,6 @@ export function UseStates(playerId: number | undefined) {
       }
       return response.data;
     } catch (error) {
-      console.error("Error fetching other user's match history:", error);
       return null;
     }
   };
