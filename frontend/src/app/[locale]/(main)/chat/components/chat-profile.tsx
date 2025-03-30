@@ -12,13 +12,13 @@ import { Button } from "@/components/ui/button";
 import { sendRequest } from "@/lib/axios";
 import { useTranslations } from 'next-intl';
 import { toast } from "sonner";
-import { BlockState } from '../page';
+import { BlockState } from '../types/chat';
 import { sendWebSocketMessage } from "@/lib/websocket";
 import { useRouter } from "@/i18n/routing";
 
 interface ChatProfileProps {
   user: User;
-  conversationId: string;
+  conversationId: number;
   onConversationDeleted: () => void;
   blockState: BlockState;
   setBlockState: (state: BlockState) => void;

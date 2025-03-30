@@ -44,3 +44,4 @@ __pycache__
 frontend/package-lock.json
 
 .venv
+backend/db.sqlite3

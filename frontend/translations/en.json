@@ -58,7 +58,7 @@
     }
   },
   "notifications": {
-    "title": "Notifications", 
+    "title": "Notifications",
     "mark_all_read": "Mark all as read",
     "no_notifications": "No notifications",
     "loading": "Loading notifications...",
@@ -73,6 +73,24 @@
       "tournament_invitation": "Tournament Invitation",
       "message": "New Message",
       "achievement": "Achievement"
+    },
+    "gameInvite": {
+      "invitationSent": "Invitation sent!",
+      "invitationSentTo": "Game invitation sent to {username}",
+      "couldNotSendInvitation": "Could not send invitation",
+      "errorOccurred": "An error occurred",
+      "invitationAccepted": "Invitation accepted!",
+      "joiningGame": "Joining game...",
+      "connectingToGame": "Connecting to game session...",
+      "acceptedYourGame": "accepted your game invitation",
+      "join": "Join",
+      "gameInvitation": "Game Invitation",
+      "invitedYouToPlay": "invited you to play Pong",
+      "errorAcceptingInvitation": "Error accepting invitation",
+      "couldNotJoinGame": "Could not join the game",
+      "invitationDeclined": "Invitation declined",
+      "errorDecliningInvitation": "Error declining invitation",
+      "inviteToGame": "Invite to Game"
     }
   },
   "settings": {
@@ -82,12 +100,12 @@
       "account": "Account",
       "game": "Game"
     },
-     "username": {
-          "error": {
-            "underscore": {
-              "title": "Invalid username",
-              "description": "Username must contain an underscore"
-          }
+    "username": {
+      "error": {
+        "underscore": {
+          "title": "Invalid username",
+          "description": "Username must contain an underscore"
+        }
       }
     },
     "password": {
@@ -149,6 +167,10 @@
         "placeholder": "Default alias",
         "save": "Save"
       },
+      "saveSuccess": {
+        "title": "Settings Saved",
+        "description": "Your game preferences have been updated successfully"
+      },
       "save": "Save changes"
     },
     "language": {
@@ -179,6 +201,65 @@
         "title": "Update Failed",
         "description": "Failed to update profile. Please try again."
       }
+    }
+  },
+  "dashboard": {
+    "userNotFound": "User Not Found",
+    "userNotFoundDescription": "The user you're looking for doesn't exist or has been removed.",
+    "goBack": "Go Back",
+    "achievements": {
+      "title": "Achievements",
+      "showAll": "Show all achievements",
+      "allAchievements": "All Achievements",
+      "completed": "Completed",
+      "locked": "Locked",
+      "firstVictory": "First Victory",
+      "firstVictoryDesc": "Win your first game",
+      "perfectGame": "Perfect Game",
+      "perfectGameDesc": "Win a game with score 3-0",
+      "undefeatedChampion": "Undefeated Champion",
+      "undefeatedChampionDesc": "Win 3 games in a row"
+    },
+    "cover": {
+      "level": "Level",
+      "addFriend": "Add Friend",
+      "addingFriend": "Adding...",
+      "remove": "Remove",
+      "removing": "Removing...",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling...",
+      "accept": "Accept",
+      "accepting": "Accepting...",
+      "decline": "Decline",
+      "declining": "Deleting...",
+      "block": "Block",
+      "blocking": "Blocking...",
+      "unblock": "Unblock",
+      "unblocking": "Unblocking..."
+    },
+    "friends": {
+      "title": "Friends",
+      "showAllFriends": "Show all friends",
+      "privateFriendsList": "Private Friends List",
+      "noFriends": "No Friends",
+      "emptyFriendsList": "Your friends list is currently empty."
+    },
+    "matchHistory": {
+      "title": "Match History",
+      "showAll": "Show all matches",
+      "fullHistory": "Full Match History",
+      "versus": "VS",
+      "errorLoading": "Error loading match history",
+      "noMatches": "No matches found"
+    },
+    "statistics": {
+      "title": "Statistics",
+      "loading": "Loading...",
+      "winRate": "Win Rate",
+      "experience": "Experience",
+      "wins": "Wins",
+      "losses": "Losses",
+      "total": "Total"
     }
   },
   "chat": {
@@ -282,15 +363,14 @@
     "title": "Game Mode",
     "local": "Local Game",
     "invite": "Invite a Friend",
-    "matchmaking": "Matchmaking",
     "localDescription": "Play against a friend on the same device",
     "inviteDescription": "Send an invitation to play remotely",
-    "matchmakingDescription": "Find opponents and compete online",
     "select": "Select",
     "gameSetup": "Game Setup",
     "player1": "Player 1",
     "player2": "Player 2",
     "selectTheme": "Select Theme",
+    "theme": "Theme",
     "fireTheme": "Fire Theme",
     "fireThemeDescription": "Hot orange glow",
     "waterTheme": "Water Theme",
@@ -300,7 +380,48 @@
     "medium": "Medium",
     "hard": "Hard",
     "startGame": "Start Game",
-    "back": "Back"
+    "back": "Back",
+    "inviteFriend": "Invite a Friend",
+    "searchFriends": "Search friends...",
+    "loadingFriends": "Loading friends...",
+    "noMatchingFriends": "No matching friends found",
+    "noFriendsYet": "No friends yet",
+    "backToGameOptions": "Back to Game Options",
+    "gamePreferences": "Game Preferences",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "savePreferences": "Save Preferences",
+    "creatingGame": "Creating game...",
+    "waitingForOpponent": "Game created. Waiting for opponent...",
+    "errorCreatingGame": "Error creating game. Please try again.",
+    "findingMatch": "Finding a match...",
+    "errorFindingMatch": "Error finding match. Please try again.",
+    "joiningGame": "Joining game...",
+    "errorGettingGameDetails": "Error getting game details. Please try again.",
+    "errorJoiningGame": "Error joining game. Please try again.",
+    "noOpponentFound": "No opponent found. Please try again.",
+    "onlineGameSetup": "Online Game Setup",
+    "createGame": "Create Game",
+    "quickMatch": "Quick Match",
+    "matchmaking": "Matchmaking",
+    "matchmakingDescription": "Find an opponent for a real-time remote Pong match",
+    "readyToFindOpponent": "Ready to find an opponent?",
+    "searchTimedOut": "Search timed out. Please try again.",
+    "connectionError": "Connection error. Please try again.",
+    "connectedToMatchmaking": "Connected to matchmaking server",
+    "searchingForOpponent": "Searching for opponent... (Position: {position})",
+    "opponentFoundConnecting": "Opponent found! Connecting to game...",
+    "connectionNotReady": "Connection not ready. Attempting to reconnect...",
+    "unableToConnect": "Unable to connect. Please try again later.",
+    "connectingToGame": "Connecting to game...",
+    "backToMenu": "Back to Menu",
+    "findOpponent": "Find Opponent",
+    "cancelSearch": "Cancel Search",
+    "timeElapsed": "Time elapsed",
+    "searching": "Searching",
+    "secondsRemaining": "{seconds} seconds remaining",
+    "you": "You",
+    "opponent": "Opponent"
   },
   "localGame": {
     "points": "Points",
@@ -328,6 +449,34 @@
     "backToSetup": "Back to Setup",
     "resumeGame": "Resume Game",
     "pauseGame": "Pause Game",
-    "backToTournament": "Back to Tournament"
+    "backToTournament": "Back to Tournament",
+    "waitingForPlayers": "WAITING FOR PLAYERS",
+    "matchOf": "MATCH {current} OF {total}",
+    "playerWinsMatch": "{player} WINS MATCH {match}!",
+    "playerWinsGame": "{player} WINS THE GAME!",
+    "firstToPoints": "First to {points} points",
+    "versus": "VS",
+    "pause": "Pause",
+    "toggleSmoothing": "Toggle Smoothing",
+    "firstToWinMatchesWinsGame": "First to win {matches} matches wins the game!"
+  },
+  "friends": {
+    "noFriends": "No Friends",
+    "emptyFriendsList": "Your friends list is currently empty.",
+    "addFriendsMessage": "Add friends",
+    "noBlockedUsers": "No Blocked Users",
+    "emptyBlockedList": "Your blocked users list is currently empty.",
+    "keepItEmptyMessage": "Let it empty :P",
+    "noInvitations": "No Invitations",
+    "emptyInvitationsList": "You have no pending friend invitations.",
+    "noSentInvitations": "No Sent Invitations",
+    "emptySentInvitationsList": "You haven't sent any friend invitations yet.",
+    "sections": {
+      "title": "Friendships",
+      "friends": "Friends",
+      "sentInvitations": "Sent Invitations",
+      "receivedInvitations": "Received Invitations",
+      "blockedUsers": "Blocked Users"
+    }
   }
 }

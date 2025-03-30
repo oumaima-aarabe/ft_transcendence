@@ -6,6 +6,7 @@ import Friends from "./components/friends";
 import Invitations from "./components/reciev-invit";
 import Blocked from "./components/blocked";
 import Sent from "./components/sent-invit";
+import { useTranslations } from "next-intl";
 
 interface Friend {
 	username: string;
@@ -22,8 +23,8 @@ interface FriendsData {
 }
 
 export default function Page() {
-
 	const [friends, setFriends] = useState<string>("friends");
+	const t = useTranslations('friends');
 
 	return (
 		<div className="w-full h-full flex items-center justify-center">

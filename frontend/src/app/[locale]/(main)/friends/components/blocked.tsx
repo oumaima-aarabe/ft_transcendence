@@ -3,10 +3,12 @@
 import React from "react";
 import { UseBlocked } from "@/api/get-blocked";
 import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 export default function Blocked() {
   const { data: blockedUsers } = UseBlocked();
-    const router = useRouter();
+  const router = useRouter();
+  const t = useTranslations('friends');
 
   const handleNavigateToProfile = (username: string) => {
     router.push(`/profile/${username}`);
@@ -17,13 +19,13 @@ export default function Blocked() {
       <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
         <div className="bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
           <h3 className="text-2xl font-medium text-white mb-2">
-            No Blocked Users
+            {t('noBlockedUsers')}
           </h3>
           <p className="text-white/70 mb-4">
-            Your blocked users list is currently empty.
+            {t('emptyBlockedList')}
           </p>
           <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full my-2" />
-          <p className="text-white/50 text-sm mt-2">let it empty :P</p>
+          <p className="text-white/50 text-sm mt-2">{t('keepItEmptyMessage')}</p>
         </div>
       </div>
     );

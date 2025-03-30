@@ -4,23 +4,25 @@ import React from "react";
 import { UseSent } from "@/api/get-sent";
 import Image from "next/image";
 import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 export default function SentInvitations() {
   const { data: sentInvit } = UseSent();
-    const router = useRouter();
+  const router = useRouter();
+  const t = useTranslations('friends');
   
-    const handleNavigateToProfile = (username: string) => {
-      router.push(`/profile/${username}`);
-    };
+  const handleNavigateToProfile = (username: string) => {
+    router.push(`/profile/${username}`);
+  };
 
   if (!sentInvit || sentInvit?.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
         <div className="bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
           <h3 className="text-2xl font-medium text-white mb-2">
-            No Sent Invitations
+            {t('noSentInvitations')}
           </h3>
-          <p className="text-white/70 mb-4">empty list.</p>
+          <p className="text-white/70 mb-4">{t('emptySentInvitationsList')}</p>
         </div>
       </div>
     );
@@ -46,7 +48,7 @@ export default function SentInvitations() {
                   {item.username}
                 </h1>
               </div>
-              <div className="flex flex-row justify-center sm:justify-start space-x-1 test-white">
+              <div className="flex flex-row justify-center sm:justify-start space-x-1 text-white">
                 <h2 className="text-sm sm:text-base">{item.first_name}</h2>
                 <h3 className="text-sm sm:text-base">{item.last_name}</h3>
               </div>

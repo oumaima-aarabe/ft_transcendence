@@ -12,6 +12,7 @@ import { useRouter } from "@/i18n/routing";
 import { useFriendMutation } from "@/hooks/useFriendMutation";
 import { useNotificationsContext } from '@/providers/NotificationsProvider';
 import { UseStates } from "@/api/get-player-states";
+import { useTranslations } from 'next-intl';
 
 export enum FriendshipStatus {
   NONE = "none",
@@ -46,6 +47,7 @@ export const useFriendshipStatus = (username: string | undefined) => {
 };
 
 export default function Cover(props: { user: User; isOwner: boolean }) {
+  const t = useTranslations('dashboard.cover');
   const { user, isOwner } = props;
   const { data: statistics } = UseStates(user.id)
   const { data: me } = UseUser();
@@ -174,7 +176,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
             disabled={friendMutation.isPending}
             className="bg-[#40CFB7] hover:bg-[#40CFB7]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
           >
-            {friendMutation.isPending ? "Adding..." : "Add Friend"}
+            {friendMutation.isPending ? t('addingFriend') : t('addFriend')}
           </Button>
         );
       case FriendshipStatus.ACCEPTED:
@@ -185,7 +187,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
             disabled={friendMutation.isPending}
             className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
           >
-            {friendMutation.isPending ? "Removing..." : "Remove"}
+            {friendMutation.isPending ? t('removing') : t('remove')}
           </Button>
         );
       case FriendshipStatus.PENDING:
@@ -197,7 +199,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
               disabled={friendMutation.isPending}
               className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
             >
-              {friendMutation.isPending ? "Cancelling..." : "Cancel"}
+              {friendMutation.isPending ? t('cancelling') : t('cancel')}
             </Button>
           );
         } else {
@@ -209,7 +211,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
                 disabled={friendMutation.isPending}
                 className="bg-[#40CFB7] hover:bg-[#40CFB7]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
               >
-                {friendMutation.isPending ? "Accepting..." : "Accept"}
+                {friendMutation.isPending ? t('accepting') : t('accept')}
               </Button>
               <Button
                 onClick={handleCancelRequest}
@@ -217,7 +219,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
                 disabled={friendMutation.isPending}
                 className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
               >
-                {friendMutation.isPending ? "Deleting..." : "Decline"}
+                {friendMutation.isPending ? t('declining') : t('decline')}
               </Button>
             </div>
           );
@@ -240,7 +242,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
             disabled={friendMutation.isPending}
             className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
           >
-            {friendMutation.isPending ? "Unblocking..." : "Unblock"}
+            {friendMutation.isPending ? t('unblocking') : t('unblock')}
           </Button>
         );
       }
@@ -253,7 +255,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
           disabled={friendMutation.isPending}
           className="bg-[#c75b37] hover:bg-[#c75b37]/80 text-white px-2 sm:px-6 py-1 sm:py-2 text-xs sm:text-base"
         >
-          {friendMutation.isPending ? "Blocking..." : "Block"}
+          {friendMutation.isPending ? t('blocking') : t('block')}
         </Button>
       );
     }
@@ -287,7 +289,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
         )}
 
         <div className="w-[90%] sm:w-[80%] space-y-1 mt-2">
-          <div className="text-white/90 text-sm">Level {statistics ? statistics.level : "0"}</div>
+          <div className="text-white/90 text-sm">{t('level')} {statistics ? statistics.level : "0"}</div>
           <Progress value={statistics ? statistics.experience % 1000 / 10 : 0} className="h-1.5" />
         </div>
       </div>

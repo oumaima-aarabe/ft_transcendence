@@ -129,7 +129,7 @@ export function Header() {
           <Avatar className="h-8 w-8 lg:h-9 lg:w-9">
             <AvatarImage src={myUserData?.avatar} />
             <AvatarFallback>
-              <img src="https://iili.io/2D8ByIj.png" />
+              <img src="https://iili.io/2D8ByIj.png" alt="Default Avatar" />
             </AvatarFallback>
           </Avatar>
           <div>

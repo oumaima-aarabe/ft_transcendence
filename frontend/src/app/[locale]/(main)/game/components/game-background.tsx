@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { GameTheme } from "../types/game";
 
 interface GameBackgroundProps {
@@ -10,6 +11,7 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
   isPlaying,
   theme,
 }) => {
+  const t = useTranslations('Game');
   const [visible, setVisible] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<GameTheme>(theme);
   const [transitioning, setTransitioning] = useState(false);
@@ -71,7 +73,7 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
       <div className="relative w-full h-full">
         <img
           src={backgroundImage}
-          alt={`${currentTheme} background`}
+          alt={currentTheme === "fire" ? t('fireTheme') : t('waterTheme')}
           className={`w-full h-full object-cover transition-all duration-700 ease-in-out transform
             ${visible ? 'scale-100 blur-0' : 'scale-105 blur-sm'}`}
         />

@@ -73,6 +73,24 @@
       "tournament_invitation": "Invitación de torneo",
       "message": "Nuevo mensaje",
       "achievement": "Logro"
+    },
+    "gameInvite": {
+      "invitationSent": "¡Invitación enviada!",
+      "invitationSentTo": "Invitación de juego enviada a {username}",
+      "couldNotSendInvitation": "No se pudo enviar la invitación",
+      "errorOccurred": "Ocurrió un error",
+      "invitationAccepted": "¡Invitación aceptada!",
+      "joiningGame": "Uniéndose al juego...",
+      "connectingToGame": "Conectando a la sesión de juego...",
+      "acceptedYourGame": "aceptó tu invitación de juego",
+      "join": "Unirse",
+      "gameInvitation": "Invitación de Juego",
+      "invitedYouToPlay": "te invitó a jugar a Pong",
+      "errorAcceptingInvitation": "Error al aceptar la invitación",
+      "couldNotJoinGame": "No se pudo unir al juego",
+      "invitationDeclined": "Invitación rechazada",
+      "errorDecliningInvitation": "Error al rechazar la invitación",
+      "inviteToGame": "Invitar al Juego"
     }
   },
   "settings": {
@@ -145,9 +163,13 @@
         "water": "Tema Agua"
       },
       "alias": {
-        "title": "Alias del torneo",
+        "title": "Alias de torneo",
         "placeholder": "Alias predeterminado",
         "save": "Guardar"
+      },
+      "saveSuccess": {
+        "title": "Configuración Guardada",
+        "description": "Tus preferencias de juego se han actualizado correctamente"
       },
       "save": "Guardar cambios"
     },
@@ -179,6 +201,65 @@
         "title": "Error al actualizar",
         "description": "Error al actualizar el perfil. Por favor, inténtalo de nuevo."
       }
+    }
+  },
+  "dashboard": {
+    "userNotFound": "Usuario no encontrado",
+    "userNotFoundDescription": "El usuario que buscas no existe o ha sido eliminado.",
+    "goBack": "Volver",
+    "achievements": {
+      "title": "Logros",
+      "showAll": "Mostrar todos los logros",
+      "allAchievements": "Todos los logros",
+      "completed": "Completado",
+      "locked": "Bloqueado",
+      "firstVictory": "Primera Victoria",
+      "firstVictoryDesc": "Gana tu primera partida",
+      "perfectGame": "Partida Perfecta",
+      "perfectGameDesc": "Gana una partida con puntuación 3-0",
+      "undefeatedChampion": "Campeón Invicto",
+      "undefeatedChampionDesc": "Gana 3 partidas seguidas"
+    },
+    "cover": {
+      "level": "Nivel",
+      "addFriend": "Añadir",
+      "addingFriend": "Añadiendo...",
+      "remove": "Eliminar",
+      "removing": "Eliminando...",
+      "cancel": "Cancelar",
+      "cancelling": "Cancelando...",
+      "accept": "Aceptar",
+      "accepting": "Aceptando...",
+      "decline": "Rechazar",
+      "declining": "Rechazando...",
+      "block": "Bloquear",
+      "blocking": "Bloqueando...",
+      "unblock": "Desbloquear",
+      "unblocking": "Desbloqueando..."
+    },
+    "friends": {
+      "title": "Amigos",
+      "showAllFriends": "Mostrar todos los amigos",
+      "privateFriendsList": "Lista de amigos privada",
+      "noFriends": "Sin amigos",
+      "emptyFriendsList": "Tu lista de amigos está vacía actualmente."
+    },
+    "matchHistory": {
+      "title": "Historial de partidas",
+      "showAll": "Mostrar todas las partidas",
+      "fullHistory": "Historial completo de partidas",
+      "versus": "VS",
+      "errorLoading": "Error al cargar el historial",
+      "noMatches": "No se encontraron partidas"
+    },
+    "statistics": {
+      "title": "Estadísticas",
+      "loading": "Cargando...",
+      "winRate": "Ratio de victorias",
+      "experience": "Experiencia",
+      "wins": "Victorias",
+      "losses": "Derrotas",
+      "total": "Total"
     }
   },
   "chat": {
@@ -279,28 +360,68 @@
     "selectTheme": "Seleccionar Tema"
   },
   "Game": {
-    "title": "Modo de juego",
-    "local": "Juego local",
-    "invite": "Invitar a un amigo",
-    "matchmaking": "Matchmaking",
-    "localDescription": "Jugar contra un amigo en el mismo dispositivo",
-    "inviteDescription": "Enviar una invitación para jugar a distancia",
-    "matchmakingDescription": "Encontrar oponentes y competir en línea",
+    "title": "Modo de Juego",
+    "local": "Juego Local",
+    "invite": "Invitar a un Amigo",
+    "matchmaking": "Emparejamiento",
+    "localDescription": "Juega contra un amigo en el mismo dispositivo",
+    "inviteDescription": "Envía una invitación para jugar a distancia",
+    "matchmakingDescription": "Encuentra un oponente para una partida de Pong en tiempo real",
     "select": "Seleccionar",
-    "gameSetup": "Configuración del juego",
+    "gameSetup": "Configuración del Juego",
     "player1": "Jugador 1",
     "player2": "Jugador 2",
-    "selectTheme": "Seleccionar tema",
+    "selectTheme": "Seleccionar Tema",
+    "theme": "Tema",
     "fireTheme": "Tema Fuego",
-    "fireThemeDescription": "Glow naranja cálida",
+    "fireThemeDescription": "Brillo naranja cálido",
     "waterTheme": "Tema Agua",
-    "waterThemeDescription": "Efecto azul teintado",
-    "selectDifficulty": "Seleccionar dificultad",
+    "waterThemeDescription": "Efecto turquesa fresco",
+    "selectDifficulty": "Seleccionar Dificultad",
     "easy": "Fácil",
     "medium": "Medio",
     "hard": "Difícil",
-    "startGame": "Iniciar juego",
-    "back": "Volver"
+    "startGame": "Iniciar Juego",
+    "back": "Volver",
+    "inviteFriend": "Invitar a un Amigo",
+    "searchFriends": "Buscar amigos...",
+    "loadingFriends": "Cargando amigos...",
+    "noMatchingFriends": "No se encontraron amigos",
+    "noFriendsYet": "Todavía no hay amigos",
+    "backToGameOptions": "Volver a Opciones de Juego",
+    "gamePreferences": "Preferencias de Juego",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "savePreferences": "Guardar Preferencias",
+    "creatingGame": "Creando juego...",
+    "waitingForOpponent": "Juego creado. Esperando oponente...",
+    "errorCreatingGame": "Error al crear el juego. Inténtalo de nuevo.",
+    "findingMatch": "Buscando una partida...",
+    "errorFindingMatch": "Error al buscar partida. Inténtalo de nuevo.",
+    "joiningGame": "Uniéndose al juego...",
+    "errorGettingGameDetails": "Error al obtener detalles del juego. Inténtalo de nuevo.",
+    "errorJoiningGame": "Error al unirse al juego. Inténtalo de nuevo.",
+    "noOpponentFound": "No se encontró ningún oponente. Inténtalo de nuevo.",
+    "onlineGameSetup": "Configuración de Juego en Línea",
+    "createGame": "Crear Juego",
+    "quickMatch": "Partida Rápida",
+    "readyToFindOpponent": "¿Listo para encontrar un oponente?",
+    "searchTimedOut": "Búsqueda expirada. Inténtalo de nuevo.",
+    "connectionError": "Error de conexión. Inténtalo de nuevo.",
+    "connectedToMatchmaking": "Conectado al servidor de emparejamiento",
+    "searchingForOpponent": "Buscando oponente... (Posición: {position})",
+    "opponentFoundConnecting": "¡Oponente encontrado! Conectando al juego...",
+    "connectionNotReady": "Conexión no lista. Intentando reconectar...",
+    "unableToConnect": "No se puede conectar. Inténtalo más tarde.",
+    "connectingToGame": "Conectando al juego...",
+    "backToMenu": "Volver al Menú",
+    "findOpponent": "Buscar Oponente",
+    "cancelSearch": "Cancelar Búsqueda",
+    "timeElapsed": "Tiempo transcurrido",
+    "searching": "Buscando",
+    "secondsRemaining": "{seconds} segundos restantes",
+    "you": "Tú",
+    "opponent": "Oponente"
   },
   "localGame": {
     "points": "Puntos",
@@ -328,6 +449,34 @@
     "backToSetup": "Volver a la configuración",
     "resumeGame": "Reanudar juego",
     "pauseGame": "Pausar juego",
-    "backToTournament": "Volver al Torneo"
+    "backToTournament": "Volver al Torneo",
+    "waitingForPlayers": "ESPERANDO JUGADORES",
+    "matchOf": "PARTIDA {current} DE {total}",
+    "playerWinsMatch": "¡{player} GANA LA PARTIDA {match}!",
+    "playerWinsGame": "¡{player} GANA EL JUEGO!",
+    "firstToPoints": "Primero en llegar a {points} puntos",
+    "versus": "VS",
+    "pause": "Pausa",
+    "toggleSmoothing": "Alternar suavizado",
+    "firstToWinMatchesWinsGame": "¡El primero en ganar {matches} partidas gana el juego!"
+  },
+  "friends": {
+    "noFriends": "Sin amigos",
+    "emptyFriendsList": "Tu lista de amigos está vacía actualmente.",
+    "addFriendsMessage": "Añadir amigos",
+    "noBlockedUsers": "Sin usuarios bloqueados",
+    "emptyBlockedList": "Tu lista de usuarios bloqueados está vacía actualmente.",
+    "keepItEmptyMessage": "Mantenla vacía :P",
+    "noInvitations": "Sin invitaciones",
+    "emptyInvitationsList": "No tienes invitaciones de amistad pendientes.",
+    "noSentInvitations": "Sin invitaciones enviadas",
+    "emptySentInvitationsList": "Aún no has enviado invitaciones de amistad.",
+    "sections": {
+      "title": "Amistades",
+      "friends": "Amigos",
+      "sentInvitations": "Invitaciones Enviadas",
+      "receivedInvitations": "Invitaciones Recibidas",
+      "blockedUsers": "Usuarios Bloqueados"
+    }
   }
 }

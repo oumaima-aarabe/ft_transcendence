@@ -10,6 +10,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Icon } from "@iconify/react";
+import { useTranslations } from 'next-intl';
 
 interface PropsAchievement {
   userId: number | undefined;
@@ -17,53 +18,56 @@ interface PropsAchievement {
 
 interface AchievementStatic {
   id: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: string;
   key: 'first_win' | 'pure_win' | 'triple_win';
 }
 
-const achievements: AchievementStatic[] = [
-  {
-    id: "1",
-    title: "First Victory",
-    description: "Win your first game",
-    icon: "🎮",
-    key: "first_win",
-  },
-  {
-    id: "2",
-    title: "Perfect Game",
-    description: "Win a game with score 3-0",
-    icon: "⭐",
-    key: "pure_win",
-  },
-  {
-    id: "3",
-    title: "Undefeated Champion",
-    description: "Win 3 games in a row",
-    icon: "👑",
-    key: "triple_win",
-  },
-];
-
 export default function Achievements({ userId }: PropsAchievement) {
+  const t = useTranslations('dashboard.achievements');
   const { data: playerStats } = UseStates(userId);
+
+  console.log("Achievements", playerStats);
+
+  const achievements: AchievementStatic[] = [
+    {
+      id: "1",
+      titleKey: "firstVictory",
+      descriptionKey: "firstVictoryDesc",
+      icon: "🎮",
+      key: "first_win",
+    },
+    {
+      id: "2",
+      titleKey: "perfectGame",
+      descriptionKey: "perfectGameDesc",
+      icon: "⭐",
+      key: "pure_win",
+    },
+    {
+      id: "3",
+      titleKey: "undefeatedChampion",
+      descriptionKey: "undefeatedChampionDesc",
+      icon: "👑",
+      key: "triple_win",
+    },
+  ];
 
   const latestAchievement = achievements[2];
 
   return (
     <div className="w-full h-full">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Achievements</h2>
+      <div className="flex justify-between items-center mb-4 h-[10%]">
+        <h2 className="text-2xl font-bold">{t('title')}</h2>
         <Dialog>
           <DialogTrigger className="text-[#40CFB7] underline text-sm hover:text-[#35b09c]">
-            Show all achievements
+            {t('showAll')}
           </DialogTrigger>
           <DialogContent className="max-h-[80vh] overflow-hidden bg-black">
             <DialogHeader className="relative">
               <DialogTitle className="text-2xl text-white font-bold mb-4">
-                All Achievements
+                {t('allAchievements')}
               </DialogTitle>
               <DialogClose className="absolute right-0 top-0">
                 <Icon
@@ -86,9 +90,9 @@ export default function Achievements({ userId }: PropsAchievement) {
                     <span className="text-3xl">{achievement.icon}</span>
                     <div className="flex-1">
                       <h3 className="font-semibold text-xl">
-                        {achievement.title}
+                        {t(achievement.titleKey)}
                       </h3>
-                      <p className="text-gray-400">{achievement.description}</p>
+                      <p className="text-gray-400">{t(achievement.descriptionKey)}</p>
                     </div>
                     <div
                       className={`px-3 py-1 rounded-full ${
@@ -97,7 +101,7 @@ export default function Achievements({ userId }: PropsAchievement) {
                           : "bg-gray-800 text-gray-400"
                       }`}
                     >
-                      {playerStats && playerStats[achievement.key] ? "Completed" : "Locked"}
+                      {playerStats && playerStats[achievement.key] ? t('completed') : t('locked')}
                     </div>
                   </div>
                 </div>
@@ -107,21 +111,21 @@ export default function Achievements({ userId }: PropsAchievement) {
         </Dialog>
       </div>
 
-      <div className="p-4 rounded-lg border border-[#40CFB7]">
-        <div className="flex items-center gap-3 p-4">
+      <div className="h-[80%] rounded-lg border border-[#40CFB7] flex items-center">
+        <div className="flex items-center gap-3 justify-between w-full p-4">
           <span className="text-7xl">{latestAchievement.icon}</span>
           <div className="flex-1">
-            <h3 className="font-semibold text-xl">{latestAchievement.title}</h3>
-            <p className="text-gray-400">{latestAchievement.description}</p>
+            <h3 className="font-semibold text-xl">{t(latestAchievement.titleKey)}</h3>
+            <p className="text-gray-400">{t(latestAchievement.descriptionKey)}</p>
           </div>
           <div
-            className={`px-3 py-1 rounded-full ${
+            className={`px-3 py-1 rounded-full  ${
               playerStats && playerStats[latestAchievement.key]
                 ? "bg-[#40CFB7]/20 text-[#40CFB7]"
                 : "bg-red text-gray-400"
             }`}
           >
-            {playerStats && playerStats[latestAchievement.key] ? "Completed" : "Locked"}
+            {playerStats && playerStats[latestAchievement.key] ? t('completed') : t('locked')}
           </div>
         </div>
       </div>

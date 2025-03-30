@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { sendGameInvite } from '@/api/game-invite-api';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Gamepad2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface GameInviteButtonProps {
   username: string;
@@ -23,6 +24,7 @@ const GameInviteButton: React.FC<GameInviteButtonProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const t = useTranslations('notifications.gameInvite');
 
   const handleInvite = async () => {
     try {
@@ -30,14 +32,14 @@ const GameInviteButton: React.FC<GameInviteButtonProps> = ({
       await sendGameInvite(username);
       
       toast({
-        title: "Invitation sent!",
-        description: `Game invitation sent to ${username}`,
+        title: t('invitationSent'),
+        description: t('invitationSentTo', { username }),
         variant: "default",
       });
     } catch (error: any) {
       toast({
-        title: "Could not send invitation",
-        description: error?.response?.data?.error || "An error occurred",
+        title: t('couldNotSendInvitation'),
+        description: error?.response?.data?.error || t('errorOccurred'),
         variant: "destructive",
       });
     } finally {
@@ -68,7 +70,7 @@ const GameInviteButton: React.FC<GameInviteButtonProps> = ({
       ) : (
         <Gamepad2 className="h-4 w-4" />
       )}
-      Invite to Game
+      {t('inviteToGame')}
     </Button>
   );
 };
