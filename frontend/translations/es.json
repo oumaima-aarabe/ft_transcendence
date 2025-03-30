@@ -360,6 +360,7 @@
     "selectTheme": "Seleccionar Tema"
   },
   "Game": {
+    "challenge": "Desafiar",
     "title": "Modo de Juego",
     "local": "Juego Local",
     "invite": "Invitar a un Amigo",

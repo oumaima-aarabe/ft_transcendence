@@ -361,6 +361,7 @@
   },
   "Game": {
     "title": "Game Mode",
+    "challenge": "Challenge",
     "local": "Local Game",
     "invite": "Invite a Friend",
     "localDescription": "Play against a friend on the same device",
