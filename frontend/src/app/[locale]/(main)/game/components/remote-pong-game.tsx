@@ -290,7 +290,7 @@ const processServerUpdate = (serverState: any) => {
     },
     leftPaddle: {
       x: serverState.left_paddle.x,
-      y: serverState.left_paddle.y,
+      y: player1Name == userName? gameStateRef.current.leftPaddle.y : serverState.left_paddle.y,
       width: serverState.left_paddle.width || PADDLE_WIDTH,
       height: serverState.left_paddle.height || PADDLE_HEIGHT,
       speed: serverState.left_paddle.speed || PADDLE_SPEED,
@@ -298,7 +298,7 @@ const processServerUpdate = (serverState: any) => {
     },
     rightPaddle: {
       x: serverState.right_paddle.x,
-      y: serverState.right_paddle.y,
+      y: player2Name == userName? gameStateRef.current.rightPaddle.y : serverState.right_paddle.y,
       width: serverState.right_paddle.width || PADDLE_WIDTH,
       height: serverState.right_paddle.height || PADDLE_HEIGHT,
       speed: serverState.right_paddle.speed || PADDLE_SPEED,
@@ -639,7 +639,8 @@ const processServerUpdate = (serverState: any) => {
     
     // Use interpolation for ball movement instead of prediction
     if (visualSmoothingEnabled) {
-      interpolateBallPosition();
+      // interpolateBallPosition();
+      updateBallPosition();
     }
   };
   

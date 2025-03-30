@@ -307,58 +307,43 @@ class GameHistoryView(APIView):
 class GameInviteView(APIView):
     def post(self, request):
         """Create a game invitation"""
-        print("GameInviteView.post() - Starting")
         
         # Get the target player's profile
         receiver_username = request.data.get('username')
-        print(f"Received username: {receiver_username}")
         
         if not receiver_username:
-            print("Error: No username provided")
             return Response({"error": "Username is required"}, 
                           status=status.HTTP_400_BAD_REQUEST)
             
         try:
             # Get the user first
-            print(f"Looking up user with username: {receiver_username}")
             try:
                 receiver_user = User.objects.get(username=receiver_username)
-                print(f"Found receiver user: {receiver_user.id} - {receiver_user.username}")
             except User.DoesNotExist:
-                print(f"Error: User '{receiver_username}' not found")
                 return Response({"error": f"User '{receiver_username}' not found"}, 
                               status=status.HTTP_404_NOT_FOUND)
             
             # Get or create the player profile for the receiver
-            print(f"Getting or creating PlayerProfile for receiver: {receiver_user.username}")
             receiver_profile, created = PlayerProfile.objects.get_or_create(player=receiver_user)
-            print(f"Receiver profile {'created' if created else 'found'}: {receiver_profile.id}")
                 
             # Get sender's profile
-            print(f"Getting or creating profile for sender: {request.user.username}")
             try:
                 sender_profile, created = PlayerProfile.objects.get_or_create(player=request.user)
-                print(f"Sender profile {'created' if created else 'found'}: {sender_profile.id}")
             except Exception as profile_error:
-                print(f"Error creating sender profile: {str(profile_error)}")
                 return Response(
                     {"error": f"Could not get or create profile for sender: {str(profile_error)}"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             # Check if sender and receiver are the same
-            print(f"Checking if sender and receiver are the same user")
             if sender_profile.player == receiver_profile.player:
-                print("Error: Sender and receiver are the same user")
                 return Response({"error": "You cannot invite yourself"}, 
                               status=status.HTTP_400_BAD_REQUEST)
             
             # Generate a unique invitation code
             invitation_code = str(uuid.uuid4())[:8]
-            print(f"Generated invitation code: {invitation_code}")
             
             # Create the invitation
-            print("Creating GameInvite object")
             try:
                 invite = GameInvite.objects.create(
                     sender=sender_profile,
@@ -366,16 +351,13 @@ class GameInviteView(APIView):
                     invitation_code=invitation_code,
                     status=StatusChoices.PENDING
                 )
-                print(f"Created invite with ID: {invite.id}")
             except Exception as invite_error:
-                print(f"Error creating invitation: {str(invite_error)}")
                 return Response(
                     {"error": f"Could not create invitation: {str(invite_error)}"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             # Send notification to receiver
-            print(f"Sending notification to {receiver_username}")
             try:
                 send_notification(
                     username=receiver_username,
@@ -387,20 +369,13 @@ class GameInviteView(APIView):
                         'sender_avatar': request.user.avatar
                     }
                 )
-                print("Notification sent successfully")
             except Exception as notify_error:
-                # Don't fail if notification sending fails, just log it
-                print(f"Failed to send notification: {str(notify_error)}")
+                pass
             
-            print("Serializing response data")
             serializer = GameInviteSerializer(invite)
-            print("Returning successful response")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
         except Exception as e:
-            import traceback
-            print("UNEXPECTED ERROR:")
-            traceback.print_exc()
             return Response({"error": f"Unexpected error: {str(e)}"}, 
                           status=status.HTTP_400_BAD_REQUEST)
 
@@ -411,13 +386,10 @@ class GameInviteResponseView(APIView):
         try:
             from users.utils import send_notification
             
-            print(f"Processing invitation response for code: {invitation_code}")
-            print(f"Request data: {request.data}")
             
             # Find the invitation regardless of status first
             try:
                 invite = GameInvite.objects.get(invitation_code=invitation_code)
-                print(f"Found invitation with status: {invite.status}")
                 
                 # Check if invitation is already processed
                 if invite.status != StatusChoices.PENDING:
@@ -457,10 +429,10 @@ class GameInviteResponseView(APIView):
                     )
                     
                     # Start the game immediately to avoid matchmaking flow
-                    game.status = StatusChoices.WAITING
-                    game.started_at = timezone.now()
-                    game.save()
-                    
+                    # game.status = StatusChoices.WAITING
+                    # game.started_at = timezone.now()
+                    # game.save()
+
                     # Update the invitation
                     invite.status = StatusChoices.ACCEPTED
                     invite.accepted_at = timezone.now()
@@ -485,9 +457,8 @@ class GameInviteResponseView(APIView):
                                 'join_url': f"/game/remote?gameId={game.id}"
                             }
                         )
-                        print(f"Notification sent to {invite.sender.player.username} with game ID: {game.id}")
                     except Exception as notification_error:
-                        print(f"Error sending notification: {notification_error}")
+                        pass
                     
                     # Return with the same synchronization data for the recipient
                     return Response({
@@ -517,9 +488,8 @@ class GameInviteResponseView(APIView):
                             'invitation_code': invitation_code
                         }
                     )
-                    print(f"Notification sent to {invite.sender.player.username}")
                 except Exception as notification_error:
-                    print(f"Error sending notification: {notification_error}")
+                    pass
                 
                 return Response({
                     "message": "Invitation declined"
@@ -531,8 +501,6 @@ class GameInviteResponseView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
         
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             return Response({
                 "error": str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
