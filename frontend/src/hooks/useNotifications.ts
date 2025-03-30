@@ -44,7 +44,7 @@ export const useNotifications = () => {
 
     console.log("Initializing notifications consumer");
     // Create WebSocket connection
-    const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:8000/ws/notifications/`);
+    const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}/ws/notifications/`);
     
     // Set up event listeners
     ws.onopen = () => {

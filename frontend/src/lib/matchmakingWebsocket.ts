@@ -20,7 +20,7 @@ export const initMatchmakingSocket = () => {
         }
         
         // Use relative URL to work in both development and production
-        const host = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+        const host = process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost';
         const wsUrl = `${host}/ws/matchmaking/`;
         
         console.log('Initializing matchmaking WebSocket connection to:', wsUrl);

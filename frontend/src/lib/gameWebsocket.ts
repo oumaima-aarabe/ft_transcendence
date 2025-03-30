@@ -55,7 +55,7 @@ export default class GameConnection {
     }
 
     // Create WebSocket URL with game ID and authentication token
-    const host = process.env.NEXT_PUBLIC_WS_URL ||'ws://localhost:8000';
+    const host = process.env.NEXT_PUBLIC_WS_URL ||'wss://localhost';
     const wsUrl = `${host}/ws/game/${this.gameId}/?token=${this.token}`;
     
     try {

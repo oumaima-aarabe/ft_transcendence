@@ -2,7 +2,7 @@ let socket: WebSocket | null = null;
 
 export const initSocket = () => {
     if (!socket || socket.readyState === WebSocket.CLOSED) {
-        const host = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+        const host = process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost';
         const wsUrl = `${host}/ws/chat/`;
         socket = new WebSocket(wsUrl);
 
