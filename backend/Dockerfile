@@ -15,4 +15,4 @@ EXPOSE 8000
 
 RUN chmod +x script.sh
 
-ENTRYPOINT ["/bin/bash", "script.sh"]
+ENTRYPOINT ["/bin/bash", "prod.sh"]

@@ -30,6 +30,7 @@ services:
       - app-network
 
   nginx:
+    # image: nginx:alpine
     container_name: nginx
     build:
         context: ./nginx/
