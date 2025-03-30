@@ -261,13 +261,6 @@ export default class GameConnection {
     }
   }
 
-  restartGame() {
-    const sent = this.sendMessage('restart_game');
-    if (!sent) {
-      this.messageQueue.push({ type: 'restart_game', data: {} });
-    }
-  }
-
   disconnect() {
     this.stopGameLoop();
     
