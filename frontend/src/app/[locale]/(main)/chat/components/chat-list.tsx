@@ -14,13 +14,13 @@ import { useTranslations } from 'next-intl';
 interface ChatListProps {
   currentUser: User;
   conversations: Conversation[];
-  onChatSelect: (chatId: string) => void;
-  selectedChatId?: string;
+  onChatSelect: (chatId: number) => void;
+  selectedChatId?: number;
   loadConversations: () => Promise<Conversation[]>;
 }
 
 interface SearchUser {
-  id: string;
+  id: number;
   username: string;
   first_name: string;
   last_name: string;
@@ -74,7 +74,7 @@ export function ChatList({
     return () => debouncedSearch.cancel();
   }, [searchQuery]);
 
-  const handleStartConversation = async (userId: string) => {
+  const handleStartConversation = async (userId: number) => {
     try {
       setIsSearching(true);
       const response = await sendRequest("POST", "/chat/conversations/create/", {

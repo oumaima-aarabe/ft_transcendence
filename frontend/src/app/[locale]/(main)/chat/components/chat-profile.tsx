@@ -18,7 +18,7 @@ import { useRouter } from "@/i18n/routing";
 
 interface ChatProfileProps {
   user: User;
-  conversationId: string;
+  conversationId: number;
   onConversationDeleted: () => void;
   blockState: BlockState;
   setBlockState: (state: BlockState) => void;

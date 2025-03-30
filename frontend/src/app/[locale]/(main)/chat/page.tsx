@@ -19,7 +19,7 @@ export default function ChatApp() {
 
   const [blockState, setBlockState] = useState<BlockState>(BlockState.PENDING);
 
-  const checkIfBlockedBySelectedUser = async (selectedUserId: string) => {
+  const checkIfBlockedBySelectedUser = async (selectedUserId: number) => {
     try {
       // First check if we've blocked them
       const outgoingBlockResponse = await sendRequest("GET", "/friends/blocked/");
@@ -95,7 +95,7 @@ export default function ChatApp() {
 
         case "chat_message":
           const newMessage: Message = {
-            id: Date.now().toString(),
+            id: Date.now(),
             message: data.message,
             created_at: new Date().toISOString(),
             sender: data.sender,
@@ -179,13 +179,10 @@ export default function ChatApp() {
 
     // Optimistic update
     const tempMessage: Message = {
-      id: Date.now().toString(),
+      id: Date.now(),
       message: content,
       created_at: new Date().toISOString(),
-      sender: {
-        ...myUserData,
-        id: String(myUserData.id)
-      } as ChatUser,
+      sender: myUserData,
       seen: false,
       conversation: { id: selectedChatRef.current.id },
     };
@@ -193,7 +190,7 @@ export default function ChatApp() {
     setMessages(prev => [...prev, tempMessage]);
   };
 
-  const handleChatSelect = async (chatId: string) => {
+  const handleChatSelect = async (chatId: number) => {
     const selected = chats.find(c => c.id === chatId);
     if (!selected) return;
 
@@ -240,17 +237,11 @@ export default function ChatApp() {
     );
   }
 
-  // Create a chat-compatible user object by converting ID to string
-  const chatUser: ChatUser = {
-    ...myUserData,
-    id: String(myUserData.id)
-  };
-
   return (
     <div className="relative h-full w-full max-w-[2000px] mx-auto">
       <div className="flex p-3 w-full h-full bg-black/40 backdrop-blur-sm rounded-[20px]">
         <ChatList
-          currentUser={chatUser}
+          currentUser={myUserData}
           conversations={chats}
           onChatSelect={handleChatSelect}
           selectedChatId={selectedChatRef.current?.id}
@@ -261,7 +252,7 @@ export default function ChatApp() {
           <>
             <ChatMessages
               messages={messages}
-              currentUser={chatUser}
+              currentUser={myUserData}
               selectedUser={selectedChatRef.current.other_participant}
               onSendMessage={handleSendMessage}
               onToggleProfile={() => setShowProfile(!showProfile)}
