@@ -708,9 +708,7 @@ const processServerUpdate = (serverState: any) => {
     
     const currentStatus = gameStateRef.current.gameStatus;
     
-    if (currentStatus === 'gameOver') {
-      connectionRef.current.restartGame();
-    } else if (currentStatus === 'matchOver') {
+    if (currentStatus === 'matchOver') {
       connectionRef.current.nextMatch();
     } else if (currentStatus === 'menu') {
       connectionRef.current.startGame();
