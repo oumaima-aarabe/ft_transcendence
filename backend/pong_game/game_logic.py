@@ -619,7 +619,7 @@ def update_player_profiles(game_id):
         # Only update if game is completed
         if game_state['game_status'] != 'gameOver':
             return
-        if game_state['match_wins']['player1'] != 3 or game_state['match_wins']['player2'] != 3:
+        if game_state['match_wins']['player1'] != 3 and game_state['match_wins']['player2'] != 3:
             return
         status = game.status
         if status == 'cancelled':
