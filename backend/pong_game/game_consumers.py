@@ -282,36 +282,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                                 'status': new_status
                             }
                         )
-            
-            elif message_type == 'restart_game':
-                # Restart the game if it's over
-                if self.game_id in game_logic.active_games:
-                    current_status = game_logic.active_games[self.game_id]['game_status']
-                    if current_status == 'gameOver':
-                        # Reset the game
-                        game_logic.reset_game(self.game_id)
-                        
-                        # Notify players of game state
-                        await self.channel_layer.group_send(
-                            self.game_group,
-                            {
-                                'type': 'game_state',
-                                'state': game_logic.active_games[self.game_id]
-                            }
-                        )
-                        
-                        # Set status to menu
-                        new_status = game_logic.set_game_status(self.game_id, 'menu')
-                        
-                        # Notify of status change
-                        await self.channel_layer.group_send(
-                            self.game_group,
-                            {
-                                'type': 'game_status_changed',
-                                'status': new_status
-                            }
-                        )
-            
             elif message_type == 'ping':
                 await self.send_json({
                     'type': 'pong'

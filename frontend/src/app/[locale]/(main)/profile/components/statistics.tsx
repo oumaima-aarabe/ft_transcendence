@@ -20,7 +20,7 @@ export default function Statistics({ userId }: StatisticsProps ) {
   const {data : statistics} = UseStates(userId)
   if (!statistics){
     return (
-      <div className="div"> walo </div>
+      <div className="div"> loading... </div>
     );
   }
   console.log("stattes L",statistics)
@@ -52,7 +52,6 @@ export default function Statistics({ userId }: StatisticsProps ) {
     <div className="w-full h-full flex flex-col">
       <h2 className="text-2xl font-bold mb-4">Statistics</h2>
       
-      {/* Stats Summary */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-black/30 p-4 rounded-lg">
           <div className="text-sm text-gray-400">Win Rate</div>

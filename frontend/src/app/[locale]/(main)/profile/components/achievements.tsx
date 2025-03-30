@@ -50,11 +50,13 @@ const achievements: AchievementStatic[] = [
 export default function Achievements({ userId }: PropsAchievement) {
   const { data: playerStats } = UseStates(userId);
 
+  console.log("Achievements", playerStats);
+
   const latestAchievement = achievements[2];
 
   return (
     <div className="w-full h-full">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 h-[10%]">
         <h2 className="text-2xl font-bold">Achievements</h2>
         <Dialog>
           <DialogTrigger className="text-[#40CFB7] underline text-sm hover:text-[#35b09c]">
@@ -107,15 +109,15 @@ export default function Achievements({ userId }: PropsAchievement) {
         </Dialog>
       </div>
 
-      <div className="p-4 rounded-lg border border-[#40CFB7]">
-        <div className="flex items-center gap-3 p-4">
+      <div className="h-[80%] rounded-lg border border-[#40CFB7] flex items-center">
+        <div className="flex items-center gap-3 justify-between w-full p-4">
           <span className="text-7xl">{latestAchievement.icon}</span>
           <div className="flex-1">
             <h3 className="font-semibold text-xl">{latestAchievement.title}</h3>
             <p className="text-gray-400">{latestAchievement.description}</p>
           </div>
           <div
-            className={`px-3 py-1 rounded-full ${
+            className={`px-3 py-1 rounded-full  ${
               playerStats && playerStats[latestAchievement.key]
                 ? "bg-[#40CFB7]/20 text-[#40CFB7]"
                 : "bg-red text-gray-400"

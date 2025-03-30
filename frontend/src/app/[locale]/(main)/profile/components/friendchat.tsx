@@ -5,8 +5,6 @@ import React from "react";
 import { useRouter } from "@/i18n/routing";
 import { UseUser } from "@/api/get-user";
 import { UseFriend } from "@/api/get-friends";
-// import { useMutation } from "@tanstack/react-query"
-import Image from "next/image";
 
 export default function Friendchat() {
   const router = useRouter();
@@ -41,13 +39,22 @@ export default function Friendchat() {
   if (!friends || friends?.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center h-full w-full p-6 text-center">
-        <div className="bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
+        <div className="white h-[10%] w-full flex justify-between items-center">
+          <span
+            className="text-[#40CFB7] underline text-sm hover:text-[#35b09c] pt-8 cursor-pointer"
+            onClick={() => {
+              router.push("/friends/");
+            }}
+          >
+            show all friends
+          </span>
+        </div>
+
+        <div className="h-[90%] bg-[#2D2A2A]/40 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center max-w-md">
           <h3 className="text-2xl font-medium text-white mb-2">No Friends</h3>
           <p className="text-white/70 mb-4">
             Your friends list is currently empty.
           </p>
-          <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full my-2" />
-          <p className="text-white/50 text-sm mt-2">add friends</p>
         </div>
       </div>
     );

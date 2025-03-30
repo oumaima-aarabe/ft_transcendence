@@ -9,7 +9,6 @@ import Loading from "@/app/[locale]/loading";
 import Achievements from "../components/achievements";
 import MatchHistory from "../components/match-history";
 import Statistics from "../components/statistics";
-// import History from "../components/history";
 
 export default function Page() {
   const [owner, setOwner] = useState<boolean>(false);

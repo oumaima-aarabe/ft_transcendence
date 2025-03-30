@@ -616,12 +616,14 @@ def update_player_profiles(game_id):
             
         game = Game.objects.get(id=game_id)
         game_state = active_games[game_id]
-        
         # Only update if game is completed
         if game_state['game_status'] != 'gameOver':
-            print("Game not over yet")
             return
-        
+        if game_state['match_wins']['player1'] != 3 or game_state['match_wins']['player2'] != 3:
+            return
+        status = game.status
+        if status == 'cancelled':
+            return
         # Get profiles
         p1_profile, _ = PlayerProfile.objects.get_or_create(player=game.player1)
         p2_profile, _ = PlayerProfile.objects.get_or_create(player=game.player2)
@@ -640,8 +642,7 @@ def update_player_profiles(game_id):
             
             #update_player1 level and experience
             p1_profile.experience += 500
-            factor = p1_profile.level if p1_profile.level > 0 else 1
-            p1_profile.level = math.floor(p1_profile.experience/(1000 * factor))
+            p1_profile.level = math.floor(p1_profile.experience/(1000))
         else:
             p2_profile.matches_won += 1
             p1_profile.matches_lost += 1
@@ -655,7 +656,6 @@ def update_player_profiles(game_id):
             p2_profile.level = math.floor(p2_profile.experience/(1000 * factor))
         
         # Save profiles
-        print("Saving player profiles")
         p1_profile.save()
         p2_profile.save()
         
