@@ -4,18 +4,11 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { ChatList } from "./components/chat-list";
 import { ChatMessages } from "./components/chat-messages";
 import { ChatProfile } from "./components/chat-profile";
-import { Message, Conversation } from "./types/chat";
+import { Message, Conversation, BlockState, User as ChatUser } from "./types/chat";
 import { initSocket, getSocket, sendWebSocketMessage } from "@/lib/websocket";
 import { sendRequest } from "@/lib/axios";
 import { UseUser } from "@/api/get-user";
-
-// move this export to another file
-export enum BlockState {
-  BLOCKED_BY_ME = "blocked_by_me",
-  BLOCKED_BY_OTHER = "blocked_by_other",
-  UNBLOCKED = "unblocked",
-  PENDING = "pending"
-}
+import { User as AppUser } from "@/types/user";
 
 export default function ChatApp() {
   const [showProfile, setShowProfile] = useState(true);
@@ -189,7 +182,10 @@ export default function ChatApp() {
       id: Date.now().toString(),
       message: content,
       created_at: new Date().toISOString(),
-      sender: myUserData,
+      sender: {
+        ...myUserData,
+        id: String(myUserData.id)
+      } as ChatUser,
       seen: false,
       conversation: { id: selectedChatRef.current.id },
     };
@@ -244,11 +240,17 @@ export default function ChatApp() {
     );
   }
 
+  // Create a chat-compatible user object by converting ID to string
+  const chatUser: ChatUser = {
+    ...myUserData,
+    id: String(myUserData.id)
+  };
+
   return (
     <div className="relative h-full w-full max-w-[2000px] mx-auto">
       <div className="flex p-3 w-full h-full bg-black/40 backdrop-blur-sm rounded-[20px]">
         <ChatList
-          currentUser={myUserData}
+          currentUser={chatUser}
           conversations={chats}
           onChatSelect={handleChatSelect}
           selectedChatId={selectedChatRef.current?.id}
@@ -259,7 +261,7 @@ export default function ChatApp() {
           <>
             <ChatMessages
               messages={messages}
-              currentUser={myUserData}
+              currentUser={chatUser}
               selectedUser={selectedChatRef.current.other_participant}
               onSendMessage={handleSendMessage}
               onToggleProfile={() => setShowProfile(!showProfile)}
