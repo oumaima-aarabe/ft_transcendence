@@ -20,15 +20,15 @@ const NotificationsExtension: React.FC = () => {
   // Find game invites
   const gameInvites = notifications.filter(
     notification => notification.type === 'game_invite' && 
-                   !notification.read && 
-                   !handledNotifications.has(notification.id)
+                   !notification.read 
+                  //  !handledNotifications.has(notification.id)
   );
 
   // Find game invite accepted notifications
   const gameInvitesAccepted = notifications.filter(
     notification => notification.type === 'game_invite_accepted' && 
-                   !notification.read && 
-                   !handledNotifications.has(notification.id)
+                   !notification.read
+                  //  !handledNotifications.has(notification.id)
   );
 
   // Handle invite actions

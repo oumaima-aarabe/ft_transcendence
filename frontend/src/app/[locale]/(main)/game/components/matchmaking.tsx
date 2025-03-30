@@ -381,12 +381,6 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
             <div className="w-full max-w-md bg-black bg-opacity-50 rounded-xl p-6 border border-gray-800 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold text-xl">{t('gamePreferences')}</h3>
-                <Button 
-                  onClick={() => setPreferencesOpen(true)}
-                  className="bg-transparent hover:bg-gray-800 p-2 rounded-full"
-                >
-                  <Settings className="text-gray-400 hover:text-white" />
-                </Button>
               </div>
               
               <div className="grid grid-cols-2 gap-6">

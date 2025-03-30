@@ -654,22 +654,6 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
                 : "0 0 15px rgba(64,207,183,0.6)",
           }}
         >
-          {/* Center section */}
-          <div className="flex flex-col items-center">
-            <div
-              className={`text-xl font-bold mb-1 ${
-                theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
-              }`}
-            >
-              {t('match')} {uiState.currentMatch}
-            </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-black/50 border border-white/20">
-              <span className="text-white font-bold">{t('versus')}</span>
-            </div>
-            <div className="mt-1 text-xs text-gray-400">
-              {t('firstToPoints', { points: POINTS_TO_WIN_MATCH })}
-            </div>
-          </div>
 
           {/* Player 1 */}
           <div className="flex items-center space-x-3">
@@ -716,6 +700,22 @@ const RemotePongRenderer: React.FC<RemotePongRendererProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+          {/* Center section */}
+          <div className="flex flex-col items-center">
+            <div
+              className={`text-xl font-bold mb-1 ${
+                theme === "fire" ? "text-[#D05F3B]" : "text-[#40CFB7]"
+              }`}
+            >
+              {t('match')} {uiState.currentMatch}
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-black/50 border border-white/20">
+              <span className="text-white font-bold">{t('versus')}</span>
+            </div>
+            <div className="mt-1 text-xs text-gray-400">
+              {t('firstToPoints', { points: POINTS_TO_WIN_MATCH })}
             </div>
           </div>
 
