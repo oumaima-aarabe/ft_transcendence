@@ -56,7 +56,7 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
     isOwner ? undefined : user?.username
   );
   const router = useRouter();
-  const { socket } = useNotificationsContext();
+  const { notifications } = useNotificationsContext();
   const friendMutation = useFriendMutation(user.username);
 
   const handleAddFriend = () => {
@@ -101,54 +101,36 @@ export default function Cover(props: { user: User; isOwner: boolean }) {
     });
   };
 
+  const handleFriendshipUpdate = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["friendshipStatus", user.username],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["friendshipStatus", me?.username],
+    });
+  };
+
   useEffect(() => {
-    if (!socket || !user.username || !me) return;
+    if (!notifications || !user.username || !me) return;
 
-    const handleFriendshipUpdate = () => {
-      queryClient.invalidateQueries({
-        queryKey: ["friendshipStatus", user.username],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["friendshipStatus", me.username],
-      });
-    };
+    // Check for the most recent notification that could affect friendship status
+    const latestNotification = notifications[notifications.length - 1];
+    
+    if (!latestNotification) return;
 
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    const friendshipNotificationTypes = [
+      "friend_request",
+      "friend_request_accepted",
+      "block",
+      "unblock",
+      "remove_friend",
+      "cancel_request"
+    ];
 
-      // Handle different types of friendship notifications
-      switch (data.notification.type) {
-        case "friend_request":
-          handleFriendshipUpdate();
-          break;
-
-        case "friend_request_accepted":
-          handleFriendshipUpdate();
-          break;
-
-        case "block":
-          handleFriendshipUpdate();
-          break;
-
-        case "unblock":
-          handleFriendshipUpdate();
-          break;
-
-        case "remove_friend":
-          handleFriendshipUpdate();
-          break;
-
-        case "cancel_request":
-          handleFriendshipUpdate();
-          break;
-      }
-    };
-
-    // Cleanup function
-    return () => {
-      socket.onmessage = null;
-    };
-  }, [socket, user.username, queryClient, me]);
+    if (friendshipNotificationTypes.includes(latestNotification.type)) {
+      handleFriendshipUpdate();
+    }
+  }, [notifications, user.username, me, queryClient]);
 
   useEffect(() => {
     if (
