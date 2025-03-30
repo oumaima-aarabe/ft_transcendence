@@ -52,7 +52,7 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
         
         // Navigate to the game with gameId parameter
         // The locale part will be handled by the routing system
-        router.push(`/game/remote?gameId=${response.game_id}`);
+        window.location.href = `/game/remote?gameId=${response.game_id}`;
       } else {
         toast({
           title: "Error accepting invitation",

@@ -36,7 +36,6 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
             self.user = await database_sync_to_async(User.objects.get)(id=user_id)
             self.user_id = user_id
         except Exception as e:
-            print(f"Error fetching user: {str(e)}")
             await self.close()
             return
         
@@ -106,11 +105,9 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
         """
         Processes incoming messages from the client.
         """
-        print(f"Received message: {content}")
         
         try:
             message_type = content.get("type", "")
-            print(f"Message type: {message_type}")
             
             # Test response - this should always work
             await self.send_json({
@@ -121,10 +118,8 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
             if message_type == "join_queue":
                 # Get difficulty preference from message or use default
                 difficulty = content.get("difficulty")
-                print(f"Join queue request with difficulty: {difficulty}")
                 
                 result = await self.join_queue(difficulty)
-                print(f"Join queue result: {result}")
                 
                 # Send confirmation to the client
                 await self.send_json({
@@ -133,7 +128,6 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                 })
                 
             elif message_type == "leave_queue":
-                print("Leave queue request")
                 result = await self.leave_queue()
                 
                 # Send confirmation to the client
@@ -143,14 +137,12 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                 })
                 
             elif message_type == "request_status":
-                print("Status request")
                 queue_status = await self.get_queue_status()
                 await self.send_json({
                     "type": "queue_status",
                     "status": queue_status
                 })
         except Exception as e:
-            print(f"Error processing message: {str(e)}")
             # Try to send an error response
             try:
                 await self.send_json({
@@ -158,7 +150,7 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                     "message": f"Error processing your request: {str(e)}"
                 })
             except Exception as inner_e:
-                print(f"Failed to send error message: {str(inner_e)}")
+                pass
     
     async def send_json(self, content):
         """Helper method to send JSON messages to the client."""
@@ -201,10 +193,6 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                                 "opponent_avatar": match['player1_avatar']
                             }
                         )
-        
-                    
-                    if matches:
-                        print(f"Created {len(matches)} matches")
                     
                     # Release the lock after completion
                     await self.release_matchmaking_lock()
@@ -216,7 +204,6 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                 # Task was cancelled (during disconnect)
                 break
             except Exception as e:
-                print(f"Error in matchmaking: {str(e)}")
                 await asyncio.sleep(5)
     
     async def try_acquire_matchmaking_lock(self):
@@ -250,7 +237,6 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
             return True
             
         except Exception as e:
-            print(f"Lock error: {str(e)}")
             return False
 
     async def release_matchmaking_lock(self):
@@ -264,7 +250,7 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                 self.channel_name
             )
         except Exception as e:
-            print(f"Error releasing lock: {str(e)}")
+            pass
 
     async def lock_attempt(self, event):
         """
@@ -463,7 +449,6 @@ class MatchmakingConsumer(AsyncJsonWebsocketConsumer):
                         waiting_players.remove(player2_entry)
                         
                     except Exception as e:
-                        print(f"Error creating match: {str(e)}")
                         # Skip these players and try the next pair
                         waiting_players = waiting_players[1:]
         

@@ -24,17 +24,13 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         self.user_id = self.scope.get('user_id')
         
         if not self.user_id:
-            print("User not authenticated")
             await self.close(code=4001)
             return
-        print(f"DEBUG: WebSocket connection for game {self.game_id}, user_id={self.user_id}")
         # Get game from database
         self.game = await self.get_game(self.game_id)
         if not self.game:
-            print(f"Game {self.game_id} not found")
             await self.close(code=4004)
             return
-        print(f"DEBUG: Game data: {self.game}")
         
         # Determine if user is player1 or player2
         if str(self.user_id) == str(self.game['player1_id']):
@@ -42,10 +38,8 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         elif str(self.user_id) == str(self.game['player2_id']):
             self.player_num = 2
         else:
-            print(f"User {self.user_id} is not a player in game {self.game_id}")
             await self.close(code=4003)
             return
-        print(f"DEBUG: User {self.user_id} identified as player {self.player_num}")
         
         # Initialize game state if not exists
         if self.game_id not in game_logic.active_games:
@@ -73,7 +67,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'game_id': self.game_id
         })
         state_to_send = game_logic.active_games[self.game_id]
-        print(f"DEBUG: Sending game state: {state_to_send}")
         await self.send_json({
             'type': 'game_state',
             'state': state_to_send
@@ -117,7 +110,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, close_code):
         """Handle WebSocket disconnection"""
-        print(f"Client {self.channel_name} disconnected with code {close_code}")
         if hasattr(self, 'game_id') and self.game_id in game_logic.active_games:
             # Mark player as disconnected
             connection_info = game_logic.set_player_connection(self.game_id, self.player_num, False)
@@ -175,7 +167,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             for i in range(wait_seconds):
                 # Check every second if both players are connected
                 if game_logic.are_both_players_connected(self.game_id):
-                    print(f"Both players connected for game {self.game_id}")
                     
                     # If game was waiting, update to menu or playing state
                     if game_logic.active_games[self.game_id]['game_status'] == 'waiting':
@@ -244,7 +235,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     if current_status == 'menu':
                         # Change status to playing
                         new_status = game_logic.set_game_status(self.game_id, 'playing')
-                        
                         # Notify all players about status change
                         await self.channel_layer.group_send(
                             self.game_group,
@@ -288,7 +278,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 })
         
         except Exception as e:
-            print(f"Error processing message: {str(e)}")
+            pass
     
     async def game_loop(self):
         """Main game loop running on the server with optimized performance"""
@@ -323,7 +313,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 # Check for inactivity timeout
                 if (current_time - last_activity_time > INACTIVE_TIMEOUT and 
                     not game_logic.is_any_player_connected(self.game_id)):
-                    print(f"Game {self.game_id} timed out due to inactivity")
                     
                     # Clean up the game
                     await game_logic.save_game_results(self.game_id)
@@ -438,13 +427,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                         last_activity_time = current_time
         
         except asyncio.CancelledError:
-            # Handle graceful cancellation
-            print(f"Game loop for game {self.game_id} cancelled")
             raise
         except Exception as e:
-            print(f"Error in game loop: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            pass
         finally:
             # Mark loop as not running
             if self.game_id in game_logic.active_games:
@@ -481,12 +466,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         await asyncio.sleep(2)
         # Close the connection
         await self.close(code=1000)  # Normal closure
-    
-        # Give the client a moment to process the final state before disconnecting
-        await asyncio.sleep(2)
-        # Close the connection
-        await self.close(code=1000)  # Normal closure
-        # Database methods
+
         
     @database_sync_to_async
     def get_game(self, game_id):
@@ -510,7 +490,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             return
         
         # Get game from database and create state
-        print(f"DEBUG: Initializing game {self.game_id} with data: {self.game}")
         game_logic.active_games[self.game_id] = game_logic.create_game_state(
             self.game_id, 
             self.game
@@ -521,7 +500,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         try:
             game = Game.objects.get(id=self.game_id)
             # new status for cancelled games in your StatusChoices class
-            print("Game cancelled")
             game.status = 'cancelled'
             game.save()
             return True

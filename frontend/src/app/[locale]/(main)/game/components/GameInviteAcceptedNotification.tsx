@@ -39,7 +39,7 @@ const GameInviteAcceptedNotification: React.FC<GameInviteAcceptedNotificationPro
     
     // Navigate to the game
     const url = joinUrl || `/game/remote?gameId=${gameId}`;
-    router.push(url);
+    window.location.href = url;
     
     toast({
       title: "Joining Game",
