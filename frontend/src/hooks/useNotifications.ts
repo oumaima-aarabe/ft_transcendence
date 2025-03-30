@@ -42,19 +42,16 @@ export const useNotifications = () => {
     // Fetch existing notifications
     fetchNotifications();
 
-    console.log("Initializing notifications consumer");
     // Create WebSocket connection
     const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}/ws/notifications/`);
     
     // Set up event listeners
     ws.onopen = () => {
       setConnected(true);
-      console.log("Connected to notifications consumer");
     };
     
     ws.onclose = () => {
       setConnected(false);
-      console.log("Disconnected from notifications consumer");
     };
     
     ws.onmessage = (event) => {
@@ -75,7 +72,7 @@ export const useNotifications = () => {
             timestamp: notification.created_at || new Date().toISOString(),
           };
           
-          setNotifications((prev) => [...prev, newNotification]);
+          setNotifications((prev) => [newNotification, ...prev]);
         }
       } catch (error) {
         console.error('Error parsing notification:', error);
@@ -86,7 +83,6 @@ export const useNotifications = () => {
     
     // Clean up on unmount
     return () => {
-      console.log("Closing to clean up notifications consumer");
       ws.close();
     };
   }, [fetchNotifications]);
