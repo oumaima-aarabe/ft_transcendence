@@ -5,7 +5,6 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import CustomQueryClientProvider from "@/providers/react-query";
-import { NotificationsProvider } from "@/providers/NotificationsProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,9 +36,7 @@ export default async function RootLayout({ children, params }: Props) {
           <div className="relative z-10">
             <NextIntlClientProvider messages={messages}>
               <CustomQueryClientProvider>
-                <NotificationsProvider>
-                  {children}
-                </NotificationsProvider>
+                {children}
               </CustomQueryClientProvider>
               <Toaster />
             </NextIntlClientProvider>

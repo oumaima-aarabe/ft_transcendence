@@ -15,7 +15,6 @@ type NotificationsContextType = {
   clearAllNotifications: () => void;
   refreshNotifications: () => void;
   socket: WebSocket | null;
-  gameInvites?: Notification[];
 };
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
