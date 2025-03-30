@@ -75,7 +75,7 @@ export const useNotifications = () => {
             timestamp: notification.created_at || new Date().toISOString(),
           };
           
-          setNotifications((prev) => [newNotification, ...prev]);
+          setNotifications((prev) => [...prev, newNotification]);
         }
       } catch (error) {
         console.error('Error parsing notification:', error);

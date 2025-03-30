@@ -19,6 +19,7 @@ services:
         condition: service_healthy
     networks:
       - app-network
+
   frontend:
     build: ./frontend
     container_name: frontend
@@ -27,9 +28,8 @@ services:
     tty: true
     networks:
       - app-network
+
   nginx:
-    # Fixed the image name typo (was ngnix:ngx)
-    # image: nginx:alpine
     container_name: nginx
     build:
         context: ./nginx/
@@ -57,7 +57,7 @@ services:
     volumes:
       - data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
       interval: 30s
       timeout: 10s
       retries: 5

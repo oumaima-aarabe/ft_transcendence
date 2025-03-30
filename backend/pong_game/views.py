@@ -420,6 +420,7 @@ class GameInviteResponseView(APIView):
             
             if action == 'accept':
                 # Create the game directly
+                from users.models import Notification
                 try:
                     game = Game.objects.create(
                         player1=invite.sender.player,
@@ -427,7 +428,12 @@ class GameInviteResponseView(APIView):
                         status=StatusChoices.WAITING,
                         difficulty=invite.sender.difficulty
                     )
-                    
+                    notif = Notification.objects.get(
+                        notification_type='game_invite',
+                        data__invitation_code=invitation_code
+                    )
+                    notif.is_read = True
+                    notif.save()
                     # Start the game immediately to avoid matchmaking flow
                     # game.status = StatusChoices.WAITING
                     # game.started_at = timezone.now()

@@ -184,6 +184,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
 CSRF_TRUSTED_ORIGINS = [
+    os.environ["FRONTEND_URL"],
+    "https://localhost",
     "http://localhost:3000",
     "https://localhost:3000",
     "https://localhost",
