@@ -1,5 +1,5 @@
 # Django & Ecosystem
-Django
+django==5.1.7
 django-allauth
 django-cors-headers
 djangorestframework

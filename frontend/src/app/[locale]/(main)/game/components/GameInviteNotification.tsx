@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { acceptGameInvite, declineGameInvite } from '@/api/game-invite-api';
 import { Gamepad2, Check, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface GameInviteNotificationProps {
   id: string;
@@ -27,6 +28,7 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
   const [isDismissed, setIsDismissed] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const t = useTranslations('notifications.gameInvite');
 
   if (isDismissed) {
     return null; // Don't render if dismissed
@@ -39,8 +41,8 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
       
       if (response && response.game_id) {
         toast({
-          title: "Invitation accepted!",
-          description: "Joining game...",
+          title: t('invitationAccepted'),
+          description: t('joiningGame'),
           variant: "default",
         });
 
@@ -55,8 +57,8 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
         window.location.href = `/game/remote?gameId=${response.game_id}`;
       } else {
         toast({
-          title: "Error accepting invitation",
-          description: "Could not join the game",
+          title: t('errorAcceptingInvitation'),
+          description: t('couldNotJoinGame'),
           variant: "destructive",
         });
         setIsLoading(null);
@@ -65,8 +67,8 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
       }
     } catch (error: any) {
       toast({
-        title: "Error accepting invitation",
-        description: error?.response?.data?.error || "An error occurred",
+        title: t('errorAcceptingInvitation'),
+        description: error?.response?.data?.error || t('errorOccurred'),
         variant: "destructive",
       });
       setIsLoading(null);
@@ -81,7 +83,7 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
       await declineGameInvite(invitationCode);
       
       toast({
-        title: "Invitation declined",
+        title: t('invitationDeclined'),
         variant: "default",
       });
       
@@ -92,8 +94,8 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
       setIsDismissed(true);
     } catch (error: any) {
       toast({
-        title: "Error declining invitation",
-        description: error?.response?.data?.error || "An error occurred",
+        title: t('errorDecliningInvitation'),
+        description: error?.response?.data?.error || t('errorOccurred'),
         variant: "destructive",
       });
       setIsLoading(null);
@@ -110,9 +112,9 @@ const GameInviteNotification: React.FC<GameInviteNotificationProps> = ({
         </div>
         
         <div className="flex-1">
-          <h4 className="text-white font-medium">Game Invitation</h4>
+          <h4 className="text-white font-medium">{t('gameInvitation')}</h4>
           <p className="text-gray-300 text-sm">
-            <span className="font-medium">{senderUsername}</span> invited you to play Pong
+            <span className="font-medium">{senderUsername}</span> {t('invitedYouToPlay')}
           </p>
         </div>
         

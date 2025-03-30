@@ -2,15 +2,18 @@
 
 import React from "react";
 import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 export default function Index(props: { function: (friends: string) => void }) {
+  const t = useTranslations('friends.sections');
+  
   return (
     <div className="w-full h-full bg-[#241715]/44 backdrop-blur-sm rounded-tl-lg rounded-bl-lg flex flex-col overflow-hidden">
       <div className="flex gap-0.1 p-2 sm:p-3 w-full h-full bg-[#2D2A2A]/10 backdrop-blur-sm rounded-[30px]">
         <div className="flex flex-col w-full items-center">
           <div className="flex flex-col w-full py-5 sm:py-10 items-center">
             <h1 className="text-2xl sm:text-4xl text-white font-normal">
-              Friendships
+              {t('title')}
             </h1>
           </div>
           <div className="w-3/4 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent rounded-full mb-5 sm:mb-10" />
@@ -35,7 +38,7 @@ export default function Index(props: { function: (friends: string) => void }) {
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
             <div className="absolute top-0 sm:top-1/2 translate-y-[40%] sm:-translate-y-1/2 flex justify-center items-center w-full text-xs sm:text-base">
-              Friends
+              {t('friends')}
             </div>
           </button>
 
@@ -57,7 +60,7 @@ export default function Index(props: { function: (friends: string) => void }) {
               <path d="M22 2L15 22 11 13 2 9 22 2z" />
             </svg>
             <div className="absolute top-0 sm:top-1/2 translate-y-[40%] sm:-translate-y-1/2 flex justify-center items-center w-full text-xs sm:text-base">
-              Sent Invitations
+              {t('sentInvitations')}
             </div>
           </button>
 
@@ -80,7 +83,7 @@ export default function Index(props: { function: (friends: string) => void }) {
               <line x1="10" y1="14" x2="21" y2="3" />
             </svg>
             <div className="absolute top-0 sm:top-1/2 translate-y-[40%] sm:-translate-y-1/2 flex justify-center items-center w-full text-xs sm:text-base">
-              Received Invitations
+              {t('receivedInvitations')}
             </div>
           </button>
 
@@ -102,7 +105,7 @@ export default function Index(props: { function: (friends: string) => void }) {
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
             </svg>
             <div className="absolute top-0 sm:top-1/2 translate-y-[40%] sm:-translate-y-1/2 flex justify-center items-center w-full text-xs sm:text-base">
-              Blocked Users
+              {t('blockedUsers')}
             </div>
           </button>
         </div>

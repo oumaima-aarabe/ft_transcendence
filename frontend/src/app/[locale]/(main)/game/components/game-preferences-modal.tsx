@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameTheme, GameDifficulty } from '../types/game';
 import { Flame, Waves, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface GamePreferencesModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
   const [selectedTheme, setSelectedTheme] = useState<GameTheme>(initialTheme);
   const [selectedDifficulty, setSelectedDifficulty] = useState<GameDifficulty>(initialDifficulty);
   const [isSaving, setIsSaving] = useState(false);
+  const t = useTranslations('Game');
 
   if (!isOpen) return null;
 
@@ -53,7 +55,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
       >
         {/* Header */}
         <div className="bg-gray-900 p-6 border-b border-gray-700 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-white">Game Preferences</h2>
+          <h2 className="text-2xl font-bold text-white">{t('gamePreferences')}</h2>
           <button 
             onClick={onClose}
             className="text-gray-400 hover:text-white"
@@ -66,7 +68,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
         <div className="p-6 space-y-6">
           {/* Theme Selection */}
           <div className="space-y-4">
-            <h3 className="text-xl text-white">Select Theme</h3>
+            <h3 className="text-xl text-white">{t('selectTheme')}</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Fire Theme */}
@@ -80,8 +82,8 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
               >
                 <div className="p-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-[#D05F3B] font-bold">Fire Theme</h3>
-                    <p className="text-gray-400 text-sm">Hot orange glow</p>
+                    <h3 className="text-[#D05F3B] font-bold">{t('fireTheme')}</h3>
+                    <p className="text-gray-400 text-sm">{t('fireThemeDescription')}</p>
                   </div>
                   <div className="w-12 h-12 flex items-center justify-center">
                     <Flame className="text-[#D05F3B]" size={32} />
@@ -100,8 +102,8 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
               >
                 <div className="p-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-[#40CFB7] font-bold">Water Theme</h3>
-                    <p className="text-gray-400 text-sm">Cool teal effect</p>
+                    <h3 className="text-[#40CFB7] font-bold">{t('waterTheme')}</h3>
+                    <p className="text-gray-400 text-sm">{t('waterThemeDescription')}</p>
                   </div>
                   <div className="w-12 h-12 flex items-center justify-center">
                     <Waves className="text-[#40CFB7]" size={32} />
@@ -113,7 +115,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
 
           {/* Difficulty Selection */}
           <div className="space-y-4">
-            <h3 className="text-xl text-white">Select Difficulty</h3>
+            <h3 className="text-xl text-white">{t('selectDifficulty')}</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Easy */}
@@ -128,7 +130,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
               >
                 <div className="p-4 flex justify-center items-center">
                   <span className={`font-bold ${selectedDifficulty === 'easy' ? 'text-green-500' : 'text-white'}`}>
-                    EASY
+                    {t('easy')}
                   </span>
                 </div>
               </motion.div>
@@ -145,7 +147,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
               >
                 <div className="p-4 flex justify-center items-center">
                   <span className={`font-bold ${selectedDifficulty === 'medium' ? 'text-yellow-500' : 'text-white'}`}>
-                    MEDIUM
+                    {t('medium')}
                   </span>
                 </div>
               </motion.div>
@@ -162,7 +164,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
               >
                 <div className="p-4 flex justify-center items-center">
                   <span className={`font-bold ${selectedDifficulty === 'hard' ? 'text-red-500' : 'text-white'}`}>
-                    HARD
+                    {t('hard')}
                   </span>
                 </div>
               </motion.div>
@@ -176,7 +178,7 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
             onClick={onClose}
             className="bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800"
           >
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -189,10 +191,10 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
             {isSaving ? (
               <div className="flex items-center">
                 <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2"></div>
-                Saving...
+                {t('saving')}
               </div>
             ) : (
-              "Save Preferences"
+              t('savePreferences')
             )}
           </Button>
         </div>

@@ -34,7 +34,7 @@ export default function Settings() {
               </button>
               {/* button */}
               <button onClick={() => setActiveTab('Game')} className={`relative flex w-full text-white font-normal bg-[#2D2A2A]/30 border border-white/10 rounded-xl my-2 ${activeTab === 'Game' ? "bg-[#A86F43]/30" : ""}`}>
-                <img src='/assets/icons/white-pong-64.svg' className="w-8 h-8 mt-2 ml-1 mb-2" />
+                <img src='/assets/icons/white-pong-64.svg' className="w-8 h-8 mt-2 ml-1 mb-2" alt="Pong Game Icon" />
                 <div className='absolute top-0 translate-y-[50%] flex justify-center items-center w-full'> {t('tabs.game')} </div>
               </button>
             </div>

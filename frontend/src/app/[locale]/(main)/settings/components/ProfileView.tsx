@@ -94,6 +94,7 @@ export default function ProfileView() {
         <img
           src={formDataToPush.cover || formData.cover}
           className="w-full h-full object-cover"
+          alt="Profile Cover Image"
           style={{
             maskImage: "linear-gradient(to top, transparent, black 50%, black)",
             WebkitMaskImage:
@@ -109,7 +110,7 @@ export default function ProfileView() {
         />
 
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-36 h-36 rounded-full overflow-hidden">
-          <img src={formDataToPush.avatar || formData.avatar} className="w-full h-full object-cover" />
+          <img src={formDataToPush.avatar || formData.avatar} className="w-full h-full object-cover" alt="Profile Avatar" />
           <div className="bg-gradient-to-b from-transparent via-black/50 to-black/100 absolute inset-0 top-1/2" />
           <img
             id="avatar-edit"

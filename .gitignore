@@ -42,3 +42,4 @@ next-env.d.ts
 __pycache__
 /.venv
 frontend/package-lock.json
+backend/db.sqlite3

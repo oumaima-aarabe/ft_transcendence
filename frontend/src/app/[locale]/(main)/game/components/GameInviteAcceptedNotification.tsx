@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Gamepad2, ArrowRight, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface GameInviteAcceptedNotificationProps {
   id: string;
@@ -25,6 +26,7 @@ const GameInviteAcceptedNotification: React.FC<GameInviteAcceptedNotificationPro
   const [isDismissed, setIsDismissed] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const t = useTranslations('notifications.gameInvite');
 
   if (isDismissed) {
     return null; // Don't render if dismissed
@@ -42,8 +44,8 @@ const GameInviteAcceptedNotification: React.FC<GameInviteAcceptedNotificationPro
     window.location.href = url;
     
     toast({
-      title: "Joining Game",
-      description: "Connecting to game session...",
+      title: t('joiningGame'),
+      description: t('connectingToGame'),
       variant: "default",
     });
   };
@@ -65,9 +67,9 @@ const GameInviteAcceptedNotification: React.FC<GameInviteAcceptedNotificationPro
         </div>
         
         <div className="flex-1">
-          <h4 className="text-white font-medium">Game Invitation Accepted</h4>
+          <h4 className="text-white font-medium">{t('invitationAccepted')}</h4>
           <p className="text-gray-300 text-sm">
-            <span className="font-medium">{acceptedBy}</span> accepted your game lol
+            <span className="font-medium">{acceptedBy}</span> {t('acceptedYourGame')}
           </p>
         </div>
         
@@ -77,7 +79,7 @@ const GameInviteAcceptedNotification: React.FC<GameInviteAcceptedNotificationPro
             className="bg-[#40CFB7] hover:bg-[#35B09B] px-3 py-1 h-8 rounded-lg text-black"
           >
             <ArrowRight className="h-4 w-4 mr-1" />
-            Join
+            {t('join')}
           </Button>
           
           <Button 
