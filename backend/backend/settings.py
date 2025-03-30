@@ -246,4 +246,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MAX_FILE_SIZE = 10 * 1024 * 1024 # 10MB
+MAX_FILE_SIZE = 50 * 1024 * 1024 # 50MB
