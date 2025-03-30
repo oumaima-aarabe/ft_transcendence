@@ -266,7 +266,6 @@ export default function RemoteGamePage() {
             transition={{ duration: 0.3 }}
             className="z-30 relative"
           >
-            console.log("gameData:", gameData);
             <RemotePongGame
               gameId={gameData.gameId}
               userName={user!.username}
