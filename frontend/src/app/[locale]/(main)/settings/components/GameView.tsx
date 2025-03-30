@@ -7,8 +7,11 @@ import {
   updateUserPreferences,
   UserPreferences,
 } from "@/api/preferences";
+import { useToast } from "@/hooks/use-toast";
+
 const GameComponent: React.FC = () => {
   const t = useTranslations("settings.game");
+  const { toast } = useToast();
 
   const [theme, setTheme] = useState<UserPreferences["theme"]>("fire");
   const [difficulty, setDifficulty] =
@@ -126,8 +129,12 @@ const GameComponent: React.FC = () => {
         </div>
 
         <button
-          onClick={() => {
-            updateUserPreferences({ theme, difficulty });
+          onClick={async () => {
+            await updateUserPreferences({ theme, difficulty });
+            toast({
+              title: t("saveSuccess.title"),
+              description: t("saveSuccess.description")
+            });
           }}
           className=" self-start w-[15rem] py-2.5 mt-4 bg-[#D05F3B]/90 hover:bg-[#D05F3B]/80 text-white text-md text-center rounded-xl transition focus:outline-none"
           >
