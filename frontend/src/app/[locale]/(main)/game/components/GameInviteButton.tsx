@@ -10,17 +10,17 @@ import { useTranslations } from 'next-intl';
 interface GameInviteButtonProps {
   username: string;
   avatarUrl?: string;
-  variant?: 'default' | 'outline' | 'ghost';
-  size?: 'sm' | 'default' | 'lg';
   className?: string;
+  disabled?: boolean;
+  children?: React.ReactNode;
 }
 
 const GameInviteButton: React.FC<GameInviteButtonProps> = ({
   username,
   avatarUrl,
-  variant = 'default',
-  size = 'default',
   className = '',
+  disabled = false,
+  children
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -47,30 +47,27 @@ const GameInviteButton: React.FC<GameInviteButtonProps> = ({
     }
   };
 
-  // Button styles based on theme
-  const buttonClasses = `
-    ${className}
-    ${variant === 'default' ? 'bg-[#D05F3B] hover:bg-[#C04F2B] text-white shadow-[0_0_15px_rgba(208,95,59,0.3)]' : ''}
-    ${variant === 'outline' ? 'bg-transparent border border-[#D05F3B] text-[#D05F3B] hover:bg-[#D05F3B]/10' : ''}
-    ${variant === 'ghost' ? 'bg-transparent hover:bg-[#D05F3B]/10 text-[#D05F3B]' : ''}
-    ${size === 'sm' ? 'text-xs px-2 py-1' : ''}
-    ${size === 'default' ? 'text-sm px-3 py-1.5' : ''}
-    ${size === 'lg' ? 'text-base px-4 py-2' : ''}
-    transition-all duration-300 rounded-lg flex items-center justify-center gap-2
-  `;
-
   return (
-    <Button 
-      onClick={handleInvite} 
-      disabled={isLoading}
-      className={buttonClasses}
+    <Button
+      variant="outline"
+      disabled={disabled || isLoading}
+      className={`relative w-full text-sm text-white bg-transparent border border-white/20 hover:border-white/30 hover:bg-white/10 hover:text-white rounded-full h-11 ${className}`}
+      onClick={handleInvite}
     >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="absolute top-3 left-3">
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Gamepad2 className="h-4 w-4" />
+        )}
+      </div>
+      {children ? (
+        children
       ) : (
-        <Gamepad2 className="h-4 w-4" />
+        <span className="flex justify-center text-xs items-center h-full">
+          {isLoading ? t('sending') : t('inviteToGame')}
+        </span>
       )}
-      {t('inviteToGame')}
     </Button>
   );
 };

@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { BlockState } from '../types/chat';
 import { sendWebSocketMessage } from "@/lib/websocket";
 import { useRouter } from "@/i18n/routing";
+import  GameInviteButton  from "../../game/components/GameInviteButton";
 
 interface ChatProfileProps {
   user: User;
@@ -129,10 +130,10 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
               {t('view_profile')}
             </span>
           </Button>
-          <Button
-            variant="outline"
+          <GameInviteButton
+            username={user.username}
             disabled={blockState === BlockState.BLOCKED_BY_ME || blockState === BlockState.BLOCKED_BY_OTHER}
-            className="relative w-full text-sm text-white bg-transparent border border-white/20 hover:border-white/30 hover:bg-white/10 hover:text-white rounded-full h-11"
+            className="text-white"
           >
             <div className="absolute top-3 left-3">
               <Swords className="h-4 w-4" />
@@ -140,7 +141,7 @@ export function ChatProfile({ user, conversationId, onConversationDeleted, block
             <span className="flex justify-center text-xs items-center h-full">
               {t('challenge')}
             </span>
-          </Button>
+        </GameInviteButton>
           <Button
             variant="outline"
             className={`relative w-full text-sm bg-transparent border border-white/20 rounded-full h-11

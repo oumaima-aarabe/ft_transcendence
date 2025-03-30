@@ -22,7 +22,6 @@ interface GameDetails {
 // Fetch details for a specific game
 export const getGameDetails = async (gameId: string): Promise<GameDetails> => {
   try {
-    // Using the correct endpoint structure that matches your Django URLs
     const response = await sendRequest('get', `/pong_game/games/${gameId}/`);
     return response.data;
   } catch (error) {

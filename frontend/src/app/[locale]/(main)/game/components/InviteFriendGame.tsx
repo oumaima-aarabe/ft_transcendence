@@ -9,7 +9,7 @@ import { useSearchUsers } from "@/api/get-user";
 import { UseUser } from "@/api/get-user";
 import { UseFriend } from "@/api/get-friends";
 import GameInviteButton from "./GameInviteButton";
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, Gamepad2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface FriendGameInvitesProps {
@@ -100,8 +100,15 @@ const FriendGameInvites: React.FC<FriendGameInvitesProps> = ({ onBack }) => {
                 <GameInviteButton
                   username={friend.username}
                   avatarUrl={friend.avatar}
-                  size="sm"
-                />
+                  className="w-auto !min-w-[150px]"
+                >
+                  <div className="absolute top-3 left-3">
+                    <Gamepad2 className="h-4 w-4" />
+                  </div>
+                  <span className="flex justify-center text-xs items-center h-full">
+                    {t('challenge')}
+                  </span>
+                </GameInviteButton>
               </div>
             ))
           )}

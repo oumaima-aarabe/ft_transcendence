@@ -31,21 +31,17 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [connectionState, setConnectionState] = useState('disconnected');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const MAX_SEARCH_TIME = 60; // 60 seconds timeout
+  const MAX_SEARCH_TIME = 60;
   
-  // Game preferences
   const [gameTheme, setGameTheme] = useState<GameTheme>('water');
   const [gameDifficulty, setGameDifficulty] = useState<GameDifficulty>('medium');
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
-  // Get user data
   const { data: userData, isLoading } = UseUser();
 
-  // Fetch user preferences
   useEffect(() => {
     if (!userData) return;
 
-    // Fetch user preferences from the server
     const fetchPreferences = async () => {
         try {
           const data = await getUserPreferences();
@@ -54,7 +50,6 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
           setGameDifficulty(data.difficulty);
         } catch (error) {
           console.error('Error fetching preferences, using defaults:', error);
-          // Default values will remain in state
         } finally {
           setPreferencesLoaded(true);
         }
@@ -63,20 +58,16 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
     fetchPreferences();
   }, [userData]);
 
-  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Add automatic timeout for matchmaking
   useEffect(() => {
-    // Only start timeout if currently searching
     if (status === 'searching') {
-      const TIMEOUT_DURATION = 60000; // 1 minute in milliseconds
+      const TIMEOUT_DURATION = 60000;
       
-      // Create timeout that will cancel matchmaking after duration
       const timeoutId = setTimeout(() => {
         if (status === 'searching') {
           console.log('Matchmaking timed out after 1 minute');
@@ -242,38 +233,6 @@ const Matchmaking: React.FC<MatchmakingProps> = ({ userId, onGameFound, onBack }
   }, [isLoading, userData, preferencesLoaded, onGameFound, t]);
 
     const startMatchmaking = async () => {
-      // First, check if the user is already in an active game
-      // try {
-      //   const statusResponse = await checkPlayerGameStatus();
-        
-      //   if (statusResponse.active_game && statusResponse.game_id) {
-      //     // User is already in a game - redirect them
-      //     setMessage('You are already in an active game.');
-          
-      //     // Wait a moment to show the message
-      //     setTimeout(() => {
-      //       // If you have a redirect function available in props, use it
-      //       if (onGameFound && statusResponse.game_id) {
-      //         onGameFound(
-      //           statusResponse.game_id,
-      //           statusResponse.player1 || 'Player 1',
-      //           statusResponse.player2 || 'Player 2',
-      //           `/game/${statusResponse.game_id}/`
-      //         );
-      //       } else {
-      //         // Otherwise, use direct navigation if possible
-      //         window.location.href = `/game/remote?gameId=${statusResponse.game_id}`;
-      //       }
-      //     }, 1500);
-          
-      //     return;
-      //   }
-      // } catch (error) {
-      //   console.error('Error checking active games:', error);
-      //   // Continue with matchmaking if the check fails
-      // }
-      
-      // Proceed with normal matchmaking
       const socket = getMatchmakingSocket();
         
       if (!socket || socket.readyState !== WebSocket.OPEN) {

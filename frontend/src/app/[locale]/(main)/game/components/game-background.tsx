@@ -18,7 +18,6 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
 
   useEffect(() => {
     if (isPlaying) {
-      // Smoother transition with a bit longer delay
       const timer = setTimeout(() => {
         setVisible(true);
       }, 300);
@@ -29,7 +28,6 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
   }, [isPlaying]);
 
   useEffect(() => {
-    // Handle theme changes with more robust transition
     if (currentTheme !== theme && isPlaying) {
       setTransitioning(true);
       setVisible(false);
@@ -37,12 +35,10 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
       const timer = setTimeout(() => {
         setCurrentTheme(theme);
         
-        // Slight delay before making visible to ensure clean swap
         setTimeout(() => {
           setVisible(true);
         }, 100);
 
-        // Reset transitioning state
         setTimeout(() => {
           setTransitioning(false);
         }, 700);
@@ -50,12 +46,10 @@ const GameBackground: React.FC<GameBackgroundProps> = ({
 
       return () => clearTimeout(timer);
     } else if (!transitioning) {
-      // Update theme immediately if not transitioning
       setCurrentTheme(theme);
     }
   }, [theme, isPlaying]);
 
-  // Don't render anything if not playing and not visible
   if (!isPlaying && !visible) return null;
 
   const backgroundImage =

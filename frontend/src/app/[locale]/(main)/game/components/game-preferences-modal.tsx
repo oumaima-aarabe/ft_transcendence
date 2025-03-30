@@ -31,10 +31,8 @@ const GamePreferencesModal: React.FC<GamePreferencesModalProps> = ({
     setIsSaving(true);
     
     try {
-      // Update server preferences through the onSave prop
       onSave(selectedTheme, selectedDifficulty);
       
-      // brief delay to show saving state
       setTimeout(() => {
         setIsSaving(false);
         onClose();

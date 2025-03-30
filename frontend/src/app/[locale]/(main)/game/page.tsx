@@ -9,38 +9,29 @@ import GameBackground from './components/game-background';
 import { GameTheme, GameDifficulty } from './types/game';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
-// import { PongGame } from './components/pong-game
 
-// Game flow state type
 type GameFlowState = 'options' | 'setup' | 'playing';
 
 export default function GamePage() {
   const t = useTranslations('Game');
-  // Flow state management
   const [flowState, setFlowState] = useState<GameFlowState>('options');
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   
-  // Game configuration
   const [player1Name, setPlayer1Name] = useState<string>(t('player1'));
   const [player2Name, setPlayer2Name] = useState<string>(t('player2'));
   const [gameTheme, setGameTheme] = useState<GameTheme>('fire');
   const [gameDifficulty, setGameDifficulty] = useState<GameDifficulty>('medium');
 
-  // Handle game option selection
   const handleSelectGameMode = (mode: 'local' | 'invite' | 'matchmaking') => {
     if (mode === 'local') {
       setFlowState('setup');
     } else if (mode === 'matchmaking') {
-      // Navigation is handled in the GameOptions component
-      // The router.push to '/game/remote' is already there
     } else {
-      // For now, other modes are not implemented
       alert(`${mode} mode is not implemented yet`);
     }
   };
 
-  // Handle game setup submission
   const handleStartGame = (
     p1Name: string, 
     p2Name: string, 
@@ -54,12 +45,10 @@ export default function GamePage() {
     setFlowState('playing');
   };
 
-  // Return to options screen
   const handleBackToOptions = () => {
     setFlowState('options');
   };
 
-  // Return to game setup
   const handleBackToSetup = () => {
     setFlowState('setup');
   };
