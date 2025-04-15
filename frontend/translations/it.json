@@ -1,0 +1,483 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "pageNotFound": "Pagina Non Trovata",
+    "pageNotFoundMessage": "La pagina che stai cercando non esiste.",
+    "backToHome": "Torna alla Home",
+    "oops": "Oops!",
+    "somethingWentWrong": "Qualcosa è andato storto",
+    "errorLoadingPage": "Errore durante il caricamento della pagina",
+    "tryAgain": "Riprova",
+    "error": {
+      "connection": "Errore di connessione. Riprova.",
+      "failed_load": "Caricamento fallito"
+    }
+  },
+  "auth": {
+    "common": {
+      "loading": "Caricamento..."
+    },
+    "sign_in": {
+      "title": "Accedi",
+      "new_user": "Nuovo su PongArcadia?",
+      "sign_up_link": "Registrati!",
+      "email_label": "Email",
+      "password_label": "Password",
+      "username_placeholder": "Inserisci il tuo username",
+      "password_placeholder": "Inserisci la tua password",
+      "button": "Accedi",
+      "or_sign_in_with": "Oppure accedi con"
+    },
+    "sign_up": {
+      "title": "Unisciti a noi inserendo le tue informazioni",
+      "first_name_label": "Nome",
+      "last_name_label": "Cognome",
+      "username_label": "Username",
+      "email_label": "Email",
+      "password_label": "Password",
+      "confirm_password_label": "Conferma password",
+      "username_placeholder": "Username",
+      "email_placeholder": "Email",
+      "first_name_placeholder": "Nome",
+      "last_name_placeholder": "Cognome",
+      "password_placeholder": "Password",
+      "confirm_password_placeholder": "Conferma password",
+      "button": "Registrati",
+      "have_account": "Hai già un account?",
+      "sign_in_link": "Accedi!"
+    },
+    "two_factor": {
+      "title": "Autenticazione a due fattori",
+      "subtitle": "Inserisci il codice generato dalla tua app di autenticazione per continuare",
+      "code_label": "Inserisci il tuo codice 2fa",
+      "code_placeholder": "● ● ● ● ● ●",
+      "verify_button": "Verifica",
+      "verifying": "Verifica in corso...",
+      "or": "Oppure",
+      "go_back": "Torna al login"
+    }
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "mark_all_read": "Segna tutto come letto",
+    "no_notifications": "Nessuna notifica",
+    "loading": "Caricamento notifiche...",
+    "dismiss": "Ignora",
+    "types": {
+      "system": "Sistema",
+      "friend_request": "Richiesta di Amicizia",
+      "friend_request_accepted": "Richiesta di Amicizia Accettata",
+      "block": "Utente Bloccato",
+      "unblock": "Utente Sbloccato",
+      "game_invite": "Invito di Gioco",
+      "tournament_invitation": "Invito al Torneo",
+      "message": "Nuovo Messaggio",
+      "achievement": "Obiettivo"
+    },
+    "gameInvite": {
+      "invitationSent": "Invito inviato!",
+      "invitationSentTo": "Invito di gioco inviato a {username}",
+      "couldNotSendInvitation": "Impossibile inviare l'invito",
+      "errorOccurred": "Si è verificato un errore",
+      "invitationAccepted": "Invito accettato!",
+      "joiningGame": "Accesso al gioco...",
+      "connectingToGame": "Connessione alla sessione di gioco...",
+      "acceptedYourGame": "ha accettato il tuo invito di gioco",
+      "join": "Partecipa",
+      "gameInvitation": "Invito di Gioco",
+      "invitedYouToPlay": "ti ha invitato a giocare a Pong",
+      "errorAcceptingInvitation": "Errore durante l'accettazione dell'invito",
+      "couldNotJoinGame": "Impossibile partecipare al gioco",
+      "invitationDeclined": "Invito rifiutato",
+      "errorDecliningInvitation": "Errore durante il rifiuto dell'invito",
+      "inviteToGame": "Invita a giocare"
+    }
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "tabs": {
+      "profile": "Profilo",
+      "account": "Account",
+      "game": "Gioco"
+    },
+    "username": {
+      "error": {
+        "underscore": {
+          "title": "Username non valido",
+          "description": "L'username deve contenere un trattino basso"
+        }
+      }
+    },
+    "password": {
+      "title": "Aggiorna Password",
+      "old_password": "Vecchia password",
+      "new_password": "Nuova password",
+      "update_button": "Aggiorna Password",
+      "updating": "Aggiornamento in corso...",
+      "success": {
+        "title": "Password aggiornata con successo",
+        "description": "La tua password è stata aggiornata con successo"
+      },
+      "error": {
+        "incorrect_old": {
+          "title": "Vecchia password errata",
+          "description": "Riprova"
+        },
+        "data_missing": {
+          "title": "Dati mancanti",
+          "description": "Compila tutti i campi"
+        },
+        "intra_account": {
+          "title": "Account Intra",
+          "description": "Non puoi aggiornare la password con un account Intra"
+        },
+        "generic": {
+          "title": "Impossibile aggiornare la password",
+          "description": "Riprova"
+        }
+      }
+    },
+    "two_factor": {
+      "title": "Autenticazione a Due Fattori",
+      "disabled_message": "L'autenticazione a due fattori è disabilitata",
+      "enabled_message": "L'autenticazione a due fattori è abilitata",
+      "enable_button": "Abilita 2FA",
+      "disable_button": "Disabilita 2FA",
+      "qr": {
+        "scan_title": "Scansionami",
+        "code_title": "Inserisci il codice generato",
+        "code_placeholder": "* * * * * *",
+        "enable_button": "Abilita 2FA"
+      }
+    },
+    "game": {
+      "difficulty": {
+        "title": "Difficoltà di gioco",
+        "easy": "Facile",
+        "medium": "Medio",
+        "hard": "Difficile"
+      },
+      "theme": {
+        "title": "Tema della plancia",
+        "fire": "Tema Fuoco",
+        "water": "Tema Acqua"
+      },
+      "alias": {
+        "title": "Alias torneo",
+        "placeholder": "Alias predefinito",
+        "save": "Salva"
+      },
+      "saveSuccess": {
+        "title": "Impostazioni salvate",
+        "description": "Le tue preferenze di gioco sono state aggiornate con successo"
+      },
+      "save": "Salva modifiche"
+    },
+    "language": {
+      "title": "Scegli Lingua",
+      "languages": {
+        "english": "Inglese",
+        "french": "Francese",
+        "italian": "Italiano",
+        "spanish": "Spagnolo"
+      }
+    },
+    "profile": {
+      "title": "Impostazioni Profilo",
+      "avatar": "Avatar",
+      "upload_avatar": "Carica Avatar",
+      "remove_avatar": "Rimuovi Avatar",
+      "username": "Username",
+      "email": "Email",
+      "first_name": "Nome",
+      "last_name": "Cognome",
+      "save": "Salva Modifiche",
+      "saving": "Salvataggio in corso...",
+      "success": {
+        "title": "Profilo Aggiornato",
+        "description": "Il tuo profilo è stato aggiornato con successo"
+      },
+      "error": {
+        "title": "Aggiornamento Fallito",
+        "description": "Impossibile aggiornare il profilo. Riprova."
+      }
+    }
+  },
+  "dashboard": {
+    "userNotFound": "Utente Non Trovato",
+    "userNotFoundDescription": "L'utente che stai cercando non esiste o è stato rimosso.",
+    "goBack": "Torna Indietro",
+    "achievements": {
+      "title": "Obiettivi",
+      "showAll": "Mostra tutti gli obiettivi",
+      "allAchievements": "Tutti gli Obiettivi",
+      "completed": "Completati",
+      "locked": "Bloccati",
+      "firstVictory": "Prima Vittoria",
+      "firstVictoryDesc": "Vinci la tua prima partita",
+      "perfectGame": "Partita Perfetta",
+      "perfectGameDesc": "Vinci una partita con punteggio 3-0",
+      "undefeatedChampion": "Campione Imbattuto",
+      "undefeatedChampionDesc": "Vinci 3 partite di fila"
+    },
+    "cover": {
+      "level": "Livello",
+      "addFriend": "Aggiungi Amico",
+      "addingFriend": "Aggiunta in corso...",
+      "remove": "Rimuovi",
+      "removing": "Rimozione in corso...",
+      "cancel": "Annulla",
+      "cancelling": "Annullamento in corso...",
+      "accept": "Accetta",
+      "accepting": "Accettazione in corso...",
+      "decline": "Rifiuta",
+      "declining": "Eliminazione in corso...",
+      "block": "Blocca",
+      "blocking": "Blocco in corso...",
+      "unblock": "Sblocca",
+      "unblocking": "Sblocco in corso..."
+    },
+    "friends": {
+      "title": "Amici",
+      "showAllFriends": "Mostra tutti gli amici",
+      "privateFriendsList": "Lista Amici Privata",
+      "noFriends": "Nessun Amico",
+      "emptyFriendsList": "La tua lista amici è attualmente vuota."
+    },
+    "matchHistory": {
+      "title": "Cronologia Partite",
+      "showAll": "Mostra tutte le partite",
+      "fullHistory": "Cronologia Partite Completa",
+      "versus": "VS",
+      "errorLoading": "Errore durante il caricamento della cronologia partite",
+      "noMatches": "Nessuna partita trovata"
+    },
+    "statistics": {
+      "title": "Statistiche",
+      "loading": "Caricamento...",
+      "winRate": "Percentuale di Vittorie",
+      "experience": "Esperienza",
+      "wins": "Vittorie",
+      "losses": "Sconfitte",
+      "total": "Totale"
+    }
+  },
+  "chat": {
+    "loading": "Caricamento chat...",
+    "messages": {
+      "send_placeholder": "Scrivi il tuo messaggio...",
+      "failed_fetch": "Impossibile recuperare i messaggi",
+      "blocked_by_other": "Sei stato bloccato da questo utente 😔",
+      "blocked_by_me": "Hai bloccato questo utente",
+      "placeholder": "Scrivi il tuo messaggio..."
+    },
+    "profile": {
+      "title": "Profilo Chat",
+      "status": "Stato",
+      "mute": "Disattiva Notifiche",
+      "block": "Blocca Utente",
+      "report": "Segnala Utente",
+      "options": "Opzioni",
+      "view_profile": "Visualizza profilo",
+      "challenge": "Sfida",
+      "delete_chat": "Elimina chat",
+      "deleting": "Eliminazione in corso...",
+      "friend_status": "Sei amico di questa persona",
+      "unblock": "Sblocca Utente",
+      "blocked_by_other": "Sei bloccato",
+      "loading": "Caricamento..."
+    },
+    "list": {
+      "title": "Conversazioni",
+      "search": "Cerca utenti con cui chattare",
+      "search_results": "Risultati ricerca",
+      "click_to_start": "Clicca per iniziare la conversazione",
+      "no_messages": "Ancora nessun messaggio",
+      "start_chat": "Inizia una nuova chat",
+      "no_users_or_conversations": "Nessun utente o conversazione trovato",
+      "no_conversations": "Ancora nessuna conversazione",
+      "failed_to_start_conversation": "Impossibile avviare la conversazione. Riprova."
+    }
+  },
+  "header": {
+    "search": {
+      "placeholder": "Cerca giocatori, amici e altro"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "away": "Assente",
+      "donotdisturb": "Non disturbare",
+      "invisible": "Invisibile"
+    }
+  },
+  "Tournaments": {
+    "title": "Tornei",
+    "join": "Partecipa a un Torneo",
+    "create": "Crea un Torneo",
+    "joinDescription": "Partecipa a un torneo e competi contro altri giocatori",
+    "createDescription": "Crea un torneo e invita altri giocatori",
+    "select": "Seleziona",
+    "createTournament": "Crea Torneo",
+    "enterPlayers": "Inserisci 4 giocatori per iniziare il torneo",
+    "tournamentSettings": "Impostazioni Torneo",
+    "difficulty": "Difficoltà",
+    "selectDifficulty": "Seleziona difficoltà",
+    "easy": "Facile",
+    "medium": "Medio",
+    "hard": "Difficile",
+    "players": "Giocatori",
+    "playerName": "Giocatore",
+    "player": "Giocatore",
+    "playerColor": "Colore Giocatore",
+    "fire": "Fuoco",
+    "water": "Acqua",
+    "back": "Indietro",
+    "startTournament": "Inizia Torneo",
+    "allPlayersRequired": "Sono necessari i nomi di tutti i giocatori per iniziare il torneo",
+    "tournamentBracket": "Tabellone Torneo",
+    "semifinal": "Semifinale",
+    "final": "Finale",
+    "matchComplete": "Partita Completa",
+    "clickToPlay": "Clicca per Giocare",
+    "waiting": "In attesa",
+    "winner": "Campione",
+    "finalWillBeHere": "La partita finale apparirà qui",
+    "tournamentBeginning": "Torneo Pronto",
+    "tournamentIntro": "Quattro giocatori si sfideranno in un torneo ad eliminazione diretta. Due semifinali seguite da una partita finale.",
+    "startFirstMatch": "Inizia il Torneo",
+    "backToTournament": "Torna al Torneo",
+    "semifinalMatch": "Partita Semifinale",
+    "finalMatch": "Partita Finale",
+    "exitTournament": "Esci dal Torneo",
+    "tournamentComplete": "Torneo Completo",
+    "tournamentInProgress": "Torneo in Corso",
+    "newTournament": "Nuovo Torneo",
+    "selectMatchToPlay": "Seleziona una partita da giocare",
+    "playSemifinal": "Gioca Semifinale",
+    "playFinal": "Gioca Finale",
+    "theme": "Tema",
+    "selectTheme": "Seleziona Tema"
+  },
+  "Game": {
+    "challenge": "Sfida",
+    "title": "Modalità di Gioco",
+    "local": "Partita Locale",
+    "invite": "Invita un Amico",
+    "localDescription": "Gioca contro un amico sullo stesso dispositivo",
+    "inviteDescription": "Invia un invito per giocare da remoto",
+    "select": "Seleziona",
+    "gameSetup": "Impostazioni Partita",
+    "player1": "Giocatore 1",
+    "player2": "Giocatore 2",
+    "selectTheme": "Seleziona Tema",
+    "theme": "Tema",
+    "fireTheme": "Tema Fuoco",
+    "fireThemeDescription": "Calda luce arancione",
+    "waterTheme": "Tema Acqua",
+    "waterThemeDescription": "Freddo effetto verde acqua",
+    "selectDifficulty": "Seleziona Difficoltà",
+    "easy": "Facile",
+    "medium": "Medio",
+    "hard": "Difficile",
+    "startGame": "Inizia Partita",
+    "back": "Indietro",
+    "inviteFriend": "Invita un Amico",
+    "searchFriends": "Cerca amici...",
+    "loadingFriends": "Caricamento amici...",
+    "noMatchingFriends": "Nessun amico corrispondente trovato",
+    "noFriendsYet": "Ancora nessun amico",
+    "backToGameOptions": "Torna alle Opzioni di Gioco",
+    "gamePreferences": "Preferenze di Gioco",
+    "cancel": "Annulla",
+    "saving": "Salvataggio in corso...",
+    "savePreferences": "Salva Preferenze",
+    "creatingGame": "Creazione partita...",
+    "waitingForOpponent": "Partita creata. In attesa dell'avversario...",
+    "errorCreatingGame": "Errore durante la creazione della partita. Riprova.",
+    "findingMatch": "Ricerca partita...",
+    "errorFindingMatch": "Errore durante la ricerca della partita. Riprova.",
+    "joiningGame": "Accesso al gioco...",
+    "errorGettingGameDetails": "Errore durante il recupero dei dettagli della partita. Riprova.",
+    "errorJoiningGame": "Errore durante l'accesso al gioco. Riprova.",
+    "noOpponentFound": "Nessun avversario trovato. Riprova.",
+    "onlineGameSetup": "Impostazioni Partita Online",
+    "createGame": "Crea Partita",
+    "quickMatch": "Partita Veloce",
+    "matchmaking": "Matchmaking",
+    "matchmakingDescription": "Trova un avversario per una partita di Pong remota in tempo reale",
+    "readyToFindOpponent": "Pronto a trovare un avversario?",
+    "searchTimedOut": "Ricerca scaduta. Riprova.",
+    "connectionError": "Errore di connessione. Riprova.",
+    "connectedToMatchmaking": "Connesso al server di matchmaking",
+    "searchingForOpponent": "Ricerca dell'avversario... (Posizione: {position})",
+    "opponentFoundConnecting": "Avversario trovato! Connessione al gioco...",
+    "connectionNotReady": "Connessione non pronta. Tentativo di riconnessione...",
+    "unableToConnect": "Impossibile connettersi. Riprova più tardi.",
+    "connectingToGame": "Connessione al gioco...",
+    "backToMenu": "Torna al Menu",
+    "findOpponent": "Trova Avversario",
+    "cancelSearch": "Annulla Ricerca",
+    "timeElapsed": "Tempo trascorso",
+    "searching": "Ricerca in corso",
+    "secondsRemaining": "{seconds} secondi rimanenti",
+    "you": "Tu",
+    "opponent": "Avversario"
+  },
+  "localGame": {
+    "points": "Punti",
+    "match": "Partita",
+    "of": "di",
+    "clickOrPressAnyKeyToStart": "Clicca o premi un tasto qualsiasi per iniziare",
+    "wSKeys": "Tasti W/S",
+    "arrowUpDownKeys": "Tasti Freccia Su/Giù",
+    "pressSpaceToPause": "Premi Spazio per mettere in pausa",
+    "paused": "In pausa",
+    "pressSpaceToContinue": "Premi Spazio per continuare",
+    "winsMatch": "Vince la Partita",
+    "matchScore": "Punteggio Partita",
+    "clickToContinueToNextMatch": "Clicca per continuare alla prossima partita",
+    "finalScore": "Punteggio Finale",
+    "clickToPlayAgain": "Clicca per giocare di nuovo",
+    "pongArcadia": "PONG ARCADIA",
+    "firstToWin": "Primo a vincere",
+    "matchesWinsGame": "partite vinte la partita!",
+    "winsGame": "Vince la Partita",
+    "won": "ha vinto",
+    "matchWon": "partita vinta",
+    "matchesWon": "partite vinte",
+    "firstTo": "Primo a",
+    "backToSetup": "Torna alle Impostazioni",
+    "resumeGame": "Riprendi Partita",
+    "pauseGame": "Pausa Partita",
+    "backToTournament": "Torna al Torneo",
+    "waitingForPlayers": "IN ATTESA DEI GIOCATORI",
+    "matchOf": "PARTITA {current} DI {total}",
+    "playerWinsMatch": "{player} VINCE LA PARTITA {match}!",
+    "playerWinsGame": "{player} VINCE LA PARTITA!",
+    "firstToPoints": "Primo a {points} punti",
+    "versus": "VS",
+    "pause": "Pausa",
+    "toggleSmoothing": "Attiva/Disattiva Smoothing",
+    "firstToWinMatchesWinsGame": "Primo a vincere {matches} partite vince la partita!"
+  },
+  "friends": {
+    "noFriends": "Nessun Amico",
+    "emptyFriendsList": "La tua lista amici è attualmente vuota.",
+    "addFriendsMessage": "Aggiungi amici",
+    "noBlockedUsers": "Nessun Utente Bloccato",
+    "emptyBlockedList": "La tua lista di utenti bloccati è attualmente vuota.",
+    "keepItEmptyMessage": "Lasciala vuota :P",
+    "noInvitations": "Nessun Invito",
+    "emptyInvitationsList": "Non hai inviti di amicizia in sospeso.",
+    "noSentInvitations": "Nessun Invito Inviato",
+    "emptySentInvitationsList": "Non hai ancora inviato inviti di amicizia.",
+    "sections": {
+      "title": "Amicizie",
+      "friends": "Amici",
+      "sentInvitations": "Inviti Inviati",
+      "receivedInvitations": "Inviti Ricevuti",
+      "blockedUsers": "Utenti Bloccati"
+    }
+  }
+}

@@ -1,3 +1,34 @@
-django==5.0.6
-psycopg2==2.9.9
+# Django & Ecosystem
+django==5.1.7
+django-allauth
+django-cors-headers
 djangorestframework
+djangorestframework_simplejwt
+
+# Database & related
+psycopg
+psycopg2-binary
+sqlparse
+asgiref
+
+# Asynchronous
+channels==4.1.0
+channels-redis==4.2.0
+daphne
+redis
+
+# Utilities
+python-dotenv
+requests
+urllib3
+certifi
+charset-normalizer
+idna
+typing_extensions
+
+# Image Processing
+pillow
+
+pyotp
+qrcode
+drf-yasg

@@ -1,0 +1,85 @@
+import React, { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { GameTheme } from "../types/game";
+
+interface GameBackgroundProps {
+  isPlaying: boolean;
+  theme: GameTheme;
+}
+
+const GameBackground: React.FC<GameBackgroundProps> = ({
+  isPlaying,
+  theme,
+}) => {
+  const t = useTranslations('Game');
+  const [visible, setVisible] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<GameTheme>(theme);
+  const [transitioning, setTransitioning] = useState(false);
+
+  useEffect(() => {
+    if (isPlaying) {
+      const timer = setTimeout(() => {
+        setVisible(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setVisible(false);
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (currentTheme !== theme && isPlaying) {
+      setTransitioning(true);
+      setVisible(false);
+
+      const timer = setTimeout(() => {
+        setCurrentTheme(theme);
+        
+        setTimeout(() => {
+          setVisible(true);
+        }, 100);
+
+        setTimeout(() => {
+          setTransitioning(false);
+        }, 700);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    } else if (!transitioning) {
+      setCurrentTheme(theme);
+    }
+  }, [theme, isPlaying]);
+
+  if (!isPlaying && !visible) return null;
+
+  const backgroundImage =
+    currentTheme === "fire"
+      ? "/assets/images/fire-game.png"
+      : "/assets/images/water-game.png";
+
+  return (
+    <div
+      className={`fixed inset-0 z-[5] transition-all duration-700 ease-in-out ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      {/* Background image with darkening filter */}
+      <div className="relative w-full h-full">
+        <img
+          src={backgroundImage}
+          alt={currentTheme === "fire" ? t('fireTheme') : t('waterTheme')}
+          className={`w-full h-full object-cover transition-all duration-700 ease-in-out transform
+            ${visible ? 'scale-100 blur-0' : 'scale-105 blur-sm'}`}
+        />
+        
+        {/* Absolute positioned dark overlay on top of the image */}
+        <div 
+          className={`absolute inset-0 bg-black transition-opacity duration-700 ease-in-out
+            ${visible ? 'opacity-70' : 'opacity-0'}`}
+        ></div>
+      </div>
+    </div>
+  );
+};
+
+export default GameBackground;

@@ -1,0 +1,83 @@
+services:
+
+  backend:
+    build: ./backend/
+    container_name: backend
+    command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    tty: true
+    environment:
+      - POSTGRES_HOST="postgres"
+      - POSTGRES_DB="ps_db_name"
+      - POSTGRES_PASSWORD="ps_db_password123456"
+      - POSTGRES_PORT="5432"
+      - POSTGRES_USER="ps_db_user"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    tty: true
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16
+    container_name: postgres
+    # env_file:
+    #   - .env
+    environment:
+      POSTGRES_USER: "ps_db_user"
+      POSTGRES_PASSWORD: "ps_db_password123456"
+      POSTGRES_DB: "ps_db_name"
+    volumes:
+      - data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ps_db_name -U ps_db_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+  redis:
+    image: redis:alpine
+    container_name: redis
+    expose:
+      - 6379
+    # ports:
+    #   - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  data:
