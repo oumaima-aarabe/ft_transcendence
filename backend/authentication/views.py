@@ -293,9 +293,9 @@ class fortytwo_view(APIView):
         try:
             ft_auth_url = "https://api.intra.42.fr/oauth/authorize"
             params = {
-                "client_id": os.getenv("42_CLIENT_ID"),
+                "client_id": os.getenv("CLIENT_ID_42"),
                 "response_type": "code",
-                "redirect_uri": os.getenv("42_CALLBACK_URL")
+                "redirect_uri": os.getenv("CALLBACK_URL_42")
             }
             return Response({"url": f"{ft_auth_url}?{urlencode(params)}"})
         except Exception as e:
@@ -313,9 +313,9 @@ class Login42API(APIView):
 
             data = {
                 "grant_type": "authorization_code",
-                "client_id": os.getenv("42_CLIENT_ID"),
-                "client_secret": os.getenv("42_CLIENT_SECRET"),
-                "redirect_uri": os.getenv("42_CALLBACK_URL"),
+                "client_id": os.getenv("CLIENT_ID_42"),
+                "client_secret": os.getenv("CLIENT_SECRET_42"),
+                "redirect_uri": os.getenv("CALLBACK_URL_42"),
                 "code": code,
             }
 
