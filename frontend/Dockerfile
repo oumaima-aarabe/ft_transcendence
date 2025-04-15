@@ -4,9 +4,9 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# handle dependency conflicts
-# allows installation with conflicting peer dependencies
 RUN npm install --force
+
+COPY . .
 
 COPY . .
 
